@@ -1,2 +1,2 @@
-# GDI-Game-Engine
-A game engine for Android based on Java.
+# PlanesAndShips
+An OpenGL based game. This is a simple turn-based strategy game.

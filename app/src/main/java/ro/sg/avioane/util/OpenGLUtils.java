@@ -1,6 +1,8 @@
 package ro.sg.avioane.util;
 
+import android.app.ActivityManager;
 import android.content.Context;
+import android.content.pm.ConfigurationInfo;
 
 import com.threed.jpct.Loader;
 import com.threed.jpct.Matrix;
@@ -10,6 +12,17 @@ import com.threed.jpct.SimpleVector;
 import java.io.InputStream;
 
 public class OpenGLUtils {
+
+    /***
+     * check if the user`s device supports at least the OpenGL V2
+     * @param activityManager use the one from the main Activity
+     * @return true if supported.
+     */
+    public static boolean isOpenGL2Supported(final ActivityManager activityManager){
+        // Check if the system supports OpenGL ES 2.0.
+        final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
+        return configurationInfo.reqGlEsVersion >= 0x20000;
+    }
 
     /**
      *

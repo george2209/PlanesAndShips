@@ -1,7 +1,11 @@
 package ro.sg.avioane.cavans.primitives;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
+import ro.sg.avioane.BuildConfig;
+import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
 
 /**
@@ -9,15 +13,23 @@ import ro.sg.avioane.geometry.XYZCoordinate;
  * The order of building the triangle is: counterclockwise order
  */
 public class Triangle extends AbstractGameCavan{
-    private FloatBuffer iVertexBuffer;
 
-    public Triangle(final XYZCoordinate triangleCoordinates[]){
-        
+    /**
+     * creates a triangle from three coordinates.
+     * @param triangleCoordinates coordinates of the triangle defined as follows:
+     *                            top
+     *                            bottom-left
+     *                            bottom-right
+     * @param color RGBA color of this triangle
+     */
+    public Triangle(final XYZCoordinate[] triangleCoordinates, final XYZColor color) {
+        if (BuildConfig.DEBUG && !(triangleCoordinates.length == 3)) {
+            throw new AssertionError("Assertion failed");
+        }
+
+        this.iColor = color;
+        buildVertexBuffer(triangleCoordinates);
     }
 
 
-    public Triangle(final XYZCoordinate top, final XYZCoordinate bottomLeft, final XYZCoordinate bottomRight){
-        final float iTriangleCoords[] = new float[9]; //9=(top +  bottomLeft + bottomRight) * 3
-        //iTriangleCoords[0]
-    }
 }

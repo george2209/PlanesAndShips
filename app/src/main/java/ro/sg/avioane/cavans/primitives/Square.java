@@ -23,7 +23,12 @@ public class Square extends AbstractGameCavan{
         }
 
         this.iColor = color;
-        buildVertexBuffer(squareCoordinates);
+        ////////////////////buildVertexBuffer(squareCoordinates);
         buildDrawOrderBuffer(SQUARE_DRAW_ORDER);
+    }
+
+    @Override
+    public void draw(final float[] viewProjectionMatrix) {
+
     }
 }

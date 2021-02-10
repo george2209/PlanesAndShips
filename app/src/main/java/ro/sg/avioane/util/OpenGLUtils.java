@@ -3,15 +3,30 @@ package ro.sg.avioane.util;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
-
-import com.threed.jpct.Loader;
-import com.threed.jpct.Matrix;
-import com.threed.jpct.Object3D;
-import com.threed.jpct.SimpleVector;
+import android.opengl.GLES20;
 
 import java.io.InputStream;
 
+import ro.sg.avioane.BuildConfig;
+
 public class OpenGLUtils {
+
+    /**
+     * Creates a Vertex or Fragment shader depending on the param "shaderType"
+     * @param shaderType it can be either GLES20.GL_VERTEX_SHADER or GLES20.GL_FRAGMENT_SHADER
+     * @param shaderCode the code that will be executed by this shader
+     * @return a handle to the respective shader
+     */
+    public static int getLoadShader(final int shaderType, final String shaderCode){
+        if (BuildConfig.DEBUG && (shaderType != GLES20.GL_VERTEX_SHADER && shaderType != GLES20.GL_FRAGMENT_SHADER)) {
+            throw new AssertionError("unknown shader type=" + shaderType);
+        }
+
+        int shader = GLES20.glCreateShader(shaderType);
+        GLES20.glShaderSource(shader, shaderCode);
+        GLES20.glCompileShader(shader);
+        return shader;
+    }
 
     /***
      * check if the user`s device supports at least the OpenGL V2
@@ -22,50 +37,5 @@ public class OpenGLUtils {
         // Check if the system supports OpenGL ES 2.0.
         final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
         return configurationInfo.reqGlEsVersion >= 0x20000;
-    }
-
-    /**
-     *
-     * @param context the application context
-     * @param objID the object resource
-     * @param mtlID the object material file. It can be null.
-     * @return null in case the Object3D cannot be build
-     */
-    public static Object3D loadModel(Context context, int objID, int mtlID) {
-        InputStream inObj;
-        InputStream inMtl;
-        try {
-            inObj = context.getResources().openRawResource(objID);//(R.raw.pine_tree_obj);
-            inMtl = context.getResources().openRawResource(mtlID);//(R.raw.pine_tree_mtl);
-            return getModel(inObj, inMtl);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public static Object3D loadModel(Context context, int objID) {
-        InputStream inObj;
-        try {
-            inObj = context.getResources().openRawResource(objID);//(R.raw.pine_tree_obj);
-            return getModel(inObj, null);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    private static Object3D getModel(InputStream inObj, InputStream inMtl) {
-        Object3D[] model = Loader.loadOBJ(inObj, inMtl, 1.0f);
-        Object3D o3d = new Object3D(0);
-        for (final Object3D temp:model) {
-            temp.setCenter(SimpleVector.ORIGIN);
-            temp.rotateX((float) (-Math.PI));
-            temp.rotateMesh();
-            temp.setRotationMatrix(new Matrix());
-            o3d = Object3D.mergeObjects(o3d, temp);
-            o3d.build();
-        }
-        return o3d;
     }
 }

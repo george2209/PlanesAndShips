@@ -17,8 +17,8 @@ import ro.sg.avioane.util.OpenGLUtils;
 
 public class MainScreen extends AppCompatActivity {
 
-    private GLSurfaceView mGLView;
-    private MainGameRenderer iGameRenderer;
+    private MainGameSurface iGameSurface;
+
     //private static boolean isTexturesLoaded = false;
 
     /***
@@ -39,25 +39,18 @@ public class MainScreen extends AppCompatActivity {
         final ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         if (OpenGLUtils.isOpenGL2Supported(activityManager))
         {
-            if(mGLView == null) {
-                mGLView = new GLSurfaceView(getApplication());
-                // Request an OpenGL ES 2.0 compatible context.
-                mGLView.setEGLContextClientVersion(2);
-                mGLView.setEGLConfigChooser((egl, display) -> {
-                    // Ensure that we get a 16bit framebuffer.
-                    int[] attributes = new int[]{EGL10.EGL_DEPTH_SIZE, 16, EGL10.EGL_NONE};
-                    EGLConfig[] configs = new EGLConfig[1];
-                    int[] result = new int[1];
-                    egl.eglChooseConfig(display, attributes, configs, 1, result);
-                    return configs[0];
-                });
+            if(this.iGameSurface == null) {
+                this.iGameSurface = new MainGameSurface(getApplication());
+                setContentView(this.iGameSurface);
             }
 
-            if(iGameRenderer == null)
-                iGameRenderer = new MainGameRenderer(this.getApplicationContext());
+
+            // Render the view only when there is a change in the drawing data
+
+
             //////////////////////////////////////////this.loadTextures();
-            mGLView.setRenderer(iGameRenderer);
-            setContentView(mGLView);
+
+
 
         } else {
             //TODO: make a layout frame where you display the non-supported message.
@@ -70,13 +63,13 @@ public class MainScreen extends AppCompatActivity {
     @Override
     protected void onResume(){
         super.onResume();
-        this.mGLView.onResume();
+        this.iGameSurface.onResume();
     }
 
     @Override
     protected void onPause(){
         super.onPause();
-        this.mGLView.onPause();
+        this.iGameSurface.onPause();
     }
 
     /*private void loadTextures(){

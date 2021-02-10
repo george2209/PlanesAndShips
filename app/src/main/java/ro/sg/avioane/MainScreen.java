@@ -6,6 +6,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.WindowManager;
 
 import java.util.Objects;

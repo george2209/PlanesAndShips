@@ -2,6 +2,8 @@ package ro.sg.avioane;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.os.health.SystemHealthManager;
+import android.view.MotionEvent;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -32,8 +34,22 @@ public class MainGameSurface extends GLSurfaceView {
         // super.requestRender();
         //super.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
-
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
 
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            this.iGameRenderer.getCamera().doMoveCamera(event.getX(), event.getY());
+            return true;
+        }
+
+        /*if (event.getAction() == MotionEvent.ACTION_UP) {
+            System.out.println("x=" + event.getX() + " y=" + event.getY());
+            this.iGameRenderer.getCamera().moveCameraUp(10.0f);
+            return true;
+        }*/
+
+        return super.onTouchEvent(event);
+    }
 }

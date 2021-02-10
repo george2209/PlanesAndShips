@@ -24,8 +24,6 @@ public class MainGameRenderer implements GLSurfaceView.Renderer{
     public MainGameRenderer(){
         super();
         this.iWorld = new WorldScene(this.iCamera);
-
-
     }
 
 
@@ -64,4 +62,14 @@ public class MainGameRenderer implements GLSurfaceView.Renderer{
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
         this.iWorld.onDraw();
     }
+
+    /***
+     *
+     * @return this renderer camera
+     */
+    public WorldCamera getCamera(){
+        return this.iCamera;
+    }
+
+
 }

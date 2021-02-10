@@ -39,6 +39,7 @@ public class WorldScene {
      * @param screenHeight
      */
     public void doRecalibration(final int screenWidth, final int screenHeight){
+        this.iCamera.doRecalibration(screenWidth, screenHeight);
         final float ratio = (float) screenWidth / screenHeight; //calculate the aspect ration on the far clip
         Matrix.frustumM(iProjectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
     }

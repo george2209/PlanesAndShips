@@ -1,11 +1,8 @@
 package ro.sg.avioane.util;
 
 import android.app.ActivityManager;
-import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.opengl.GLES20;
-
-import java.io.InputStream;
 
 import ro.sg.avioane.BuildConfig;
 

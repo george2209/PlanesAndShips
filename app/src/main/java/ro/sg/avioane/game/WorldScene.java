@@ -14,7 +14,7 @@ public class WorldScene {
     private final float[] iProjectionMatrix = new float[16];
     private final float[] iViewProjectionMatrix = new float[16];
     private final WorldCamera iCamera;
-    private final List<AbstractGameCavan> iGameEntities = new ArrayList<AbstractGameCavan>(MAX_NO_SUPPORTED_CAVANS);
+    private final List<AbstractGameCavan> iGameEntities = new ArrayList<>(MAX_NO_SUPPORTED_CAVANS);
 
     public WorldScene(final WorldCamera camera){
         this.iCamera = camera;
@@ -25,7 +25,7 @@ public class WorldScene {
      * Warning!
      * This method is not synchronized to you may want to do this operation during the start of the
      * game and not when the game is already started and running.
-     * @param entity
+     * @param entity the 3D object that will be added to this world
      */
     public void add(final AbstractGameCavan entity){
         this.iGameEntities.add(entity);
@@ -35,13 +35,14 @@ public class WorldScene {
     /**
      * This method must be called whenever the display resolution of the device was changed
      * I.E.: call it on "onSurfaceChanged" of the Renderer.
-     * @param screenWidth
-     * @param screenHeight
+     * @param screenWidth device display width
+     * @param screenHeight device display height
      */
     public void doRecalibration(final int screenWidth, final int screenHeight){
+        System.out.println("screenWidth=" + screenWidth + " screenHeight=" + screenHeight);
         this.iCamera.doRecalibration(screenWidth, screenHeight);
-        final float ratio = (float) screenWidth / screenHeight; //calculate the aspect ration on the far clip
-        Matrix.frustumM(iProjectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
+        final float ratio = (float) screenWidth / (float) screenHeight; //calculate the aspect ration on the far clip
+        Matrix.frustumM(iProjectionMatrix, 0, -ratio, ratio, -1, 1, 0.1f, 4.0f);
     }
 
     public void onDraw(){

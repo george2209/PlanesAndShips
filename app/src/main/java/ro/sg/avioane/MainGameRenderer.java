@@ -31,12 +31,21 @@ public class MainGameRenderer implements GLSurfaceView.Renderer{
         final XYZCoordinate[] triangleCoordinates = new XYZCoordinate[3];
         for(int i=0; i<3; i++) {
             triangleCoordinates[i] = new XYZCoordinate();
-            triangleCoordinates[i].x = i * (i-1) * 5; // 0,0,10
-            triangleCoordinates[i].y = (i - 1)*(i - 2) * 5; //10,0,0
-            triangleCoordinates[i].z = 0; //0,0,0
         }
 
-        this.iTestObject = new Triangle(triangleCoordinates, new XYZColor(0.0f, 0.8f, 0.8f, 1.0f));
+        triangleCoordinates[0].x = 0.0f;
+        triangleCoordinates[0].y = 0.622008459f;
+        triangleCoordinates[0].z = 0.0f;
+
+        triangleCoordinates[1].x = -0.5f;
+        triangleCoordinates[1].y = -0.311004243f;
+        triangleCoordinates[1].z = 0.0f;
+
+        triangleCoordinates[2].x = 0.5f;
+        triangleCoordinates[2].y = -0.311004243f;
+        triangleCoordinates[2].z = 0.0f;
+
+        this.iTestObject = new Triangle(triangleCoordinates, new XYZColor(0.63671875f, 0.76953125f, 0.22265625f, 1.0f));
         this.iWorld.add(this.iTestObject);
     }
 

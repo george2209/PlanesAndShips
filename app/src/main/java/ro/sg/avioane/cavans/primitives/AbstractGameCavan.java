@@ -92,6 +92,7 @@ public abstract class AbstractGameCavan {
             arrCoords[3*i] = coordinates[i].x;
             arrCoords[3*i + 1] = coordinates[i].y;
             arrCoords[3*i + 2] = coordinates[i].z;
+            //System.out.println("x=" + coordinates[i].x + " y=" + coordinates[i].y + " z=" + coordinates[i].z + "\n");
         }
         iVertexBuffer.put(arrCoords);
         // set the buffer to read the first coordinate

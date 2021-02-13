@@ -6,6 +6,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
+import javax.microedition.khronos.opengles.GL10;
+
 import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
@@ -49,19 +51,27 @@ public class Triangle extends AbstractGameCavan{
 
     @Override
     public void draw(final float[] viewProjectionMatrix) {
+
+        // counterclockwise orientation of the ordered vertices
+        GLES20.glFrontFace(GL10.GL_CCW);
+        // Enable face culling.
+        GLES20.glEnable(GL10.GL_CULL_FACE); //--> make sure is disabled at clean up!
+        // What faces to remove with the face culling.
+        GLES20.glCullFace(GL10.GL_FRONT);
+
         //1. Ask OpenGL ES to load the program
         GLES20.glUseProgram(super.iHandleProgram);
 
-        //2. Load the position vector
+        //2. Get a handle to the position vector
         final int positionHandle = GLES20.glGetAttribLocation(super.iHandleProgram, "vPosition");
 
-        //3. Enable the loaded handle
+        //3. Enable the loaded handle to load the data into
         GLES20.glEnableVertexAttribArray(positionHandle);
 
-        //4. Prepare the triangle coordinate data
-        GLES20.glVertexAttribPointer(positionHandle, super.NO_OF_COORDINATES_PER_VERTEX,
+        //4. Load the triangle coordinate data
+        GLES20.glVertexAttribPointer(positionHandle, AbstractGameCavan.NO_OF_COORDINATES_PER_VERTEX,
                 GLES20.GL_FLOAT, false,
-                super.NO_OF_COORDINATES_PER_VERTEX * 4 /*4=FLOAT SIZE*/, super.iVertexBuffer);
+                AbstractGameCavan.NO_OF_COORDINATES_PER_VERTEX * 4 /*4=FLOAT SIZE*/, super.iVertexBuffer);
 
         //5. Now load the color
         final int colorHandle = GLES20.glGetUniformLocation(super.iHandleProgram, "vColor");
@@ -72,15 +82,17 @@ public class Triangle extends AbstractGameCavan{
         //7. do calculate transformation matrix
         final int vpmatrixHandle = GLES20.glGetUniformLocation(super.iHandleProgram, "vpmMatrix");
 
-        // Pass the projection and view transformation to the shader
+        //8. Pass the projection and view transformation to the shader
         GLES20.glUniformMatrix4fv(vpmatrixHandle, 1, false, viewProjectionMatrix, 0);
 
-        // Draw the triangle
+        //9. Draw the triangle
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0,
-                9 /*9 = 3 coordinates x 3values per coordinate*/ / super.NO_OF_COORDINATES_PER_VERTEX);
+                3 /*9 = 3 coordinates x 3values per coordinate / super.NO_OF_COORDINATES_PER_VERTEX */);
 
-        // Disable vertex array
+        //10. Cleanup: Disable vertex array
         GLES20.glDisableVertexAttribArray(positionHandle);
+        GLES20.glDisable(GL10.GL_CULL_FACE);
+
     }
 
 

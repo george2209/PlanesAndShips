@@ -7,7 +7,9 @@ import android.os.Bundle;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import ro.sg.avioane.cavans.GameTerrain2;
 import ro.sg.avioane.cavans.primitives.Triangle;
+import ro.sg.avioane.cavans.primitives.XYZAxis;
 import ro.sg.avioane.game.WorldCamera;
 import ro.sg.avioane.game.WorldScene;
 import ro.sg.avioane.geometry.XYZColor;
@@ -16,7 +18,10 @@ import ro.sg.avioane.geometry.XYZCoordinate;
 public class MainGameRenderer implements GLSurfaceView.Renderer{
 
     //put here some object for test:
+    //private GameTerrain2 iTestObject = null;
     private Triangle iTestObject = null;
+    private XYZAxis iWorldAxis = new XYZAxis();
+
     private Bundle iPersistenceObject = null; //will be used later for persistence
     private final WorldCamera iCamera = new WorldCamera();
     private final WorldScene iWorld;
@@ -27,9 +32,9 @@ public class MainGameRenderer implements GLSurfaceView.Renderer{
     }
 
 
-    private void testDrawObject(){
-        final XYZCoordinate[] triangleCoordinates = new XYZCoordinate[3];
-        for(int i=0; i<3; i++) {
+    private void addDrawObjects(){
+        final XYZCoordinate[] triangleCoordinates = new XYZCoordinate[4];
+        for(int i=0; i<4; i++) {
             triangleCoordinates[i] = new XYZCoordinate();
         }
 
@@ -37,16 +42,27 @@ public class MainGameRenderer implements GLSurfaceView.Renderer{
         triangleCoordinates[0].y = 0.622008459f;
         triangleCoordinates[0].z = 0.0f;
 
-        triangleCoordinates[1].x = -0.5f;
-        triangleCoordinates[1].y = -0.311004243f;
+        triangleCoordinates[1].x = 0.5f;
+        triangleCoordinates[1].y = 0.622008459f;
         triangleCoordinates[1].z = 0.0f;
 
-        triangleCoordinates[2].x = 0.5f;
-        triangleCoordinates[2].y = -0.311004243f;
+        triangleCoordinates[2].x = 0.0f;
+        triangleCoordinates[2].y = 0.0f;
         triangleCoordinates[2].z = 0.0f;
 
-        this.iTestObject = new Triangle(triangleCoordinates, new XYZColor(0.63671875f, 0.76953125f, 0.22265625f, 1.0f));
+        triangleCoordinates[3].x = 0.5f;
+        triangleCoordinates[3].y = 0.0f;
+        triangleCoordinates[3].z = 0.0f;
+
+        this.iTestObject = new Triangle(triangleCoordinates, new XYZColor(0.2f,0.8f,0.1f,1.0f));
+
+        //this.iTestObject = new GameTerrain2((short)1,(short)2);
+
+
         this.iWorld.add(this.iTestObject);
+
+        this.iWorldAxis = new XYZAxis();
+        this.iWorld.add(this.iWorldAxis);
     }
 
 
@@ -56,7 +72,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer{
             this.iPersistenceObject = new Bundle();
             // Set the background frame color
             GLES20.glClearColor(0.5f, 0.0f, 0.5f, 1.0f);
-            this.testDrawObject();
+            this.addDrawObjects();
         }
     }
 
@@ -68,7 +84,8 @@ public class MainGameRenderer implements GLSurfaceView.Renderer{
 
     @Override
     public void onDrawFrame(GL10 gl) {
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        GLES20.glClear(GL10.GL_COLOR_BUFFER_BIT |
+                GL10.GL_DEPTH_BUFFER_BIT);
         this.iWorld.onDraw();
     }
 

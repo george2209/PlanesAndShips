@@ -17,16 +17,17 @@ public class MainGameSurface extends GLSurfaceView {
 
         // Create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2);
+        super.setPreserveEGLContextOnPause(true);
 
         this.iGameRenderer = new MainGameRenderer();
-        super.setEGLConfigChooser((egl, display) -> {
+        /*super.setEGLConfigChooser((egl, display) -> {
             // Ensure that we get a 16bit framebuffer.
             int[] attributes = new int[]{EGL10.EGL_DEPTH_SIZE, 16, EGL10.EGL_NONE};
             EGLConfig[] configs = new EGLConfig[1];
             int[] result = new int[1];
             egl.eglChooseConfig(display, attributes, configs, 1, result);
             return configs[0];
-        });
+        });*/
         super.setRenderer(this.iGameRenderer);
 
         // Render the view only when there is a change in the drawing data

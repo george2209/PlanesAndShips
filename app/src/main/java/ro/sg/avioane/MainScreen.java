@@ -7,6 +7,7 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.view.MotionEvent;
+import android.view.Window;
 import android.view.WindowManager;
 
 import java.util.Objects;
@@ -34,7 +35,10 @@ public class MainScreen extends AppCompatActivity {
         this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //remove the status and battery.
         //this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+
         //Remove title bar
+        //this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         Objects.requireNonNull(this.getSupportActionBar()).hide();
 
         final ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -72,6 +76,12 @@ public class MainScreen extends AppCompatActivity {
         super.onPause();
         this.iGameSurface.onPause();
     }
+
+    /*
+    @Override
+    protected void onStop(){
+        super.onStop();
+    }*/
 
     /*private void loadTextures(){
         if(!MainScreen.isTexturesLoaded){

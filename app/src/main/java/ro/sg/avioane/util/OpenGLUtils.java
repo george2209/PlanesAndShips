@@ -20,8 +20,25 @@ public class OpenGLUtils {
         }
 
         int shader = GLES20.glCreateShader(shaderType);
-        GLES20.glShaderSource(shader, shaderCode);
-        GLES20.glCompileShader(shader);
+        if(shader == 0) {
+            throw new RuntimeException("FATAL ERROR !!! \n\n shader=" + shader + " ERROR =>>>> " + GLES20.glGetError() + "\n\n" + "shader source=" + shaderCode + " isShader=" + GLES20.glIsShader(shader));
+        } else {
+            GLES20.glShaderSource(shader, shaderCode);
+            GLES20.glCompileShader(shader);
+
+            // Get the compilation status.
+            final int[] compileStatus = new int[1];
+            GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compileStatus, 0);
+            // If the compilation failed, delete the shader.
+            if (compileStatus[0] == 0)
+            {
+                final String errorStr = GLES20.glGetShaderInfoLog(shader);
+                GLES20.glDeleteShader(shader);
+                //shader = 0;
+                throw new RuntimeException("\"FATAL ERROR !!! Compile shader error: \\n\\n" + errorStr + "\n\n");
+            }
+
+        }
         return shader;
     }
 

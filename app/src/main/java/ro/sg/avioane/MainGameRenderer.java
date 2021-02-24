@@ -20,7 +20,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer{
     //put here some object for test:
     //private GameTerrain2 iTestObject = null;
     private Triangle iTestObject = null;
-    private XYZAxis iWorldAxis = new XYZAxis();
+    private XYZAxis iWorldAxis = null;
 
     private Bundle iPersistenceObject = null; //will be used later for persistence
     private final WorldCamera iCamera = new WorldCamera();
@@ -39,12 +39,12 @@ public class MainGameRenderer implements GLSurfaceView.Renderer{
         }
 
         triangleCoordinates[0].x = 0.0f;
-        triangleCoordinates[0].y = 0.622008459f;
-        triangleCoordinates[0].z = 0.0f;
+        triangleCoordinates[0].y = 0.0f;
+        triangleCoordinates[0].z = 0.622008459f;
 
         triangleCoordinates[1].x = 0.5f;
-        triangleCoordinates[1].y = 0.622008459f;
-        triangleCoordinates[1].z = 0.0f;
+        triangleCoordinates[1].y = 0.0f;
+        triangleCoordinates[1].z = 0.622008459f;
 
         triangleCoordinates[2].x = 0.0f;
         triangleCoordinates[2].y = 0.0f;
@@ -71,7 +71,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer{
         if(this.iPersistenceObject == null) {
             this.iPersistenceObject = new Bundle();
             // Set the background frame color
-            GLES20.glClearColor(0.5f, 0.0f, 0.5f, 1.0f);
+            GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
             this.addDrawObjects();
         }
     }

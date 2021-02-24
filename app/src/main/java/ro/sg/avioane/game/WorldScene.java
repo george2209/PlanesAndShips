@@ -11,8 +11,9 @@ public class WorldScene {
     //TODO: update this number once the game is ready to be released!!!!!
     private static final int MAX_NO_SUPPORTED_CAVANS = 100;
 
+    private final float[] iModelMatrix = new float[16];
     private final float[] iProjectionMatrix = new float[16];
-    private final float[] iViewProjectionMatrix = new float[16];
+
     private final WorldCamera iCamera;
     private final List<AbstractGameCavan> iGameEntities = new ArrayList<>(MAX_NO_SUPPORTED_CAVANS);
 
@@ -42,21 +43,39 @@ public class WorldScene {
         System.out.println("screenWidth=" + screenWidth + " screenHeight=" + screenHeight);
         this.iCamera.doRecalibration(screenWidth, screenHeight);
         final float ratio = (float) screenWidth / (float) screenHeight; //calculate the aspect ration on the far clip
-        Matrix.frustumM(iProjectionMatrix, 0, -ratio, ratio, -1, 1, 0.1f, 4.0f);
+        Matrix.frustumM(iProjectionMatrix, 0, -ratio, ratio, -1.0f, 1.0f, 0.1f, 10.0f);
     }
 
     public void onDraw(){
+        Matrix.setIdentityM(this.iModelMatrix,0);
+
+        //now you can apply transforms to the model matrix before you send it to the
+        //cavans
+        //ex:
+        // Do a complete rotation every 10 seconds.
+        //long time = SystemClock.uptimeMillis() % 10000L;
+        //float angleInDegrees = (360.0f / 10000.0f) * ((int) time);
+        // Matrix.rotateM(iModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);
+
+        //call this to have the view matrix build depending on the camera movement
+        //we can choose to call this only if the camera was moved
+        //TODO: draw only when camera was moved this!
         this.iCamera.onDraw();
-        Matrix.multiplyMM(this.iViewProjectionMatrix,
+
+
+
+
+
+        /*Matrix.multiplyMM(this.iProjectionMatrix,
                 0,
-                this.iProjectionMatrix,
+                this.iModelMatrix,
                 0,
                 this.iCamera.getViewMatrix(),
-                0);
+                0);*/
 
         //draw all entities of the map on the projection clip
         for (final AbstractGameCavan entity: this.iGameEntities) {
-            entity.draw(this.iViewProjectionMatrix);
+            entity.draw(this.iCamera.getViewMatrix(), this.iModelMatrix, this.iProjectionMatrix);
         }
     }
 }

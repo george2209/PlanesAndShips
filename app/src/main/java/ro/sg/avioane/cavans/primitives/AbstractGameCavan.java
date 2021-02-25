@@ -18,14 +18,16 @@ public abstract class AbstractGameCavan {
     private static final byte SHADER_WITH_COLOR_PER_VERTEX = 1;
     private static final byte SHADER_WITH_COLOR_UNIFORM = 2;
     protected static final byte NO_OF_COORDINATES_PER_VERTEX = 3; //use X,Y,Z
-    protected FloatBuffer iVertexBuffer;
-    protected ShortBuffer iDrawOrderBuffer;
+    protected int iVertexBufferIdx = 0;
+    protected int iDrawOrderBufferIdx = 0;
     protected XYZColor iColor = new XYZColor(0.03671875f, 0.76953125f, 0.82265625f, 1.0f);
     protected int iHandleProgram;
     protected String iVertexShaderCode;
     protected String iFragmentShaderCode;
     private byte iShaderType = SHADER_WITH_COLOR_UNIFORM;
     private int iIndexOrderLength = 0;
+    protected final static short BYTES_PER_FLOAT = 4;
+    protected final static short BYTES_PER_SHORT = 2;
 
     public abstract void draw(final float[] viewMatrix, final float[] modelMatrix, final float[] projectionMatrix);
 
@@ -50,10 +52,10 @@ public abstract class AbstractGameCavan {
 
         //2. Get a handle to the position vector
         final int positionHandle = GLES20.glGetAttribLocation(this.iHandleProgram, "vPosition");
-        //if(positionHandle < 0) {
-        //    System.err.println("WRONG POSITION HANDLE: " + positionHandle);
-        //    System.out.println("ERROR =>>>> " +       GLES20.glGetError());
-        //}
+        if(positionHandle < 0) {
+            System.err.println("WRONG POSITION HANDLE: " + positionHandle);
+            System.out.println("ERROR =>>>> " +       GLES20.glGetError());
+        }
 
         //3. Enable the loaded handle to load the data into
         GLES20.glEnableVertexAttribArray(positionHandle);
@@ -64,9 +66,10 @@ public abstract class AbstractGameCavan {
         }
 
         //4. Load the coordinate data
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, this.iVertexBufferIdx);
         GLES20.glVertexAttribPointer(positionHandle, AbstractGameCavan.NO_OF_COORDINATES_PER_VERTEX,
                 GLES20.GL_FLOAT, false,
-                shaderStride, this.iVertexBuffer);
+                shaderStride, 0);
 
         //5. Now load the color
         int colorHandle = 0;
@@ -77,10 +80,12 @@ public abstract class AbstractGameCavan {
             GLES20.glUniform4fv(colorHandle, 1, this.iColor.asFloatArray(), 0);
         } else if(this.iShaderType == SHADER_WITH_COLOR_PER_VERTEX){
             colorHandle = GLES20.glGetAttribLocation(this.iHandleProgram, "aColor");
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, this.iVertexBufferIdx);
+            GLES20.glEnableVertexAttribArray(colorHandle);
             GLES20.glVertexAttribPointer(colorHandle, 4 , //4=RGBA
                     GLES20.GL_FLOAT, false,
-                    shaderStride, this.iVertexBuffer);
-            GLES20.glEnableVertexAttribArray(colorHandle);
+                    shaderStride, NO_OF_COORDINATES_PER_VERTEX * BYTES_PER_FLOAT);
+
         } else
             throw new RuntimeException("unkwn shader type=" + this.iShaderType);
 
@@ -107,25 +112,27 @@ public abstract class AbstractGameCavan {
         //GLES20.glLineWidth(0.2f);
         //GLES20.glDrawElements(GLES20.GL_LINES, this.iIndexOrder.length, GLES20.GL_UNSIGNED_SHORT, super.iDrawOrderBuffer);
 
+        //8.1 bind the drawing order
+        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, this.iDrawOrderBufferIdx);
+
         //9. Draw the form
         if(GL10.GL_LINES == FORM_TYPE) {
-            GLES20.glDrawElements(GL10.GL_LINES, this.iIndexOrderLength, GL10.GL_UNSIGNED_SHORT, this.iDrawOrderBuffer);
+            GLES20.glDrawElements(GL10.GL_LINES, this.iIndexOrderLength, GL10.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
         } else if(GL10.GL_TRIANGLE_STRIP == FORM_TYPE) {
-            GLES20.glDrawElements(GL10.GL_TRIANGLE_STRIP, this.iIndexOrderLength, GL10.GL_UNSIGNED_SHORT, this.iDrawOrderBuffer);
+            GLES20.glDrawElements(GL10.GL_TRIANGLE_STRIP, this.iIndexOrderLength, GL10.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
         } else {
             throw new RuntimeException("FATAL ERROR !!! unknown FORM_TYPE=" + FORM_TYPE);
         }
-
-        //System.out.println("TRIANGLE ERROR =>>>> " +       GLES20.glGetError());
-
-
-        //GLES20.glDrawArrays(GLES20.GL_LINES, 0, 2);
 
         //System.out.println("ERROR =>>>> " +       GLES20.glGetError());
 
 
 
         //10. Cleanup: Disable vertex array
+        // Unbind element array.
+        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+
         if(this.iShaderType == SHADER_WITH_COLOR_PER_VERTEX){
             GLES20.glDisableVertexAttribArray(colorHandle);
         }
@@ -181,9 +188,24 @@ public abstract class AbstractGameCavan {
                 // (# of coordinate values * 2 bytes per short)
                 drawOrder.length * 2);
         bb.order(ByteOrder.nativeOrder());
-        iDrawOrderBuffer = bb.asShortBuffer();
+        final ShortBuffer iDrawOrderBuffer = bb.asShortBuffer();
         iDrawOrderBuffer.put(drawOrder);
         iDrawOrderBuffer.position(0);
+
+        //Load data into OpenGL memory from this point already.
+        {
+            final int buffers[] = new int[1];
+            GLES20.glGenBuffers(1, buffers, 0);
+            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, buffers[0]);
+
+            GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, iDrawOrderBuffer.capacity() * BYTES_PER_SHORT, iDrawOrderBuffer, GLES20.GL_STATIC_DRAW);
+            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
+
+            this.iDrawOrderBufferIdx = buffers[0];
+
+            //release main memory
+            iDrawOrderBuffer.limit(0);
+        }
     }
 
     /**
@@ -210,7 +232,7 @@ public abstract class AbstractGameCavan {
         bb.order(ByteOrder.nativeOrder());
 
         // create a floating point buffer from the ByteBuffer
-        iVertexBuffer = bb.asFloatBuffer();
+        final FloatBuffer iVertexBuffer = bb.asFloatBuffer();
 
         // add the coordinates to the FloatBuffer
         final float[] arrCoords = new float[coordinatesLength];
@@ -224,11 +246,26 @@ public abstract class AbstractGameCavan {
                 arrCoords[vertexStride*i + 5] = coordinates[i].color.blue;
                 arrCoords[vertexStride*i + 6] = coordinates[i].color.alpha;
             }
-            System.out.println("x=" + coordinates[i].x + " y=" + coordinates[i].y + " z=" + coordinates[i].z + "\n");
+            //System.out.println("x=" + coordinates[i].x + " y=" + coordinates[i].y + " z=" + coordinates[i].z + "\n");
         }
         iVertexBuffer.put(arrCoords);
         // set the buffer to read the first coordinate
         iVertexBuffer.position(0);
+
+        //Load data into OpenGL memory from this point already.
+        {
+            final int buffers[] = new int[1];
+            GLES20.glGenBuffers(1, buffers, 0);
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0]);
+
+            GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, iVertexBuffer.capacity() * BYTES_PER_FLOAT, iVertexBuffer, GLES20.GL_STATIC_DRAW);
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+
+            this.iVertexBufferIdx = buffers[0];
+
+            //release main memory
+            iVertexBuffer.limit(0);
+        }
 
         if(isColorPerVertex){
             this.iShaderType = SHADER_WITH_COLOR_PER_VERTEX;

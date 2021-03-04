@@ -1,8 +1,9 @@
 package ro.sg.avioane.cavans.primitives;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
+import android.opengl.GLES20;
+import android.opengl.Matrix;
+
+import javax.microedition.khronos.opengles.GL10;
 
 import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.geometry.XYZColor;
@@ -23,13 +24,25 @@ public class Triangle extends AbstractGameCavan{
      * @param color RGBA color of this triangle
      */
     public Triangle(final XYZCoordinate[] triangleCoordinates, final XYZColor color) {
-        if (BuildConfig.DEBUG && !(triangleCoordinates.length == 3)) {
+        /*if (BuildConfig.DEBUG && !(triangleCoordinates.length == 3)) {
             throw new AssertionError("Assertion failed");
-        }
+        }*/
 
-        this.iColor = color;
-        buildVertexBuffer(triangleCoordinates);
+        super.iColor = color;
+        super.buildDrawOrderBuffer(this.buildIndexes());
+        super.buildVertexBuffer(triangleCoordinates);
+        super.compileGLSL();
     }
+
+    private short[] buildIndexes(){
+        return new short[]{0, 2, 1, 3};
+    }
+
+    @Override
+    public void draw(final float[] viewMatrix, final float[] modelMatrix, final float[] projectionMatrix) {
+        super.doDraw(viewMatrix, modelMatrix, projectionMatrix, GL10.GL_TRIANGLE_STRIP);
+    }
+
 
 
 }

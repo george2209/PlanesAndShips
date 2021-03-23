@@ -2,6 +2,7 @@ package ro.sg.avioane;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.opengl.Matrix;
 import android.os.health.SystemHealthManager;
 import android.view.MotionEvent;
 
@@ -41,7 +42,20 @@ public class MainGameSurface extends GLSurfaceView {
     public boolean onTouchEvent(MotionEvent event) {
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            this.iGameRenderer.getCamera().doMoveCamera(event.getX(), event.getY());
+            //System.out.println("touch on x=" + event.getX() + " y=" + event.getY());
+            //final float[] someMatrix = new float[16];
+            //final float ratio = 2.0f;
+            //Matrix.setIdentityM(someMatrix, 0);
+            //Matrix.frustumM(someMatrix, 0, -ratio, ratio, -1.0f, 1.0f, 0.1f, 10.0f);
+//            for(int i=0; i<4; i++){
+//                for(int j=0; j<4; j++){
+//                    System.out.print(someMatrix[i*4 + j] + ",");
+//                }
+//                System.out.println("\n");
+//            }
+
+
+            this.iGameRenderer.onTouch(event);
             return true;
         }
 
@@ -53,4 +67,6 @@ public class MainGameSurface extends GLSurfaceView {
 
         return super.onTouchEvent(event);
     }
+
+
 }

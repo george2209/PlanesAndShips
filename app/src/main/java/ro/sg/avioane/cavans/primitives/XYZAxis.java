@@ -26,14 +26,14 @@ public class XYZAxis extends AbstractGameCavan{
         arrCoordinates[0] = new XYZCoordinate(0.0f, 0.0f, 0.0f);
         arrCoordinates[0].color = new XYZColor(0.8f, 0.8f, 0.8f, 1.0f);
         //X
-        arrCoordinates[1] = new XYZCoordinate(1.0f, 0.0f, 0.0f);
+        arrCoordinates[1] = new XYZCoordinate(10.0f, 0.0f, 0.0f);
         arrCoordinates[1].color = new XYZColor(0.9f, 0.1f, 0.0f, 1.0f);
         //Y
-        arrCoordinates[2] = new XYZCoordinate(0.0f, 1.0f, 0.0f);
-        arrCoordinates[2].color = new XYZColor(0.0f, 0.9f, 0.0f, 1.0f);
+        arrCoordinates[2] = new XYZCoordinate(0.0f, 10.0f, 0.0f);
+        arrCoordinates[2].color = new XYZColor(0.0f, 0.9f, 0.1f, 1.0f);
         //Z
-        arrCoordinates[3] = new XYZCoordinate(0.0f, 0.0f, 1.0f);
-        arrCoordinates[3].color = new XYZColor(0.0f, 0.0f, 0.9f, 1.0f);
+        arrCoordinates[3] = new XYZCoordinate(0.0f, 0.0f, 10.0f);
+        arrCoordinates[3].color = new XYZColor(0.1f, 0.1f, 0.9f, 1.0f);
 
         return  arrCoordinates;
     }
@@ -48,7 +48,7 @@ public class XYZAxis extends AbstractGameCavan{
     }
 
     @Override
-    public void draw(float[] viewMatrix, float[] modelMatrix, float[] projectionMatrix) {
-        super.doDraw(viewMatrix, modelMatrix, projectionMatrix, GL10.GL_LINES);
+    public void draw(float[] viewMatrix, float[] projectionMatrix) {
+        super.doDraw(viewMatrix, projectionMatrix, GL10.GL_LINES);
     }
 }

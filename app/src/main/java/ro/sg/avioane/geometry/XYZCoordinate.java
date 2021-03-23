@@ -13,9 +13,23 @@ public class XYZCoordinate {
 
     }
 
+    public XYZCoordinate(final float[] arr){
+        this.x = arr[0];
+        this.y = arr[1];
+        this.z = arr[2];
+    }
+
     public XYZCoordinate(final float x, final float y, final float z){
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+
+    /**
+     *
+     * @return a float array with {x,y,z} position
+     */
+    public float[] asArray(){
+        return new float[] {x,y,z};
     }
 }

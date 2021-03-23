@@ -39,8 +39,8 @@ public class Triangle extends AbstractGameCavan{
     }
 
     @Override
-    public void draw(final float[] viewMatrix, final float[] modelMatrix, final float[] projectionMatrix) {
-        super.doDraw(viewMatrix, modelMatrix, projectionMatrix, GL10.GL_TRIANGLE_STRIP);
+    public void draw(final float[] viewMatrix, final float[] projectionMatrix) {
+        super.doDraw(viewMatrix, projectionMatrix, GL10.GL_TRIANGLE_STRIP);
     }
 
 

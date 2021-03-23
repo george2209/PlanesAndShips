@@ -8,8 +8,15 @@ import ro.sg.avioane.BuildConfig;
 
 public class OpenGLUtils {
 
+
+
     /**
      * Creates a Vertex or Fragment shader depending on the param "shaderType"
+     *
+     * added by dumitrageorge@gmail.com:
+     * Take care! Shader calls should be within the "OpenGL thread"
+     * that is onSurfaceChanged(), onSurfaceCreated() or onDrawFrame() !!!
+     *
      * @param shaderType it can be either GLES20.GL_VERTEX_SHADER or GLES20.GL_FRAGMENT_SHADER
      * @param shaderCode the code that will be executed by this shader
      * @return a handle to the respective shader
@@ -21,7 +28,7 @@ public class OpenGLUtils {
 
         int shader = GLES20.glCreateShader(shaderType);
         if(shader == 0) {
-            throw new RuntimeException("FATAL ERROR !!! \n\n shader=" + shader + " ERROR =>>>> " + GLES20.glGetError() + "\n\n" + "shader source=" + shaderCode + " isShader=" + GLES20.glIsShader(shader));
+            throw new RuntimeException("FATAL ERROR !!! \n\n shader=" + shader + " ERROR =>>>> " + GLES20.glGetError() + "\n\n" + "shader source=" + shaderCode + " \nisShader=" + GLES20.glIsShader(shader));
         } else {
             GLES20.glShaderSource(shader, shaderCode);
             GLES20.glCompileShader(shader);

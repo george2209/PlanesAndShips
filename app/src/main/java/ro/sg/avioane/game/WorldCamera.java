@@ -6,7 +6,7 @@ import ro.sg.avioane.geometry.XYZCoordinate;
 
 public class WorldCamera {
     private final float[] iViewMatrix = new float[16];
-    private XYZCoordinate iCameraPosition = new XYZCoordinate(0.2f,0.8f,0.5f);
+    private XYZCoordinate iCameraPosition = new XYZCoordinate(0.5f,1.0f,3.0f);
     private XYZCoordinate iLookAtPosition = new XYZCoordinate(0.0f,0.0f,-2.0f);
     private XYZCoordinate iCameraUpPosition = new XYZCoordinate(0.0f,1.0f,0.0f);
     private int screenWidth;
@@ -23,6 +23,10 @@ public class WorldCamera {
         this.screenHeight = screenHeight;
     }
 
+    public XYZCoordinate getCameraPosition(){
+        return this.iCameraPosition;
+    }
+
     /**
      * move the camera when the user touched the display as follows:
      * 1/2 half upper of the display will move the camera 10.0f upper
@@ -35,16 +39,16 @@ public class WorldCamera {
         final float ratio = 0.1f;
         if(x < this.screenWidth / 4.0f){
             this.iCameraPosition.x -= ratio;
-            this.iLookAtPosition.x -= ratio;
+            //this.iLookAtPosition.x -= ratio;
         } else if(x > this.screenWidth*3.0f / 4.0f){
             this.iCameraPosition.x += ratio;
-            this.iLookAtPosition.x += ratio;
+            //this.iLookAtPosition.x += ratio;
         } else if(y < this.screenHeight / 3.0f){
             this.iCameraPosition.z -= ratio;
-            this.iLookAtPosition.z -= ratio;
+            //this.iLookAtPosition.z -= ratio;
         } else if(y > this.screenHeight*2.0f / 3.0f){
             this.iCameraPosition.z += ratio;
-            this.iLookAtPosition.z += ratio;
+            //this.iLookAtPosition.z += ratio;
         }
     }
 
@@ -60,10 +64,10 @@ public class WorldCamera {
     /**
      * Sets the x,y,z of the center vector where the camera is pointing to on the far clip (
      * world scene).
-     * @param viewCenterPosition the pointing vector coordinates against the scene
+     * @param position the pointing vector coordinates against the scene
      */
-    public void setCenterOfViewPosition(final XYZCoordinate viewCenterPosition){
-        this.iLookAtPosition = viewCenterPosition;
+    public void setLookAtPosition(final XYZCoordinate position){
+        this.iLookAtPosition = position;
     }
 
     /**
@@ -82,6 +86,7 @@ public class WorldCamera {
      */
     public void onDraw(){
         //System.out.println("Camera position: x=" + this.iCameraPosition.x + " y=" + this.iCameraPosition.y + " z=" + this.iCameraPosition.z);
+        Matrix.setIdentityM(iViewMatrix,0);
         Matrix.setLookAtM(this.iViewMatrix, 0, iCameraPosition.x, iCameraPosition.y, iCameraPosition.z,
                 iLookAtPosition.x, iLookAtPosition.y, iLookAtPosition.z,
                 iCameraUpPosition.x, iCameraUpPosition.y, iCameraUpPosition.z);

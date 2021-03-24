@@ -14,7 +14,7 @@ import ro.sg.avioane.geometry.XYZCoordinate;
 
 public class GameTerrain extends AbstractGameCavan {
 
-    //private float[] iMVPMatrix = new float[16]; //view projection final matrix
+
     private static final float TILE_LENGTH = 1.0f;
     //private final XYZCoordinate[] iTriangleCoordinates;
     //private final short[] iIndexOrder;
@@ -67,18 +67,20 @@ public class GameTerrain extends AbstractGameCavan {
         XYZColor currColor = red;
 
         int index = 0;
+        final float widthReference = 0-((float)width/2.0f);
+        final float lengthReference = ((float)length/2.0f);
         for(int i=length; i>=0; i--){
             for (int j = 0; j < width+1; j++) {
                 //System.out.println("\nTile no: " + index);
                 arrVertices[index] = new XYZCoordinate();
-                arrVertices[index].x = j * TILE_LENGTH;
-                if(i==length || i<=1)
+                arrVertices[index].x = widthReference + j * TILE_LENGTH;
+                //if(i==length || i<=1)
                     arrVertices[index].y = 0.0f;
-                else{
-                    //final Random r = new Random();
-                    arrVertices[index].y = 0.3f;//r.nextFloat();
-                }
-                arrVertices[index].z = (i * TILE_LENGTH);
+                //else{
+                //    final Random r = new Random();
+                //    arrVertices[index].y = r.nextFloat();
+                //}
+                arrVertices[index].z = (i * TILE_LENGTH) - lengthReference;
                 if(currColor.equals(red))
                     currColor = green;
                 else if(currColor.equals(green))

@@ -23,9 +23,9 @@ import ro.sg.avioane.util.MathGLUtils;
 public class MainGameRenderer implements GLSurfaceView.Renderer {
 
     //put here some object for test:
-    //private GameTerrain iGameTerrian = null;
+    private GameTerrain iGameTerrian = null;
 
-    private XYZPoint iPoint = null;
+    //private XYZPoint iPoint = null;
     private XYZAxis iWorldAxis = null;
     private Line iMovingLine = null;
 
@@ -48,24 +48,25 @@ public class MainGameRenderer implements GLSurfaceView.Renderer {
         this.iWorldAxis = new XYZAxis();
         this.iWorld.add(this.iWorldAxis);
 
-        {
+        /*{
             final XYZCoordinate coordinate = new XYZCoordinate(1.0f, 0.0f, 0.0f);
             coordinate.color = new XYZColor(1.0f, 1.0f, 1.0f, 1.0f);
             this.iPoint = new XYZPoint(coordinate);
             this.iCamera.setLookAtPosition(coordinate);
         }
-        this.iWorld.add(this.iPoint);
+        this.iWorld.add(this.iPoint);*/
 
 
         this.iMovingLine = new Line(
                 new XYZCoordinate(0, 0, 0),
-                new XYZCoordinate(5, 5, 5)
+                new XYZCoordinate(5, 5, 5),
+                new XYZColor(0.5f,0.5f,0.5f,1)
         );
         this.iWorld.add(this.iMovingLine);
 
 
-        //this.iGameTerrian = new GameTerrain(50,3);
-        //this.iWorld.add(this.iGameTerrian);
+        this.iGameTerrian = new GameTerrain(100,50);
+        this.iWorld.add(this.iGameTerrian);
     }
 
 

@@ -15,7 +15,7 @@ public class WorldScene {
     private static final int MAX_NO_SUPPORTED_CAVANS = 100;
 
     private static final float NEAR_CAMERA_FIELD = 1.0f;
-    private static final float FAR_CAMERA_FIELD = 6.0f;
+    private static final float FAR_CAMERA_FIELD = 100.0f;
 
     private int iScreenWidth = 0;
     private int iScreenHeight = 0;

@@ -19,6 +19,15 @@ public class Line extends AbstractGameCavan{
 
     public Line(final XYZCoordinate start, final XYZCoordinate end){
         super.iColor = new XYZColor(0.0f, 0.5f, 1.0f, 0.5f);
+        this.buildLine(start, end);
+    }
+
+    public Line(final XYZCoordinate start, final XYZCoordinate end, final XYZColor color){
+        super.iColor = color;
+        this.buildLine(start, end);
+    }
+
+    private void buildLine(final XYZCoordinate start, final XYZCoordinate end){
         super.buildDrawOrderBuffer(this.buildIndexes());
         super.buildVertexBuffer(this.buildCoordinates(start, end));
         super.compileGLSL();

@@ -6,7 +6,7 @@ import ro.sg.avioane.geometry.XYZCoordinate;
 
 public class WorldCamera {
     private final float[] iViewMatrix = new float[16];
-    private XYZCoordinate iCameraPosition = new XYZCoordinate(0.5f,1.0f,3.0f);
+    private XYZCoordinate iCameraPosition = new XYZCoordinate(0.0f,35.0f,15.0f);
     private XYZCoordinate iLookAtPosition = new XYZCoordinate(0.0f,0.0f,-2.0f);
     private XYZCoordinate iCameraUpPosition = new XYZCoordinate(0.0f,1.0f,0.0f);
     private int screenWidth;

@@ -33,14 +33,7 @@ public class GameTerrain extends AbstractGameCavan {
      */
     public GameTerrain(final int width, final int length) {
         super.iColor = new XYZColor(0.1f, 0.9f, 0.1f, 1.0f);
-        final short[] arrTmp = this.buildIndexDrawOrder(width, length);
-
-//        System.out.println("\nindex:");
-//        for(int i=0; i<arrTmp.length; i++){
-//            System.out.print(arrTmp[i] + ",");
-//        }
-
-        super.buildDrawOrderBuffer(arrTmp);
+        super.buildDrawOrderBuffer(this.buildIndexDrawOrder(width, length));
         super.buildVertexBuffer(this.buildCoordinates(width, length));
         super.compileGLSL();
     }

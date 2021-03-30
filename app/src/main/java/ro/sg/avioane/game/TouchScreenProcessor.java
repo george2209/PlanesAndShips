@@ -6,135 +6,184 @@
 
 package ro.sg.avioane.game;
 
+import android.opengl.GLU;
 import android.opengl.Matrix;
+import android.view.MotionEvent;
 
+import java.util.List;
+
+import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.util.DebugUtils;
 import ro.sg.avioane.util.MathGLUtils;
 
 /**
- * This class is transforming the VIEW-PORT SPACE "your device's display" coordinated into the
- * game world space.
- * It is used to detect if the user has "touched" on a specific spirit/graphical object
- * inside the game's world.
- *
- * Hint:
- * you can use this class as tutorial to learn how to go from device space display coordinates
- * (i.e. 1200x800) into the world game coordinate (X,Y,Z).
- * Updated by: dumitrageorge@gmail.com
+ * The class is processing the touch events and movements as well as making sure
+ * that they are translated into the game world from the display coordinates.
  */
 public class TouchScreenProcessor {
 
-    private final float[] iProjectionMatrix = new float[16];
-    private final float[] iViewMatrix = new float[16];
+    private enum TOUCH_STATE_ENGINE{
+        E_NONE,
+        E_CLICK_DOWN,
+        E_MOVING,
+        E_CLICK_UP
+    }
+
+    private TOUCH_STATE_ENGINE iStateEngine = TOUCH_STATE_ENGINE.E_NONE;
 
     private int iScreenWidth = 0;
     private int iScreenHeight = 0;
 
-    public float[] processScreenTouch(final float x, final float y,
-                                   final int screenWidth,
-                                   final int screenHeight,
-                                   final float[] projectionMatrix,
-                                   final float[] viewMatrix){
+    private float iStartX = 0.0f;
+    private float iStartY = 0.0f;
+    private float iEndX = 0.0f;
+    private float iEndY = 0.0f;
 
-        this.iScreenHeight = screenHeight;
-        this.iScreenWidth = screenWidth;
+    //if needed replace this implementation with a List for more listeners.
+    //at this moment we only have one listener to we keep it for later
+    //you may also want in this case to add a synchronization access.
+    private TouchScreenListener iEventsListener = null;
 
-        //keep a buffer of the original arrays...TBD if it is needed
-        // maybe send reference is better if they are not needed for re-usage.
-        //TODO: to be decided once 'object collision' is implemented
-        for (int i = 0; i < projectionMatrix.length; i++) {
-            this.iProjectionMatrix[i] = projectionMatrix[i];
-            this.iViewMatrix[i] = viewMatrix[i];
+    public void addTouchScreenListener(final TouchScreenListener l){
+        if (BuildConfig.DEBUG && iEventsListener!=null){
+            throw new AssertionError("listener non NULL. If you need more then an implementation change is suggested");
         }
+        this.iEventsListener = l;
+    }
 
-        //STEP1: convert from the display coordinates (i.e. 1028, 75) into OpenGL coordinates [-1...1]
-        final float[] normalizedXY = this.getNormalizedDisplayCoordinates(x,y);
-        //System.out.println("nX=" + normalizedXY[0] + "  nY=" + normalizedXY[1]);
-
-        //STEP2: build the "clip" 3D coordinates. We will create a point on the far end of
-        // the frustum that is Z=-1. To specify that this is a point and not a vector we will put
-        //the 4th dimension to 1 instead of 0. This helps in transformation (check on
-        // Internet "operation with matrices vector vs vertex")
-        final float[] clipMatrix = new float[] {normalizedXY[0], normalizedXY[1], -1.0f, 1.0f};
-        DebugUtils.printVector(clipMatrix, "---clipMatrix---");
-
-        //STEP3: convert all into the "EYE" or "CAMERA" space. This means that the resulting
-        // coordinates from this step will found themselves  into a space where the ORIGIN IS CAMERA
-        //position.
-        //please note that this method will return a vector pointing into the screen (w=0)
-        final float[] cameraEyeMatrix = this.getConvertClipToCameraCoordinates(clipMatrix);
-        DebugUtils.printSymmetricalMatrix(cameraEyeMatrix, "---cameraEyeMatrix---");
-
-        //STEP4: convert from the "EYE / CAMERA" coordinates into the "WORLD" coordinates.
-        //now instead of having the camera position as reference we will have the world referenced
-        //to the point on the screen
-        final float[] vectorWorld = this.getConvertCameraToWorldCoordinates(cameraEyeMatrix);
-
-        DebugUtils.printVector(vectorWorld, "\nvectorWorld vector ************");
-
-        return vectorWorld;
+    public void removeTouchScreenListener(final TouchScreenListener l){
+        this.iEventsListener = null;
     }
 
     /**
-     * Convert from camera coordinates (where the camera is the reference) into the world
-     * coordinates (where we have 0,0,0 as reference)
-     * @param cameraEyeCoordinates
-     * @return a 3D vector into the world coordinates (X,Y,Z).
+     * This method must be called whenever the display resolution of the device was changed
+     * I.E.: call it on "onSurfaceChanged" of the Renderer.
+     * @param screenWidth device display width
+     * @param screenHeight device display height
      */
-    private float[] getConvertCameraToWorldCoordinates(final float[] cameraEyeCoordinates){
-        final float[] invertedViewMatrix = new float[this.iViewMatrix.length];
-        if(!Matrix.invertM(invertedViewMatrix, 0, this.iProjectionMatrix, 0))
-            throw new IllegalStateException("cannot invert the view matrix!");
-
-        //DebugUtils.printSymmetricalMatrix(iProjectionMatrix, "---iProjectionMatrix---");
-        DebugUtils.printSymmetricalMatrix(invertedViewMatrix, "---invertedViewMatrix---");
-        DebugUtils.printVector(cameraEyeCoordinates, "---cameraEyeCoordinates---");
-
-        final float[] resultBrut = MathGLUtils.matrixMultiplyWithVector(invertedViewMatrix, cameraEyeCoordinates);
-        final float[] result = new float[] {resultBrut[0], resultBrut[1], resultBrut[2]};
-
-        MathGLUtils.matrixNormalize(result);
-        return result;
+    public void doRecalibration(final int screenWidth, final int screenHeight){
+        this.iScreenWidth = screenWidth;
+        this.iScreenHeight = screenHeight;
     }
 
-    /**
-     * Convert from the frustum to the camera coordinates
-     * We do this by doing the following operation:
-     *  <code>inv_of(ProjectionMatrix) x ClipVector4D </code>
-     * @param clipMatrix
-     * @return
-     */
-    private float[] getConvertClipToCameraCoordinates(final float[] clipMatrix){
-        final float[] invertedProjectionMatrix = new float[this.iProjectionMatrix.length];
-        if(!Matrix.invertM(invertedProjectionMatrix, 0, this.iProjectionMatrix, 0))
-            throw new IllegalStateException("cannot invert the projection matrix!");
+    public void onTouch(MotionEvent e, final float[] viewMatrix, final float[] projectionMatrix){
+        //System.out.println("MotionEvent=" + MotionEvent.actionToString(e.getActionMasked()));
+        switch(e.getActionMasked()){
+            case MotionEvent.ACTION_DOWN: {
+                if (BuildConfig.DEBUG &&
+                        (this.iStateEngine != TOUCH_STATE_ENGINE.E_NONE)) {
+                    throw new AssertionError("inconsistent state engine detected =" + this.iStateEngine);
+                }
 
+                this.iStateEngine = TOUCH_STATE_ENGINE.E_CLICK_DOWN;
+                break;
+            }
+            case MotionEvent.ACTION_MOVE: {
+                if(this.iStateEngine == TOUCH_STATE_ENGINE.E_CLICK_DOWN){
+                    this.iStartX = e.getX();
+                    this.iStartY = e.getY();
+                } else if(this.iStateEngine == TOUCH_STATE_ENGINE.E_MOVING){
+                    this.iEndX = e.getX();
+                    this.iEndY = e.getY();
+                } else {
+                    throw new UnsupportedOperationException("unknown state engine:" + this.iStateEngine);
+                }
+                this.iStateEngine = TOUCH_STATE_ENGINE.E_MOVING;
+                break;
+            }
+            case MotionEvent.ACTION_UP:{
+                if(this.iStateEngine == TOUCH_STATE_ENGINE.E_MOVING){
+                    float deltaX = this.iEndX - this.iStartX;
+                    float deltaY = this.iEndY - this.iStartY;
+                    if(this.iEventsListener!=null){
+                        this.iEventsListener.fireMovement(deltaX/this.iScreenWidth * 100.0f, deltaY/this.iScreenHeight * 100.0f);
+                    } else {
+                        System.out.println("WARNING: null iEventsListener!");
+                    }
 
-        final float[] result = MathGLUtils.matrixMultiplyWithVector(invertedProjectionMatrix, clipMatrix);
-        //reset Z coordinate to point inside the screen by setting it to -1
-        result[2] = -1.0f;
-        //reset the matrix into a vector by setting w=0
-        result[3] = 0.0f;
+//                    System.out.println("process movement of the camera at START:\n" +
+//                            this.iStartX + ", " + this.iStartY +
+//                            "\nEND:\n" +
+//                            this.iEndX + ", " + this.iEndY);
+//
+//                    System.out.println("\n\n");
+//                    System.out.println("deltaX=" + deltaX*100.0f/this.iScreenWidth + " deltaY=" + deltaY*100.0f/this.iScreenHeight);
+//                    System.out.println("\n\n");
 
-        return result;
+                } else if(this.iStateEngine == TOUCH_STATE_ENGINE.E_CLICK_DOWN){
+                    System.out.println("process click");
+                    final float x = e.getX();
+                    final float y = (float)this.iScreenHeight - e.getY();
+                    this.processClick(x,y, viewMatrix, projectionMatrix);
+                } else {
+                    throw new UnsupportedOperationException("unknown state engine:" + this.iStateEngine);
+                }
+                this.iStateEngine = TOUCH_STATE_ENGINE.E_NONE;
+                break;
+            }
+            default:
+                System.out.println("WARNING! un-catch mouse event:" + e.getActionMasked());
+        }
     }
 
+
     /**
-     * Convert from display coordinates to OpenGL frustum coordinates.
+     * the method is processing a touch on the display that will translate the display device
+     * coordinates that were touched (click) into a 3D world space coordinate.
+     * They can be then used to check if there is an object that the user wants to select.
+     * TODO: the notification mechanism.
      * @param x
      * @param y
-     * @return
      */
-    private float[] getNormalizedDisplayCoordinates(final float x, final float y){
-        //subtract -1 because our range is not from 0..screen width but in OpenGL is
-        //from -1..1. So a -1 shift is needed
-        final float nX = 2.0f * x / this.iScreenWidth - 1.0f;
-        final float nY = 2.0f * y / this.iScreenHeight - 1.0f;
+    private void processClick(final float x,  final float y, final float[] viewMatrix,
+                              final float[] projectionMatrix){
+        final int[] viewport = { 0, 0, this.iScreenWidth, this.iScreenHeight };
 
-        //final float nX = x / this.iScreenWidth * 2.0f - 1.0f;
-        //final float nY = 1.0f - y / this.iScreenHeight * 2.0f;
+        final float[] resultNear = getUnProjectMatrix(x, y, 0.0f, viewport, viewMatrix, projectionMatrix);
+        final float[] resultFar = getUnProjectMatrix(x, y, 1.0f, viewport, viewMatrix, projectionMatrix);
+        final float[] result = MathGLUtils.matrixDifference(resultFar, resultNear);
+        MathGLUtils.matrixNormalize(result);
 
-        // -nY because the bottom is not lower-left corned but in OpenGL is top-left
-        return new float[] {nX, -nY};
+        System.out.println("\nWORLD touched NEAR:\n objX=" +  resultNear[0] +
+                "\nobjY=" + resultNear[1] +
+                "\nobjZ=" + resultNear[2] +
+                "\nobjW=" + resultNear[3]);
+
+        System.out.println("\nWORLD touched VECTOR:\n objX=" +  result[0] +
+                "\nobjY=" + result[1] +
+                "\nobjZ=" + result[2] +
+                "\nobjW=" + result[3]);
+
+        //TODO: implement the right notification for this event.
     }
+
+
+    /**
+     * getUnProjectMatrix
+     * @param x
+     * @param y
+     * @param winZ
+     * @param viewport
+     * @return the x,y coordinated from screen translated into world coordinates
+     */
+    private float[] getUnProjectMatrix(float x, float y, float winZ,
+                                       int[] viewport,
+                                       final float[] viewMatrix,
+                                       final float[] projectionMatrix) {
+        final float[] result = new float[4];
+
+        GLU.gluUnProject(x, y, winZ,
+                viewMatrix, 0,
+                projectionMatrix,0,
+                viewport, 0,
+                result, 0);
+
+        result[0] /= result[3];
+        result[1] /= result[3];
+        result[2] /= result[3];
+        result[3] = 1.0f;
+
+        return result;
+    }
+
 }

@@ -7,7 +7,7 @@ import ro.sg.avioane.geometry.XYZCoordinate;
 public class WorldCamera {
     private final float[] iViewMatrix = new float[16];
     private XYZCoordinate iCameraPosition = new XYZCoordinate(0.0f,35.0f,15.0f);
-    private XYZCoordinate iLookAtPosition = new XYZCoordinate(0.0f,0.0f,-2.0f);
+    private XYZCoordinate iLookAtPosition = new XYZCoordinate(0.0f,0.0f,0.0f);
     private XYZCoordinate iCameraUpPosition = new XYZCoordinate(0.0f,1.0f,0.0f);
     private int screenWidth;
     private int screenHeight;
@@ -23,9 +23,7 @@ public class WorldCamera {
         this.screenHeight = screenHeight;
     }
 
-    public XYZCoordinate getCameraPosition(){
-        return this.iCameraPosition;
-    }
+
 
     /**
      * move the camera when the user touched the display as follows:
@@ -59,6 +57,8 @@ public class WorldCamera {
      */
     public void setCameraPosition(final XYZCoordinate cameraPosition){
         this.iCameraPosition = cameraPosition;
+        System.out.println("new camera position x=" + this.iCameraPosition.x + " y=" + this.iCameraPosition.y + " z=" + this.iCameraPosition.z);
+
     }
 
     /**
@@ -68,6 +68,10 @@ public class WorldCamera {
      */
     public void setLookAtPosition(final XYZCoordinate position){
         this.iLookAtPosition = position;
+    }
+
+    public XYZCoordinate getiLookAtPosition(){
+        return this.iLookAtPosition;
     }
 
     /**
@@ -99,5 +103,9 @@ public class WorldCamera {
      */
     public float[] getViewMatrix(){
         return this.iViewMatrix;
+    }
+
+    public XYZCoordinate getCameraPosition(){
+        return this.iCameraPosition;
     }
 }

@@ -41,7 +41,7 @@ public class MainGameSurface extends GLSurfaceView {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+//        if (event.getAction() == MotionEvent.ACTION_DOWN) {
             //System.out.println("touch on x=" + event.getX() + " y=" + event.getY());
             //final float[] someMatrix = new float[16];
             //final float ratio = 2.0f;
@@ -57,7 +57,7 @@ public class MainGameSurface extends GLSurfaceView {
 
             this.iGameRenderer.onTouch(event);
             return true;
-        }
+//        }
 
         /*if (event.getAction() == MotionEvent.ACTION_UP) {
             System.out.println("x=" + event.getX() + " y=" + event.getY());
@@ -65,7 +65,7 @@ public class MainGameSurface extends GLSurfaceView {
             return true;
         }*/
 
-        return super.onTouchEvent(event);
+//        return super.onTouchEvent(event);
     }
 
 

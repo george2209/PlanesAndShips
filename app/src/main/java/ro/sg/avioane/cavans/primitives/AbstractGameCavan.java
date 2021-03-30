@@ -10,6 +10,7 @@ import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
 import ro.sg.avioane.util.OpenGLUtils;
@@ -56,7 +57,8 @@ public abstract class AbstractGameCavan {
         if(this.iShaderType == SHADER_WITH_COLOR_PER_VERTEX)
             sb.append("  vColor = aColor;");
         sb.append("  gl_Position = vpmMatrix * vPosition;"); //set coordinates on the projection clip
-        sb.append("  gl_PointSize = 10.0;");
+        if (BuildConfig.DEBUG)
+            sb.append("  gl_PointSize = 10.0;");
         sb.append("}");
 
 

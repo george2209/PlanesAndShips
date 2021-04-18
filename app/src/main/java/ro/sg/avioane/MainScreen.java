@@ -77,6 +77,12 @@ public class MainScreen extends AppCompatActivity {
         this.iGameSurface.onPause();
     }
 
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        this.iGameSurface.onDestroy();
+    }
+
     /*
     @Override
     protected void onStop(){

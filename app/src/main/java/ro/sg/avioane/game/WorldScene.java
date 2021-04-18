@@ -1,14 +1,10 @@
 package ro.sg.avioane.game;
 
-import android.opengl.GLU;
 import android.opengl.Matrix;
 import android.view.MotionEvent;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import ro.sg.avioane.cavans.primitives.AbstractGameCavan;
-import ro.sg.avioane.util.MathGLUtils;
 
 public class WorldScene {
     //TODO: update this number once the game is ready to be released!!!!!
@@ -40,9 +36,6 @@ public class WorldScene {
         this.iGameEntities.add(entity);
     }
 
-//    public float[] getProjectionMatrix(){
-//        return this.iProjectionMatrix;
-//    }
 
 
     /**
@@ -58,19 +51,6 @@ public class WorldScene {
 
         final float ratio = (float) screenWidth / (float) screenHeight; //calculate the aspect ration on the far clip
         Matrix.frustumM(iProjectionMatrix, 0, -ratio, ratio, -1.0f, 1.0f, NEAR_CAMERA_FIELD, FAR_CAMERA_FIELD);
-
-        /*System.out.println("ratio=" + ratio + "\nProjectionMatrix:\n");
-
-        for(int i=0;i<4; i++){
-            System.out.print("[");
-            for (int j = 0; j < 4; j++) {
-                String s = "";
-                if(j!=3)
-                    s = ", ";
-                System.out.print("" + iProjectionMatrix[i*4+j] + s);
-            }
-            System.out.println("]");
-        }*/
     }
 
     public void onDraw(){
@@ -89,27 +69,27 @@ public class WorldScene {
         //TODO: draw only when camera was moved this!
         this.iCamera.onDraw();
 
-
-
-
-
-        /*Matrix.multiplyMM(this.iProjectionMatrix,
-                0,
-                this.iModelMatrix,
-                0,
-                this.iCamera.getViewMatrix(),
-                0);*/
-
         //draw all entities of the map on the projection clip
         for (final AbstractGameCavan entity: this.iGameEntities) {
             entity.draw(this.iCamera.getViewMatrix(), this.iProjectionMatrix);
         }
     }
 
+    /**
+     * process the touch events for this component.
+     * The input is the display coordinates the the calculated world-based coordinates
+     * and the touch event type (movement, click..) will be sent to the respective touch processor
+     * listener in a separate call, however on "this" caller thread, meaning no separate thread for
+     * processing & notification will be used.
+     * If you want to do the computation on a separate thread then you must be aware that you must
+     * send the resulting notification on the OpenGL thread (GUI).
+     * This method is called usually from inside the extended class of
+     * GLSurfaceView.onTouchEvent(..) method.
+     * @param e
+     * @param touchProcessor
+     */
     public void onTouch(MotionEvent e, final TouchScreenProcessor touchProcessor){
         touchProcessor.onTouch(e, this.iCamera.getViewMatrix(), this.iProjectionMatrix);
     }
-
-
 
 }

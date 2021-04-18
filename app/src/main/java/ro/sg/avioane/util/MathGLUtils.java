@@ -1,8 +1,25 @@
 package ro.sg.avioane.util;
 
 import ro.sg.avioane.BuildConfig;
+import ro.sg.avioane.geometry.XYZCoordinate;
 
 public class MathGLUtils {
+
+    /**
+     * get3DPointsDistance
+     * Used formula:
+     * D(P1, P2) = √ [(Px2 − Px1)² + (Py2 − Py1)² + (Pz2 − Pz1)²]
+     * @param p1
+     * @param p2
+     * @return the distance between two points in 3D space.
+     */
+    public static float get3DPointsDistance(final XYZCoordinate p1, final XYZCoordinate p2){
+        return (float) Math.sqrt(
+                Math.pow((p2.x() - p1.x()), 2) +
+                Math.pow((p2.y() - p1.y()), 2) +
+                Math.pow((p2.z() - p1.z()), 2)
+        );
+    }
 
     /**
      * add two matrices into a new matrix
@@ -95,5 +112,21 @@ public class MathGLUtils {
         for(int i=0; i<SIZE; i++){
             m[i] = m[i] / (float)determinant;
         }
+    }
+
+    /**
+     * This method is returning a point that is placed at a specific length from the initial point
+     * following a vector from that initial point.
+     * So if you set a point A(initialPoint) and a vector V(vector) and you want to know what is
+     * the point coordinate at a specific length L(length) from A going the V path then this will be
+     * returned here.
+     * @param vector
+     * @param initialPoint
+     * @param length
+     * @return
+     */
+    public static float[] getPointOnVector(float[] vector, final float[] initialPoint, final float length) {
+        final float[] pointOnVector = MathGLUtils.matrixMultiplyWithValue(vector, length);
+        return MathGLUtils.matrixAddMatrix(initialPoint, pointOnVector);
     }
 }

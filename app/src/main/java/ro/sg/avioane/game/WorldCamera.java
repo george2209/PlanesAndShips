@@ -36,16 +36,16 @@ public class WorldCamera {
     public void doMoveCamera(final float x, final float y){
         final float ratio = 0.1f;
         if(x < this.screenWidth / 4.0f){
-            this.iCameraPosition.x -= ratio;
+            this.iCameraPosition.setX(this.iCameraPosition.x() - ratio);
             //this.iLookAtPosition.x -= ratio;
         } else if(x > this.screenWidth*3.0f / 4.0f){
-            this.iCameraPosition.x += ratio;
+            this.iCameraPosition.setX(this.iCameraPosition.x() + ratio);
             //this.iLookAtPosition.x += ratio;
         } else if(y < this.screenHeight / 3.0f){
-            this.iCameraPosition.z -= ratio;
+            this.iCameraPosition.setZ(this.iCameraPosition.z() - ratio);
             //this.iLookAtPosition.z -= ratio;
         } else if(y > this.screenHeight*2.0f / 3.0f){
-            this.iCameraPosition.z += ratio;
+            this.iCameraPosition.setZ(this.iCameraPosition.z() + ratio);
             //this.iLookAtPosition.z += ratio;
         }
     }
@@ -57,8 +57,15 @@ public class WorldCamera {
      */
     public void setCameraPosition(final XYZCoordinate cameraPosition){
         this.iCameraPosition = cameraPosition;
-        System.out.println("new camera position x=" + this.iCameraPosition.x + " y=" + this.iCameraPosition.y + " z=" + this.iCameraPosition.z);
+        //System.out.println("new camera position x=" + this.iCameraPosition.x + " y=" + this.iCameraPosition.y + " z=" + this.iCameraPosition.z);
+    }
 
+    /**
+     *
+     * @return the camera position x,y,z coordinates
+     */
+    public XYZCoordinate getCameraPosition(){
+        return this.iCameraPosition;
     }
 
     /**
@@ -91,9 +98,9 @@ public class WorldCamera {
     public void onDraw(){
         //System.out.println("Camera position: x=" + this.iCameraPosition.x + " y=" + this.iCameraPosition.y + " z=" + this.iCameraPosition.z);
         Matrix.setIdentityM(iViewMatrix,0);
-        Matrix.setLookAtM(this.iViewMatrix, 0, iCameraPosition.x, iCameraPosition.y, iCameraPosition.z,
-                iLookAtPosition.x, iLookAtPosition.y, iLookAtPosition.z,
-                iCameraUpPosition.x, iCameraUpPosition.y, iCameraUpPosition.z);
+        Matrix.setLookAtM(this.iViewMatrix, 0, iCameraPosition.x(), iCameraPosition.y(), iCameraPosition.z(),
+                iLookAtPosition.x(), iLookAtPosition.y(), iLookAtPosition.z(),
+                iCameraUpPosition.x(), iCameraUpPosition.y(), iCameraUpPosition.z());
 
     }
 
@@ -105,7 +112,5 @@ public class WorldCamera {
         return this.iViewMatrix;
     }
 
-    public XYZCoordinate getCameraPosition(){
-        return this.iCameraPosition;
-    }
+
 }

@@ -40,32 +40,15 @@ public class MainGameSurface extends GLSurfaceView {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+         this.iGameRenderer.onTouch(event);
+         return true;
+    }
 
-//        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            //System.out.println("touch on x=" + event.getX() + " y=" + event.getY());
-            //final float[] someMatrix = new float[16];
-            //final float ratio = 2.0f;
-            //Matrix.setIdentityM(someMatrix, 0);
-            //Matrix.frustumM(someMatrix, 0, -ratio, ratio, -1.0f, 1.0f, 0.1f, 10.0f);
-//            for(int i=0; i<4; i++){
-//                for(int j=0; j<4; j++){
-//                    System.out.print(someMatrix[i*4 + j] + ",");
-//                }
-//                System.out.println("\n");
-//            }
-
-
-            this.iGameRenderer.onTouch(event);
-            return true;
-//        }
-
-        /*if (event.getAction() == MotionEvent.ACTION_UP) {
-            System.out.println("x=" + event.getX() + " y=" + event.getY());
-            this.iGameRenderer.getCamera().moveCameraUp(10.0f);
-            return true;
-        }*/
-
-//        return super.onTouchEvent(event);
+    /**
+     * destroy all the components owned by this renderer
+     */
+    protected void onDestroy(){
+        this.iGameRenderer.onDestroy();
     }
 
 

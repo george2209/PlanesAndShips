@@ -8,5 +8,6 @@ package ro.sg.avioane.game;
 
 public interface TouchScreenListener {
     public void fireMovement(final float xPercent, final float zPercent);
-    public void fireTouchClick(final float x, final float y);
+    public void fireTouchClick(final float[] clickVector);
+    public void fireZoom(final float zoomingFactor);
 }

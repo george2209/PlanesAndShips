@@ -41,8 +41,8 @@ public class Line extends AbstractGameCavan{
      */
     public void updateCoordinates(final XYZCoordinate start, final XYZCoordinate end){
         System.out.println("\nupdateCoordinates on line:");
-        System.out.println("\nstart: x=" + start.x + " y=" + start.y + " z=" + start.z);
-        System.out.println("\nend: x=" + end.x + " y=" + end.y + " z=" + end.z);
+        System.out.println("\nstart: x=" + start.x() + " y=" + start.y() + " z=" + start.z());
+        System.out.println("\nend: x=" + end.x() + " y=" + end.y() + " z=" + end.z());
         this.iStart = start;
         this.iEnd = end;
         this.iIsDirty = true;

@@ -22,7 +22,7 @@ import ro.sg.avioane.util.MathGLUtils;
 public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenListener {
 
     //put here some object for test:
-    private GameTerrain iGameTerrian = null;
+    private GameTerrain iGamePlane = null;
 
     //private XYZPoint iPoint = null;
     private XYZAxis iWorldAxis = null;
@@ -50,7 +50,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 
         /*{
             final XYZCoordinate coordinate = new XYZCoordinate(1.0f, 0.0f, 0.0f);
-            coordinate.color = new XYZColor(1.0f, 1.0f, 1.0f, 1.0f);
+            coordinate.color = new XYZColor(1.0f, 1.0f, 1.0f, 0.0f);
             this.iPoint = new XYZPoint(coordinate);
             this.iCamera.setLookAtPosition(coordinate);
         }
@@ -60,13 +60,13 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         this.iMovingLine = new Line(
                 new XYZCoordinate(0, 0, 0),
                 new XYZCoordinate(5, 5, 5),
-                new XYZColor(0.5f,0.5f,0.5f,1)
+                new XYZColor(1.0f,1.0f,1.0f,1.0f) //white = 1,1,1,1
         );
         this.iWorld.add(this.iMovingLine);
 
 
-        this.iGameTerrian = new GameTerrain(100,50);
-        this.iWorld.add(this.iGameTerrian);
+        this.iGamePlane = new GameTerrain(2,2);
+        this.iWorld.add(this.iGamePlane);
     }
 
 
@@ -101,81 +101,58 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 
     public void onTouch(MotionEvent e) {
         this.iWorld.onTouch(e, this.iTouchProcessor);
-
-
-//        final float x = e.getX();
-//        final float y = e.getY();
-//
-//        System.out.println("event type:" + e.getAction());
-//
-//        if(e.getAction() == MotionEvent.ACTION_MOVE){
-//
-//        }
-
-//        if(wasLine) {
-//            this.iCamera.doMoveCamera(x, y);
-//        } else {
-//
-//            final float[] touchedVector = this.iWorld.onTouch(e);
-//
-//            System.out.println("\n\n--------touchedVector:--------------\n\n");
-//
-//
-//
-//            final XYZCoordinate cameraPosition = this.iCamera.getCameraPosition();
-//            final float[] cameraPositionArr = cameraPosition.asArray();
-//            final float[] p1 = cameraPositionArr;//getPointOnVector(touchedVector, cameraPositionArr, 0.0f);
-//            final float[] p2 = getPointOnVector(touchedVector, cameraPositionArr, 10.0f);
-//
-//            System.out.println("\n\n--------touchedVector END:--------------\n\n");
-//
-//
-//
-//            this.iMovingLine.updateCoordinates(
-//                    new XYZCoordinate(p1),
-//                    new XYZCoordinate(p2)
-//            );
-//            wasLine = true;
-//        }
-
-
     }
 
-    private float[] getPointOnVector(float[] vector, final float[] camera, float length) {
-        final float[] pointOnVector = MathGLUtils.matrixMultiplyWithValue(vector, length);
-        return MathGLUtils.matrixAddMatrix(camera, pointOnVector);
-    }
 
     @Override
     public void fireMovement(float xPercent, float zPercent) {
         final XYZCoordinate cameraPosition = this.iCamera.getCameraPosition();
-        final float ratio = 2.0f * (float) this.iScreenWidth / (float) this.iScreenHeight;
+        final float ratio = TouchScreenProcessor.TOUCH_MOVEMENT_ACCELERATION_FACTOR * (float) this.iScreenWidth / (float) this.iScreenHeight;
 
         //System.out.println("xPercent=" + xPercent + " zPercent=" + zPercent);
-        cameraPosition.x -= (ratio/100.0f) * xPercent * 2.0f;
-        cameraPosition.z -= (ratio/100.0f) * zPercent;
+        cameraPosition.setX( cameraPosition.x() - (ratio/100.0f) * xPercent * 2.0f) ;
+        cameraPosition.setZ( cameraPosition.z() - (ratio/100.0f) * zPercent );
         this.iCamera.setCameraPosition(cameraPosition);
 
         final XYZCoordinate lookAtPosition = this.iCamera.getiLookAtPosition();
-        lookAtPosition.x -= (ratio/100.0f) * xPercent * 2.0f;
-        lookAtPosition.z -= (ratio/100.0f) * zPercent;
+        lookAtPosition.setX( lookAtPosition.x() - (ratio/100.0f) * xPercent * 2.0f );
+        lookAtPosition.setZ( lookAtPosition.z() - (ratio/100.0f) * zPercent );
         this.iCamera.setLookAtPosition(lookAtPosition);
 
     }
 
     @Override
-    public void fireTouchClick(float x, float y) {
+    public void fireTouchClick(final float[] clickVector) {
+        final float[] p1 = this.iCamera.getCameraPosition().asArray();
+        final float[] p2 = MathGLUtils.getPointOnVector(clickVector, p1, 50.0f);
+
+        this.iMovingLine.updateCoordinates(
+                    new XYZCoordinate(p1),
+                    new XYZCoordinate(p2)
+        );
+
+        this.iGamePlane.processClickOnObject(this.iCamera.getCameraPosition(), new XYZCoordinate(clickVector));
 
     }
 
-//    private void tmpComputeIntoWorldCoordinates(final float x, final float y){
-//        float xOrigin = (float)this.iScreenWidth / 2.0f;
-//        float yOrigin = (float)this.iScreenHeight / 2.0f;
-//
-//        float newX = (x - xOrigin) / xOrigin;
-//        float newY = (y - yOrigin) / yOrigin;
-//
-//        System.out.println("newX=" + newX + " newY=" + newY);
-//    }
+    /**
+     *
+     * @param zoomingFactor the zoom factor in percent as real subunit number in range [0..1]
+     */
+    @Override
+    public void fireZoom(float zoomingFactor) {
+        System.out.println("ZOOM FACTOR=" + zoomingFactor);
+        final XYZCoordinate cameraPosition = this.iCamera.getCameraPosition();
+        cameraPosition.setY(cameraPosition.y()*(1-zoomingFactor));
+        this.iCamera.setCameraPosition(cameraPosition);
+    }
+
+    /**
+     * destroy all the components owned by this renderer
+     */
+    protected void onDestroy(){
+        this.iGamePlane.onDestroy();
+
+    }
 
 }

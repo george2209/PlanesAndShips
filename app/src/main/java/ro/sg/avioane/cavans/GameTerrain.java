@@ -40,13 +40,19 @@ public class GameTerrain extends AbstractGameCavan {
     private final int iMapWidthX; //tiles number on X
     private final int iMapLengthZ; //tiles number on Z
 
+    private boolean iIsDirty = false;
+
+    private int iClickedTileIndex = -1;
+
     /**
      *
-     * @param width as number of tiles
-     * @param length as number of tiles
+     * @param width as number of tiles. It must be an even number!
+     * @param length as number of tiles. It must be an even number!
      */
     public GameTerrain(final int width, final int length) {
-        if (BuildConfig.DEBUG && (width < 1 || length < 1 || width > MAX_TILES_NO || length > MAX_TILES_NO)) {
+        if (BuildConfig.DEBUG &&
+                (width < 1 || length < 1 || width > MAX_TILES_NO || length > MAX_TILES_NO
+                || width%2 != 0 || length%2 != 0  )) {
             throw new AssertionError(
                     new StringBuilder("Assertion failed width=")
                             .append(width).append(" length")
@@ -82,53 +88,55 @@ public class GameTerrain extends AbstractGameCavan {
      * @return an array with all coordinates fixed
      */
     private XYZCoordinate[] buildCoordinates(){
-        final XYZColor red = new XYZColor(1.0f,0.0f,0.0f,0.0f);
-        final XYZColor green = new XYZColor(0.1f,1.0f,0.3f,0.0f);
-        final XYZColor blue = new XYZColor(0.1f,0.2f,1.0f,0.0f);
+        final XYZColor red = new XYZColor(1.0f,0.0f,0.0f,1.0f);
+        final XYZColor green = new XYZColor(0.1f,1.0f,0.3f,1.0f);
+        final XYZColor blue = new XYZColor(0.1f,0.2f,1.0f,1.0f);
         int index = 0;
 
-        int xxx = 0;
+//        int tmpTileNo = 0;
 
-        for (int j = this.iMapLengthZ/2; j > -this.iMapLengthZ/2; j--) {
+        for (int j = -this.iMapLengthZ/2; j < this.iMapLengthZ/2; j++) {
             for (int i = -this.iMapWidthX/2; i < this.iMapWidthX/2; i++) {
                 XYZColor tmpColor = null;
-                if(i%2==0)
+                final int colorCode = (i + (j+1));
+                if(colorCode%2==0)
                     tmpColor = green;
+                else if(colorCode%3==0)
+                    tmpColor = blue;
                 else
                     tmpColor = red;
 
-
+//                System.out.println("tile no=" + (tmpTileNo)); tmpTileNo++;
                 final XYZCoordinate leftUp = new XYZCoordinate(i*TILE_LENGTH, 0.0f, j*TILE_LENGTH);
-                final XYZCoordinate[] arr = getSquareCoordinates(leftUp, tmpColor);
-                System.out.println("array:" + xxx); xxx++;
-                for(int k=0; k<arr.length; k++) {
-                    System.out.println("\tx=" + arr[k].x() + "\tz=" + arr[k].z() );
-                    this.iArrVertices[index++] = arr[k];
-                }
+                this.getSquareCoordinates(leftUp, tmpColor, index);
+                index+=4;
+//                for (int k = index-4; k < index; k++) {
+//                    System.out.println("\t" + this.iArrVertices[k].x() + " " + this.iArrVertices[k].y() + " " + this.iArrVertices[k].z() );
+//                }
             }
         }
         return this.iArrVertices;
     }
 
     /**
-     * TODO: will be refactored and optimised later....
      * @param leftUp
      * @param color
-     * @return
      */
-    private XYZCoordinate[] getSquareCoordinates(XYZCoordinate leftUp,  final XYZColor color){
-        final XYZCoordinate[] arr = new XYZCoordinate[4];
-        arr[0] = leftUp;
-        arr[1] = new XYZCoordinate(leftUp.x(), leftUp.y(), leftUp.z() - TILE_LENGTH);
-        arr[2] = new XYZCoordinate(leftUp.x() + TILE_LENGTH, leftUp.y(), leftUp.z());
-        arr[3] = new XYZCoordinate(leftUp.x() + TILE_LENGTH, leftUp.y(), leftUp.z() - TILE_LENGTH);
+    private void getSquareCoordinates(XYZCoordinate leftUp,  final XYZColor color, int index){
 
-        arr[0].color = color;
-        arr[1].color = color;
-        arr[2].color = color;
-        arr[3].color = color;
+        this.iArrVertices[index] = leftUp;
+        this.iArrVertices[index++].color = color;
 
-        return arr;
+
+        this.iArrVertices[index] = new XYZCoordinate(leftUp.x(), leftUp.y(), leftUp.z() + TILE_LENGTH);
+        this.iArrVertices[index++].color = color;
+
+
+        this.iArrVertices[index] = new XYZCoordinate(leftUp.x() + TILE_LENGTH, leftUp.y(), leftUp.z());
+        this.iArrVertices[index++].color = color;
+
+        this.iArrVertices[index] = new XYZCoordinate(leftUp.x() + TILE_LENGTH, leftUp.y(), leftUp.z() + TILE_LENGTH);
+        this.iArrVertices[index++].color = color;
     }
 
     /**
@@ -162,126 +170,29 @@ public class GameTerrain extends AbstractGameCavan {
             }
         }
 
-        System.out.println("INDEX ARRAY:\n\n");
-        index = 0;
-        for (short i = 0; i < this.iMapLengthZ; i++) {
-            System.out.println("\n----\n");
-            for (short j = 0; j < this.iMapWidthX * 6; j++) {
-                    System.out.print(arr[index++] + ", ");
-            }
-        }
-
-        System.out.println("\n\nINDEX ARRAY: arr=" + arr.length + "=" + (index));
+//        System.out.println("INDEX ARRAY:\n\n");
+//        index = 0;
+//        for (short i = 0; i < this.iMapLengthZ; i++) {
+//            System.out.println("\n----\n");
+//            for (short j = 0; j < this.iMapWidthX * 6; j++) {
+//                    System.out.print(arr[index++] + ", ");
+//            }
+//        }
+//
+//        System.out.println("\n\nINDEX ARRAY: arr=" + arr.length + "=" + (index));
 
         return arr;
     }
-    
 
-    /**
-     * the way the map is arranged is from top-down and left to the right.
-     * @param width as number of tiles
-     * @param length as number of tiles
-     * @return an array with all coordinates fixed
-     */
-//    private XYZCoordinate[] buildCoordinates(final int width, final int length){
-//
-//        final XYZColor red = new XYZColor(1.0f,0.0f,0.0f,0.0f);
-//        final XYZColor green = new XYZColor(0.1f,1.0f,0.3f,0.0f);
-//        final XYZColor blue = new XYZColor(0.1f,0.2f,1.0f,0.0f);
-//        XYZColor currColor = red;
-//
-//        int index = 0;
-//        final float widthReference = 0-((float)width/2.0f);
-//        final float lengthReference = ((float)length/2.0f);
-//
-//        this.iLowestYTerrainPoint = 0.0f;
-//
-//        System.out.println("\n");
-//        for(int i=length; i>=0; i--){
-//            for (int j = 0; j < width+1; j++) {
-//                System.out.println("\nTile no: " + index);
-//                iArrVertices[index] = new XYZCoordinate();
-//                iArrVertices[index].setX(widthReference + j * TILE_LENGTH);
-//                //if(i==length || i<=1)
-//                    iArrVertices[index].setY(0.0f);
-//                //else{
-//                //    final Random r = new Random();
-//                //    iArrVertices[index].y = r.nextFloat();
-//                //}
-//                //update iLowestYTerrainPoint = min(..)!!!!
-//                iArrVertices[index].setZ((i * TILE_LENGTH) - lengthReference);
-//
-////                if(currColor.equals(red))
-////                    currColor = green;
-////                else if(currColor.equals(green))
-////                    currColor = blue;
-////                else if(currColor.equals(blue))
-////                    currColor = red;
-////                else
-////                    throw  new RuntimeException("unknown color");
-//
-//                iArrVertices[index].color = currColor;
-//
-//                System.out.println("XYZCoordinate[" + iArrVertices[index].x() + ", " +
-//                        iArrVertices[index].y() + ", " +
-//                        iArrVertices[index].z() + "]");
-//                index++;
-//            }
-//        }
-//        return iArrVertices;
-//    }
 
-    /**
-     *
-     * @return the array of indexes
-     */
-//    private short[] buildIndexes(){
-//        final short[] indexOrder = new short[]{0, 2, 1, 3, /*degeneration*/3, 2, 2, 4, 3, 5};
-//        return indexOrder;
-//    }
-
-//    private short[] buildIndexDrawOrder(final int width, final int length) {
-//        if (BuildConfig.DEBUG && (width < 1 || length < 1 || width > MAX_TILES_NO || length > MAX_TILES_NO)) {
-//            throw new AssertionError(
-//                    new StringBuilder("Assertion failed width=")
-//                            .append(width).append(" length")
-//                            .append(length).toString());
-//        }
-//
-//        final int size = (4+2*(width-1)) * length + (length-1)*2;
-//        final short[] indexOrder = new short[size];
-//
-//        int index = 0;
-//        for(short le=0; le<length; le++){
-//            for (short wi=0; wi<=width; wi++){
-//                indexOrder[index] = (short) (wi + (le*(width+1)));
-//                index++;
-//                indexOrder[index] = (short) (wi + ((le+1)*(width+1)));
-//                index++;
-//            }
-//            if(le < length-1){
-//                indexOrder[index] = (short) (width + ((le+1)*(width+1)));
-//                index++;
-//                indexOrder[index] = (short) (0 + ((le+1)*(width+1)));
-//                index++;
-//            }
-//        }
-//
-//
-//        System.out.println("\nbuildIndexDrawOrder:\n");
-//        for(short le=0; le<indexOrder.length; le++){
-//            if(le<indexOrder.length-1){
-//                System.out.print( indexOrder[le] + ", ");
-//            } else {
-//                System.out.print( indexOrder[le] + "\n");
-//            }
-//        }
-//
-//        return indexOrder;
-//    }
 
     @Override
     public void draw(final float[] viewMatrix, final float[] projectionMatrix) {
+        if(this.iIsDirty){
+            super.buildVertexBuffer(this.iArrVertices);
+            this.iIsDirty = false;
+        }
+
         super.doDraw(viewMatrix, projectionMatrix, GL10.GL_TRIANGLES);
     }
 
@@ -326,6 +237,75 @@ public class GameTerrain extends AbstractGameCavan {
 
         final float a[] = MathGLUtils.getPointOnVector(vector.asArray(), startingPoint.asArray(), ca);
 
-        System.out.printf("CLICK ON MAP x=%.2f y=%.2f z=%.2f", a[0], a[1], a[2]);
+        System.out.printf("CLICK ON MAP x=%.2f y=%.2f z=%.2f\n\n", a[0], a[1], a[2]);
+        //System.out.println("searching tile on map: ");
+        this.searchTile(new XYZCoordinate(a));
+    }
+
+    private void searchTile(final XYZCoordinate tileCoordinate){
+        //check if x is inside the map range.
+        if(this.iArrVertices[0].x() > tileCoordinate.x() ||
+                this.iArrVertices[this.iArrVertices.length-1].x() < tileCoordinate.x()){
+            System.out.println("IGNORED: X is out of the map range:" + tileCoordinate.x());
+        } else if(this.iArrVertices[0].z() > tileCoordinate.z() ||
+                this.iArrVertices[this.iArrVertices.length-1].z() < tileCoordinate.z()) {
+            System.out.println("IGNORED: Z is out of the map range:" + tileCoordinate.z() + "  this.iArrVertices[0].z()=" + this.iArrVertices[0].z() + "  this.iArrVertices[this.iArrVertices.length-1].z()=" +
+                    this.iArrVertices[this.iArrVertices.length-1].z());
+        } else {
+            //do a binary search on X
+            int xTile = -1;
+            int left = 0;
+            int right = this.iMapWidthX - 1;
+            int pivot = -1;
+
+//            System.out.println("pivot: [");
+            while (left <= right) {
+                pivot = left + (right - left) / 2;
+                final int index = pivot * 4;
+//                System.out.print(pivot + ", ");
+                if(this.iArrVertices[index].x() <= tileCoordinate.x() &&
+                        this.iArrVertices[index + 2].x() >= tileCoordinate.x()){
+//                    System.out.println("X TILE POSITION FOUND!");
+                    break;
+                } else if (this.iArrVertices[index + 2].x() < tileCoordinate.x()) {
+                    left = pivot + 1;
+                } else {
+                    right = pivot - 1;
+                }
+            }
+//            System.out.println("]\n");
+            xTile = pivot;
+
+
+
+            //do a binary search on Z
+            left = 0;
+            right = this.iMapLengthZ - 1;
+            int finalIndex = -1;
+
+            while (left <= right) {
+                pivot = left + (right - left) / 2;
+                final int index = (pivot * this.iMapWidthX + xTile)*4;
+
+                if(this.iArrVertices[index].z() <= tileCoordinate.z() &&
+                        this.iArrVertices[index + 1].z() >= tileCoordinate.z()){
+                    System.out.println("Z TILE POSITION FOUND at square no="
+                            + (pivot * this.iMapWidthX + xTile) + " " +
+                            "at index=" + index);
+                    finalIndex = index;
+                    break;
+                } else if (this.iArrVertices[index].z() < tileCoordinate.z()) {
+                    left = pivot + 1;
+                } else {
+                    right = pivot - 1;
+                }
+            }
+
+            for (int i = 0; i < 4; i++) {
+                this.iArrVertices[i+finalIndex].color = new XYZColor(0.5f, 0.5f, 0.5f, 1.0f);
+            }
+
+            this.iIsDirty = true;
+        }
     }
 }

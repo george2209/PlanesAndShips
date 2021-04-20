@@ -60,12 +60,12 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         this.iMovingLine = new Line(
                 new XYZCoordinate(0, 0, 0),
                 new XYZCoordinate(5, 5, 5),
-                new XYZColor(1.0f,1.0f,1.0f,1.0f) //white = 1,1,1,1
+                new XYZColor(0.9f,0.9f,0.9f,1.0f) //white = 1,1,1,1
         );
         this.iWorld.add(this.iMovingLine);
 
 
-        this.iGamePlane = new GameTerrain(2,2);
+        this.iGamePlane = new GameTerrain(10,20);
         this.iWorld.add(this.iGamePlane);
     }
 
@@ -126,9 +126,14 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         final float[] p1 = this.iCamera.getCameraPosition().asArray();
         final float[] p2 = MathGLUtils.getPointOnVector(clickVector, p1, 50.0f);
 
+        final XYZCoordinate p1Line = new XYZCoordinate(p1);
+        final XYZCoordinate p2Line = new XYZCoordinate(p2);
+        p1Line.color = new XYZColor(1.0f, 0 , 0.0f, 1);
+        p2Line.color = new XYZColor(1.0f, 0 , 0.0f, 1);
+
         this.iMovingLine.updateCoordinates(
-                    new XYZCoordinate(p1),
-                    new XYZCoordinate(p2)
+                    p1Line,
+                    p2Line
         );
 
         this.iGamePlane.processClickOnObject(this.iCamera.getCameraPosition(), new XYZCoordinate(clickVector));

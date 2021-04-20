@@ -59,8 +59,8 @@ public abstract class AbstractGameCavan {
         if(this.iShaderType == SHADER_COLOR_TYPE.E_SHADER_WITH_COLOR_PER_VERTEX)
             sb.append("  vColor = aColor;");
         sb.append("  gl_Position = vpmMatrix * vPosition;"); //set coordinates on the projection clip
-        if (BuildConfig.DEBUG)
-            sb.append("  gl_PointSize = 10.0;");
+//        if (BuildConfig.DEBUG)
+//            sb.append("  gl_PointSize = 10.0;");
         sb.append("}");
 
 
@@ -104,6 +104,8 @@ public abstract class AbstractGameCavan {
             if(this.iDrawOrderBufferIdx != -1){
                 buffers[0] = this.iDrawOrderBufferIdx;
                 GLES20.glDeleteBuffers(1, buffers, 0);
+                buffers[0] = -1;
+                this.iDrawOrderBufferIdx = -1;
             }
 
             GLES20.glGenBuffers(1, buffers, 0);
@@ -126,10 +128,10 @@ public abstract class AbstractGameCavan {
     protected void buildVertexBuffer(XYZCoordinate[] coordinates) {
         //check if the color is inside each vertex by checking the first vertex
         boolean isColorPerVertex = coordinates[0].color != null;
-        int vertexStride = 3;
+        int vertexStride = 3; // X, Y, Z, --> 0, 1, 2
 
         if(isColorPerVertex){
-            // X, Y, Z, --> 0, 1 , 2,
+            // X, Y, Z, --> 0, 1, 2,
             // R, G, B, A --> 3, 4, 5, 6
             vertexStride = 7;
         }
@@ -174,10 +176,14 @@ public abstract class AbstractGameCavan {
                 buffers[0] = this.iVertexBufferIdx;
                 GLES20.glDeleteBuffers(1, buffers, 0);
                 isShaderAlreadyBuild = true;
+                this.iVertexBufferIdx = -1;
+                buffers[0] = -1;
             }
 
             GLES20.glGenBuffers(1, buffers, 0);
             GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0]);
+
+            int cap = vertexBuffer.capacity() * BYTES_PER_FLOAT;
 
             GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, vertexBuffer.capacity() * BYTES_PER_FLOAT, vertexBuffer, GLES20.GL_STATIC_DRAW);
             GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
@@ -254,7 +260,7 @@ public abstract class AbstractGameCavan {
         //this.iDrawOrderBuffer.position(0);
 
         // counterclockwise orientation of the ordered vertices
-        GLES20.glFrontFace(GL10.GL_CCW);
+        //GLES20.glFrontFace(GL10.GL_CCW);
         // Enable face culling.
         //GLES20.glEnable(GL10.GL_CULL_FACE); //--> make sure is disabled at clean up!
         // What faces to remove with the face culling.

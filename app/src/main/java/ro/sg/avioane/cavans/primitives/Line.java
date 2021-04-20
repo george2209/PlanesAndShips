@@ -18,18 +18,20 @@ public class Line extends AbstractGameCavan{
     private boolean iIsDirty = false;
 
     public Line(final XYZCoordinate start, final XYZCoordinate end){
-        super.iColor = new XYZColor(0.0f, 0.5f, 1.0f, 0.5f);
-        this.buildLine(start, end);
+        this.buildLine(start, end,  new XYZColor(0.0f, 0.5f, 1.0f, 0.5f));
     }
 
     public Line(final XYZCoordinate start, final XYZCoordinate end, final XYZColor color){
-        super.iColor = color;
-        this.buildLine(start, end);
+        this.buildLine(start, end, color);
     }
 
-    private void buildLine(final XYZCoordinate start, final XYZCoordinate end){
+    private void buildLine(final XYZCoordinate start, final XYZCoordinate end, final XYZColor color){
         super.buildDrawOrderBuffer(this.buildIndexes());
-        super.buildVertexBuffer(this.buildCoordinates(start, end));
+        final XYZCoordinate[] lineCoordinatesArr =  this.buildCoordinates(start, end);
+        for (int i = 0; i < lineCoordinatesArr.length ; i++) {
+            lineCoordinatesArr[i].color = color;
+        }
+        super.buildVertexBuffer(lineCoordinatesArr);
         super.compileGLSL();
     }
 

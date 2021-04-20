@@ -86,7 +86,7 @@ public class TouchScreenProcessor {
     }
 
     public void onTouch(MotionEvent e, final float[] viewMatrix, final float[] projectionMatrix){
-        System.out.println("MotionEvent=" + MotionEvent.actionToString(e.getActionMasked()));
+        //System.out.println("MotionEvent=" + MotionEvent.actionToString(e.getActionMasked()));
         switch(e.getActionMasked()){
             case MotionEvent.ACTION_DOWN: {
                 if (BuildConfig.DEBUG &&

@@ -1,13 +1,14 @@
+/*
+ * Copyright (c) 2021.
+ * By using this source code from this project/file you agree with the therms listed at
+ * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
+ */
+
 package ro.sg.avioane;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
-import android.opengl.Matrix;
-import android.os.health.SystemHealthManager;
 import android.view.MotionEvent;
-
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
 
 public class MainGameSurface extends GLSurfaceView {
 
@@ -18,9 +19,11 @@ public class MainGameSurface extends GLSurfaceView {
 
         // Create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2);
+
+        //not preserved anymore...save some GPU resources.
         super.setPreserveEGLContextOnPause(true);
 
-        this.iGameRenderer = new MainGameRenderer();
+        this.iGameRenderer = new MainGameRenderer(context);
         /*super.setEGLConfigChooser((egl, display) -> {
             // Ensure that we get a 16bit framebuffer.
             int[] attributes = new int[]{EGL10.EGL_DEPTH_SIZE, 16, EGL10.EGL_NONE};
@@ -38,18 +41,17 @@ public class MainGameSurface extends GLSurfaceView {
 
     }
 
+
+
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
          this.iGameRenderer.onTouch(event);
          return true;
     }
 
-    /**
-     * destroy all the components owned by this renderer
-     */
-    protected void onDestroy(){
-        this.iGameRenderer.onDestroy();
+    @Override
+    public void onPause(){
+        super.onPause();
     }
-
-
 }

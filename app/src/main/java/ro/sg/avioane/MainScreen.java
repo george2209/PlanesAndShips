@@ -1,21 +1,23 @@
+/*
+ * Copyright (c) 2021.
+ * By using this source code from this project/file you agree with the therms listed at
+ * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
+ */
+
 package ro.sg.avioane;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.view.MotionEvent;
-import android.view.Window;
 import android.view.WindowManager;
 
 import java.util.Objects;
 
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
-
+import ro.sg.avioane.util.OpenGLProgramUtils;
 import ro.sg.avioane.util.OpenGLUtils;
+import ro.sg.avioane.util.TextureUtils;
 
 public class MainScreen extends AppCompatActivity {
 
@@ -32,6 +34,8 @@ public class MainScreen extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        System.out.println("onCreate");
+
         this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //remove the status and battery.
         //this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -39,7 +43,13 @@ public class MainScreen extends AppCompatActivity {
 
         //Remove title bar
         //this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        Objects.requireNonNull(this.getSupportActionBar()).hide();
+        try {
+            Objects.requireNonNull(this.getSupportActionBar()).hide();
+        }catch (NullPointerException npe){
+            System.out.println("Warning: null ActionBar detected. App will run with ActionBar not " +
+                    "hidden. Stacktrace:");
+            npe.printStackTrace();
+        }
 
         final ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         if (OpenGLUtils.isOpenGL2Supported(activityManager))
@@ -60,34 +70,56 @@ public class MainScreen extends AppCompatActivity {
         } else {
             //TODO: make a layout frame where you display the non-supported message.
             //TBD if this part is really needed as the App shall be not installed from the
-            //Market on a non-compatible device.
-            //return;
+            //Market on a non-compatible device. Needed?
+
+            throw new UnsupportedOperationException("wrong GLES version!");
         }
     }
 
-    @Override
-    protected void onResume(){
-        super.onResume();
-        this.iGameSurface.onResume();
-    }
+//    @Override
+//    protected void onResume(){
+//        System.out.println("onResume");
+//        super.onResume();
+//    }
+
+//    @Override
+//    protected void onPause(){
+//        System.out.println("onPause");
+//        super.onPause();
+//    }
 
     @Override
-    protected void onPause(){
-        super.onPause();
-        this.iGameSurface.onPause();
+    protected void onStart() {
+        System.out.println("onStart");
+        super.onStart();
+        if(this.iGameSurface != null) {
+            this.iGameSurface.onResume();
+        }
     }
 
-    @Override
-    protected void onDestroy(){
-        super.onDestroy();
-        this.iGameSurface.onDestroy();
-    }
 
-    /*
     @Override
     protected void onStop(){
+        System.out.println("onStop");
+        if(this.iGameSurface != null)
+            this.iGameSurface.onPause();
         super.onStop();
-    }*/
+    }
+
+    @Override
+    protected void onDestroy() {
+        System.out.println("onDestroy!!!");
+        OpenGLProgramUtils.killInstance();
+        TextureUtils.killInstance();
+        this.iGameSurface = null;
+        super.onDestroy();
+    }
+
+    //    @Override
+//    protected void onRestart() {
+//        System.out.println("onRestart");
+//        super.onRestart();
+//    }
 
     /*private void loadTextures(){
         if(!MainScreen.isTexturesLoaded){

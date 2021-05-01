@@ -6,6 +6,8 @@
 
 package ro.sg.avioane.util;
 
+import android.opengl.GLES20;
+
 import ro.sg.avioane.BuildConfig;
 
 public class DebugUtils {
@@ -39,6 +41,25 @@ public class DebugUtils {
             if(j==vector.length-1)
                 separator = "\n";
             System.out.print(vector[j] + separator);
+        }
+    }
+
+    public static void checkPrintGLError(){
+        if(BuildConfig.DEBUG){
+            int err = GLES20.glGetError();
+            String error = "";
+            while(err != GLES20.GL_NO_ERROR){
+                switch (err){
+                    case GLES20.GL_INVALID_ENUM:                  error = "INVALID_ENUM"; break;
+                    case GLES20.GL_INVALID_VALUE:                 error = "INVALID_VALUE"; break;
+                    case GLES20.GL_INVALID_OPERATION:             error = "INVALID_OPERATION"; break;
+                    case GLES20.GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
+                    case GLES20.GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
+                }
+                System.out.println("ERROR!!!! -------- > checkPrintGLError:: " + error );
+                err = GLES20.glGetError();
+                error = "";
+            }
         }
     }
 }

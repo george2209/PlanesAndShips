@@ -1,10 +1,21 @@
+/*
+ * Copyright (c) 2021.
+ * By using this source code from this project/file you agree with the therms listed at
+ * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
+ */
+
 package ro.sg.avioane.cavans.primitives;
 
+import javax.microedition.khronos.opengles.GL10;
+
 import ro.sg.avioane.geometry.XYZCoordinate;
+import ro.sg.avioane.geometry.XYZVertex;
+import ro.sg.avioane.geometry.XYZTexture;
+import ro.sg.avioane.util.MathGLUtils;
 
 public class Square extends AbstractGameCavan{
 
-    private final XYZCoordinate iUpperLeftCoordinate;
+    private final XYZVertex iUpperLeftCoordinate;
     private final float iEdgeSize;
 
     /**
@@ -12,18 +23,96 @@ public class Square extends AbstractGameCavan{
      * @param upperLeftCoordinate the x,y,z coordinate
      * @param edgeSize size from (0.0 to 1.0]
      */
-    public Square(final XYZCoordinate upperLeftCoordinate, final float edgeSize){
+    public Square(final XYZVertex upperLeftCoordinate, final float edgeSize){
         this.iUpperLeftCoordinate = upperLeftCoordinate;
         this.iEdgeSize = edgeSize;
+
+        super.build(buildCoordinates(upperLeftCoordinate, edgeSize), buildIndexDrawOrder());
     }
 
-    private XYZCoordinate[] buildCoordinates(){
-        final XYZCoordinate[] coordinatesArray = new XYZCoordinate[4];
+    private XYZVertex[] buildCoordinates(final XYZVertex upperLeftCoordinate, final float edgeSize){
+        final XYZVertex[] coordinatesArray = new XYZVertex[4];
+        coordinatesArray[0] = upperLeftCoordinate;
+
+        coordinatesArray[1] = new XYZVertex(
+                new XYZCoordinate(
+                upperLeftCoordinate.coordinate.x(), upperLeftCoordinate.coordinate.y(),
+                upperLeftCoordinate.coordinate.z() + edgeSize
+                ));
+        coordinatesArray[1].color = upperLeftCoordinate.color;
+        //coordinatesArray[1].texture = new XYZTexture(0,1, coordinatesArray[0].texture.getTextureData());
+
+        coordinatesArray[2] = new XYZVertex(
+                new XYZCoordinate(
+                upperLeftCoordinate.coordinate.x() + edgeSize, upperLeftCoordinate.coordinate.y(),
+                upperLeftCoordinate.coordinate.z()));
+        coordinatesArray[2].color = upperLeftCoordinate.color;
+        //coordinatesArray[2].texture = new XYZTexture(1,0, coordinatesArray[0].texture.getTextureData());
+
+        coordinatesArray[3] = new XYZVertex(
+                new XYZCoordinate(
+                upperLeftCoordinate.coordinate.x() + edgeSize, upperLeftCoordinate.coordinate.y(),
+                upperLeftCoordinate.coordinate.z() + edgeSize));
+        coordinatesArray[3].color = upperLeftCoordinate.color;
+        //coordinatesArray[3].texture = new XYZTexture(1,1, coordinatesArray[0].texture.getTextureData());
+
+//        coordinatesArray[0].normal = MathGLUtils.getTriangleNormal(
+//                coordinatesArray[0].coordinate,
+//                coordinatesArray[1].coordinate,
+//                coordinatesArray[2].coordinate);
+//
+//        coordinatesArray[1].normal = MathGLUtils.getTriangleSharedNormal(
+//                new XYZCoordinate[] {
+//                        //triangle 0
+//                        coordinatesArray[0].coordinate,
+//                        coordinatesArray[1].coordinate,
+//                        coordinatesArray[2].coordinate,
+//                        //triangle 1
+//                        coordinatesArray[2].coordinate,
+//                        coordinatesArray[1].coordinate,
+//                        coordinatesArray[3].coordinate
+//                });
+//
+//        coordinatesArray[2].normal = coordinatesArray[1].normal;
+//        coordinatesArray[3].normal = coordinatesArray[1].normal;
+
+
         return coordinatesArray;
+    }
+
+
+
+    private short[] buildIndexDrawOrder() {
+        return new short[] {0,1,2,2,1,3};
     }
 
     @Override
     public void draw(float[] viewMatrix, float[] projectionMatrix) {
-
+        super.doDraw(viewMatrix, projectionMatrix, GL10.GL_TRIANGLES);
     }
+
+    @Override
+    public void onRestore() {
+        super.build(buildCoordinates(this.iUpperLeftCoordinate, this.iEdgeSize), buildIndexDrawOrder());
+    }
+
+//    @Override
+//    public void onStop() {
+//
+//    }
+
+//    @Override
+//    public void onRestart() {
+//        super.onRestart();
+//    }
+
+//    @Override
+//    public void onResume() {
+//        if(super.isOnPause()){
+//            //we must rebuild the indexes
+//            super.buildDrawOrderBuffer(this.buildIndexDrawOrder());
+//            super.buildVertexBuffer(this.buildCoordinates(iUpperLeftCoordinate, iEdgeSize));
+//        }
+//        super.onResume();
+//    }
 }

@@ -7,14 +7,11 @@
 package ro.sg.avioane.game;
 
 import android.opengl.GLU;
-import android.opengl.Matrix;
 import android.view.MotionEvent;
-
-import java.util.List;
 
 import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.geometry.XYZCoordinate;
-import ro.sg.avioane.util.DebugUtils;
+import ro.sg.avioane.geometry.XYZVertex;
 import ro.sg.avioane.util.MathGLUtils;
 
 /**
@@ -122,7 +119,7 @@ public class TouchScreenProcessor {
             }
             case MotionEvent.ACTION_POINTER_DOWN:{
                 this.iStateEngine = TOUCH_STATE_ENGINE.E_ZOOMING;
-                System.out.println("ZOOMING START");
+                //System.out.println("ZOOMING START");
                 for (int i = 0; i<e.getPointerCount() && i <NO_OF_SUPPORTED_FINGER_POINTERS; i++) {
 //                    System.out.println("\tPointer " + i + " ID=" + e.getPointerId(i) +
 //                            "\tx=" + e.getX(i) + " y=" + e.getY(i));
@@ -133,14 +130,14 @@ public class TouchScreenProcessor {
 
             } break;
             case MotionEvent.ACTION_POINTER_UP: {
-                System.out.println("ZOOMING POINTER UP");
+                //System.out.println("ZOOMING POINTER UP");
                 if (BuildConfig.DEBUG &&
                         e.getPointerCount() < NO_OF_SUPPORTED_FINGER_POINTERS){
                     throw new AssertionError("low pointer number detected=" + e.getPointerCount());
                 }
 
                 XYZCoordinate p1 = new XYZCoordinate(this.iStartX[0], this.iStartY[0], 0);
-                XYZCoordinate p2 = new XYZCoordinate(this.iStartX[1], this.iStartY[1], 0);
+                XYZCoordinate p2 = new XYZCoordinate( this.iStartX[1], this.iStartY[1], 0);
 
                 final float distanceInitial = MathGLUtils.get3DPointsDistance(p1, p2);
 
@@ -150,10 +147,10 @@ public class TouchScreenProcessor {
                 final float distanceEnd = MathGLUtils.get3DPointsDistance(p1, p2);
 
                 if(distanceInitial < distanceEnd ){
-                    System.out.println("zoom in");
+                    //System.out.println("zoom in");
                     this.fireZoomEvent((distanceEnd-distanceInitial) / (float)(Math.sqrt(this.iScreenHeight*this.iScreenHeight + this.iScreenWidth*this.iScreenWidth)));
                 } else {
-                    System.out.println("zoom out");
+                    //System.out.println("zoom out");
                     this.fireZoomEvent((distanceEnd-distanceInitial) / (float)(Math.sqrt(this.iScreenHeight*this.iScreenHeight + this.iScreenWidth*this.iScreenWidth)));
                 }
 
@@ -176,19 +173,19 @@ public class TouchScreenProcessor {
                                 "\nyPercentage=" + yPercentage +
                                 "\ntotal:" + (2.0f - (xPercentage + yPercentage)));*/
                         if (xPercentage > 0.01f || yPercentage > 0.01f) {
-                            System.out.println("MOVEMENT");
+                            //System.out.println("MOVEMENT");
                             this.fireMovementEvent(e.getX(), e.getY());
                             break;
                         } //else continue..don`t break it
                     }
                     case E_CLICK_DOWN: {
-                        System.out.println("process CLICK");
+                        //System.out.println("process CLICK");
                         final float x = e.getX();
                         final float y = (float) this.iScreenHeight - e.getY();
                         this.processClick(x, y, viewMatrix, projectionMatrix);
                     } break;
                     case E_ZOOMING: {
-                        System.out.println("ZOOMING END");
+                        //System.out.println("ZOOMING END");
 
 //                        for (int i = 0; i<e.getPointerCount() && i <NO_OF_SUPPORTED_FINGER_POINTERS; i++) {
 //                            System.out.println("zooming delta for pointer " + i + "" +

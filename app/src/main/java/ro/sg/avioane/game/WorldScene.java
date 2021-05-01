@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2021.
+ * By using this source code from this project/file you agree with the therms listed at
+ * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
+ */
+
 package ro.sg.avioane.game;
 
 import android.opengl.Matrix;
@@ -36,7 +42,54 @@ public class WorldScene {
         this.iGameEntities.add(entity);
     }
 
+    /**
+     * remove all referenced entities to this class
+     */
+//    public void clear(){
+//        this.iGameEntities.clear();
+//    }
 
+    public void onRestoreWorld(){
+        for(AbstractGameCavan cavan: this.iGameEntities){
+            cavan.destroy();
+            cavan.onRestore();
+        }
+    }
+
+    /**
+     *
+     * @return the number of objects contained by this world
+     */
+    public int count(){
+        return this.iGameEntities.size();
+    }
+
+    /**
+     * this method will re-build all the buffers to prepare the objects for rendering.
+     */
+//    public void onResume(){
+//        for (AbstractGameCavan entity: this.iGameEntities) {
+//            entity.onResume();
+//        }
+//    }
+
+//    /**
+//     * this method call onPause on each of the world components releasing some of the memory used.
+//     */
+//    public void onPause(){
+//        for (AbstractGameCavan entity: this.iGameEntities) {
+//            entity.onPause();
+//        }
+//    }
+//
+//    /**
+//     * rebuild all programs and reload all textures used by each object
+//     */
+//    public void onRestart(){
+//        for (AbstractGameCavan entity: this.iGameEntities) {
+//            entity.onRestart();
+//        }
+//    }
 
     /**
      * This method must be called whenever the display resolution of the device was changed
@@ -53,11 +106,15 @@ public class WorldScene {
         Matrix.frustumM(iProjectionMatrix, 0, -ratio, ratio, -1.0f, 1.0f, NEAR_CAMERA_FIELD, FAR_CAMERA_FIELD);
     }
 
+    /**
+     * take care on rendering this world and all its objects and camera.
+     * TODO: draw only when something was changed. Implement a "dirty" semaphore or notification
+     */
     public void onDraw(){
         //Matrix.setIdentityM(this.iModelMatrix,0);
 
         //now you can apply transforms to the model matrix before you send it to the
-        //cavans
+        //be draw
         //ex:
         // Do a complete rotation every 10 seconds.
         //long time = SystemClock.uptimeMillis() % 10000L;

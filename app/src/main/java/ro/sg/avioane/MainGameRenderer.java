@@ -1,15 +1,20 @@
+/*
+ * Copyright (c) 2021.
+ * By using this source code from this project/file you agree with the therms listed at
+ * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
+ */
+
 package ro.sg.avioane;
 
+import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
-import android.os.Bundle;
 import android.view.MotionEvent;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import ro.sg.avioane.cavans.GameTerrain;
-import ro.sg.avioane.cavans.primitives.Line;
+import ro.sg.avioane.cavans.primitives.Square;
 import ro.sg.avioane.cavans.primitives.XYZAxis;
 import ro.sg.avioane.game.TouchScreenListener;
 import ro.sg.avioane.game.TouchScreenProcessor;
@@ -17,18 +22,28 @@ import ro.sg.avioane.game.WorldCamera;
 import ro.sg.avioane.game.WorldScene;
 import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
+import ro.sg.avioane.geometry.XYZVertex;
+import ro.sg.avioane.geometry.XYZTexture;
 import ro.sg.avioane.util.MathGLUtils;
+import ro.sg.avioane.util.OpenGLProgramUtils;
+import ro.sg.avioane.util.OpenGLUtils;
+import ro.sg.avioane.util.TextureUtils;
 
 public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenListener {
 
+    private final Context iContext;
+
     //put here some object for test:
-    private GameTerrain iGamePlane = null;
+    //private GameTerrain iGamePlane = null;
 
     //private XYZPoint iPoint = null;
     private XYZAxis iWorldAxis = null;
-    private Line iMovingLine = null;
+    //private Line iMovingLine = null;
+    private Square iSquare = null;
 
-    private Bundle iPersistenceObject = null; //will be used later for persistence
+    //private Bundle iPersistenceObject = null; //will be used later for persistence
+    //private boolean isGLContext = false;
+
     private final WorldCamera iCamera = new WorldCamera();
     private final WorldScene iWorld;
     private int iScreenWidth = 0;
@@ -36,20 +51,48 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 
     private final TouchScreenProcessor iTouchProcessor = new TouchScreenProcessor();
 
-    public MainGameRenderer() {
-        super();
+    public MainGameRenderer(Context context) {
+        this.iContext = context;
         this.iWorld = new WorldScene(this.iCamera);
         this.iTouchProcessor.addTouchScreenListener(this);
+
+//        final XYZVertex t1 = MathGLUtils.getTriangleNormal(
+//                new XYZVertex(-113.748047f, -13.510292f, 250.230896f),
+//                new XYZVertex(-111.487404f, -45.606571f, 225.793869f),
+//                new XYZVertex(-123.862007f, -14.288765f, 244.758011f)
+//        );
+//
+//        final XYZVertex t2 = MathGLUtils.getTriangleNormal(
+//                new XYZVertex(-113.748047f, -13.510292f, 250.230896f),
+//                new XYZVertex(-98.904160f, -44.577564f, 230.430054f),
+//                new XYZVertex(-111.487404f, -45.606571f, 225.793869f)
+//        );
+//
+//        final XYZVertex t3 = MathGLUtils.getTriangleNormal(
+//                new XYZVertex(-98.904160f, -44.577564f, 230.430054f),
+//                new XYZVertex(-113.748047f, -13.510292f, 250.230896f),
+//                new XYZVertex(-113.202438f, -13.474716f, 250.301163f)
+//        );
+//
+//        final XYZVertex nor = new XYZVertex(
+//                MathGLUtils.matrixNormalize(MathGLUtils.add(
+//                        MathGLUtils.add(t1, t2), t3
+//                ).asArray()));
+//
+//        System.out.println("\n\n\n*******************************************");
+//        System.out.println("Nx=" + nor.x() + " Ny=" + nor.y() + " Nz=" + nor.z());
+//        System.out.println("\n\n\n*******************************************");
     }
 
-
     private void addDrawObjects() {
+
+        System.out.println("************addDrawObjects*********************");
 
         this.iWorldAxis = new XYZAxis();
         this.iWorld.add(this.iWorldAxis);
 
         /*{
-            final XYZCoordinate coordinate = new XYZCoordinate(1.0f, 0.0f, 0.0f);
+            final XYZVertex coordinate = new XYZVertex(1.0f, 0.0f, 0.0f);
             coordinate.color = new XYZColor(1.0f, 1.0f, 1.0f, 0.0f);
             this.iPoint = new XYZPoint(coordinate);
             this.iCamera.setLookAtPosition(coordinate);
@@ -57,27 +100,51 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         this.iWorld.add(this.iPoint);*/
 
 
-        this.iMovingLine = new Line(
-                new XYZCoordinate(0, 0, 0),
-                new XYZCoordinate(5, 5, 5),
-                new XYZColor(0.9f,0.9f,0.9f,1.0f) //white = 1,1,1,1
-        );
-        this.iWorld.add(this.iMovingLine);
+//        this.iMovingLine = new Line(
+//                new XYZVertex(0, 0, 0),
+//                new XYZVertex(5, 5, 5),
+//                new XYZColor(0.9f,0.9f,0.9f,1.0f) //white = 1,1,1,1
+//        );
+//        this.iWorld.add(this.iMovingLine);
+//
+//
+//        this.iGamePlane = new GameTerrain(100,100);
+//        this.iWorld.add(this.iGamePlane);
 
 
-        this.iGamePlane = new GameTerrain(10,20);
-        this.iWorld.add(this.iGamePlane);
+
+
+//        final XYZVertex leftUpperSquare = new XYZVertex( new XYZCoordinate(0,0,0));
+//        leftUpperSquare.color = new XYZColor(1,0,0,1);
+//        //leftUpperSquare.texture = new XYZTexture(0.0f, 0.0f, TextureUtils.loadTextureData(this.iContext,"test"));
+//        this.iSquare = new Square( leftUpperSquare, 10);
+//        this.iWorld.add(this.iSquare);
     }
 
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        if (this.iPersistenceObject == null) {
-            this.iPersistenceObject = new Bundle();
-            // Set the background frame color
-            GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.8f);
+        boolean isRestoreNeeded = TextureUtils.getInstance().onDestroy();
+        isRestoreNeeded |= OpenGLProgramUtils.getInstance().onDestroy();
+        if(isRestoreNeeded && this.iWorld.count() > 0){
+            System.out.println("A restore of the world is needed***");
+            this.iWorld.onRestoreWorld();
+        } else {
+            System.out.println("Build world is needed***");
             this.addDrawObjects();
         }
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.8f);
+
+
+
+//        if (!this.isGLContext) {
+//            this.isGLContext = true;
+//            // Set the background frame color
+//            GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.8f);
+//            this.addDrawObjects();
+//        } else if(BuildConfig.DEBUG) {
+//                throw new AssertionError("this.isGLContext ************ALREADY LOADED??????");
+//        }
     }
 
     @Override
@@ -126,17 +193,17 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         final float[] p1 = this.iCamera.getCameraPosition().asArray();
         final float[] p2 = MathGLUtils.getPointOnVector(clickVector, p1, 50.0f);
 
-        final XYZCoordinate p1Line = new XYZCoordinate(p1);
-        final XYZCoordinate p2Line = new XYZCoordinate(p2);
+        final XYZVertex p1Line = new XYZVertex(new XYZCoordinate(p1));
+        final XYZVertex p2Line = new XYZVertex(new XYZCoordinate(p2));
         p1Line.color = new XYZColor(1.0f, 0 , 0.0f, 1);
         p2Line.color = new XYZColor(1.0f, 0 , 0.0f, 1);
 
-        this.iMovingLine.updateCoordinates(
-                    p1Line,
-                    p2Line
-        );
-
-        this.iGamePlane.processClickOnObject(this.iCamera.getCameraPosition(), new XYZCoordinate(clickVector));
+//        this.iMovingLine.updateCoordinates(
+//                    p1Line,
+//                    p2Line
+//        );
+//
+//        this.iGamePlane.processClickOnObject(this.iCamera.getCameraPosition(), new XYZVertex(clickVector));
 
     }
 
@@ -146,18 +213,18 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
      */
     @Override
     public void fireZoom(float zoomingFactor) {
-        System.out.println("ZOOM FACTOR=" + zoomingFactor);
+        //System.out.println("ZOOM FACTOR=" + zoomingFactor);
         final XYZCoordinate cameraPosition = this.iCamera.getCameraPosition();
         cameraPosition.setY(cameraPosition.y()*(1-zoomingFactor));
         this.iCamera.setCameraPosition(cameraPosition);
     }
 
-    /**
-     * destroy all the components owned by this renderer
-     */
-    protected void onDestroy(){
-        this.iGamePlane.onDestroy();
-
-    }
+//    protected void onPause(){
+//        this.isGLContext = false;
+//        this.iWorld.clear();
+//        TextureUtils.getInstance().onDestroy();
+//        OpenGLProgramUtils.getInstance().onDestroy();
+//        //this.iWorld.onPause();
+//    }
 
 }

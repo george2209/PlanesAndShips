@@ -1,18 +1,19 @@
 
+/*
+ * Copyright (c) 2021.
+ * By using this source code from this project/file you agree with the therms listed at
+ * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
+ */
+
 package ro.sg.avioane.cavans;
-
-import android.opengl.GLES20;
-import android.opengl.Matrix;
-
-import java.util.Random;
 
 import javax.microedition.khronos.opengles.GL10;
 
 import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.cavans.primitives.AbstractGameCavan;
-import ro.sg.avioane.game.TouchScreenListener;
 import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
+import ro.sg.avioane.geometry.XYZVertex;
 import ro.sg.avioane.util.MathGLUtils;
 
 public class GameTerrain extends AbstractGameCavan {
@@ -21,7 +22,7 @@ public class GameTerrain extends AbstractGameCavan {
 
 
     private static final float TILE_LENGTH = 1.0f;
-    //private final XYZCoordinate[] iTriangleCoordinates;
+    //private final XYZVertex[] iTriangleCoordinates;
     //private final short[] iIndexOrder;
 
     //Limited for keeping the iArrIndexOrder as short type
@@ -31,7 +32,7 @@ public class GameTerrain extends AbstractGameCavan {
     //~180 tiles can be increased to the ~255 and the 2bytes-short size kept
     public static final short MAX_TILES_NO = 100;
 
-    private final XYZCoordinate[] iArrVertices;
+    private final XYZVertex[] iArrVertices;
 
     public float getLowestYTerrainPoint(){
         return this.iLowestYTerrainPoint;
@@ -60,15 +61,11 @@ public class GameTerrain extends AbstractGameCavan {
         } else {
             this.iMapWidthX = width;
             this.iMapLengthZ = length;
-
-//            this.iArrVertices = new XYZCoordinate[(width + 1) * (length + 1)];
-            this.iArrVertices = new XYZCoordinate[(width * length * 4)]; //4 coordinates per tile
+            this.iArrVertices = new XYZVertex[(width * length * 4)]; //4 coordinates per tile
         }
 
-        super.iColor = new XYZColor(0.1f, 0.9f, 0.1f, 1.0f);
-        super.buildDrawOrderBuffer(this.buildIndexDrawOrder());
-        super.buildVertexBuffer(this.buildCoordinates());
-        super.compileGLSL();
+        //super.iColor = new XYZColor(0.1f, 0.9f, 0.1f, 1.0f);
+        super.build(this.buildCoordinates(), this.buildIndexDrawOrder());
     }
 
     /**
@@ -87,7 +84,7 @@ public class GameTerrain extends AbstractGameCavan {
      *
      * @return an array with all coordinates fixed
      */
-    private XYZCoordinate[] buildCoordinates(){
+    private XYZVertex[] buildCoordinates(){
         final XYZColor red = new XYZColor(1.0f,0.0f,0.0f,1.0f);
         final XYZColor green = new XYZColor(0.1f,1.0f,0.3f,1.0f);
         final XYZColor blue = new XYZColor(0.1f,0.2f,1.0f,1.0f);
@@ -107,7 +104,7 @@ public class GameTerrain extends AbstractGameCavan {
                     tmpColor = red;
 
 //                System.out.println("tile no=" + (tmpTileNo)); tmpTileNo++;
-                final XYZCoordinate leftUp = new XYZCoordinate(i*TILE_LENGTH, 0.0f, j*TILE_LENGTH);
+                final XYZVertex leftUp = new XYZVertex(new XYZCoordinate(i*TILE_LENGTH, 0.0f, j*TILE_LENGTH));
                 this.getSquareCoordinates(leftUp, tmpColor, index);
                 index+=4;
 //                for (int k = index-4; k < index; k++) {
@@ -122,20 +119,29 @@ public class GameTerrain extends AbstractGameCavan {
      * @param leftUp
      * @param color
      */
-    private void getSquareCoordinates(XYZCoordinate leftUp,  final XYZColor color, int index){
+    private void getSquareCoordinates(XYZVertex leftUp, final XYZColor color, int index){
 
         this.iArrVertices[index] = leftUp;
         this.iArrVertices[index++].color = color;
 
 
-        this.iArrVertices[index] = new XYZCoordinate(leftUp.x(), leftUp.y(), leftUp.z() + TILE_LENGTH);
+        this.iArrVertices[index] = new XYZVertex(
+                new XYZCoordinate(
+                leftUp.coordinate.x(), leftUp.coordinate.y(), leftUp.coordinate.z() + TILE_LENGTH
+                ));
         this.iArrVertices[index++].color = color;
 
 
-        this.iArrVertices[index] = new XYZCoordinate(leftUp.x() + TILE_LENGTH, leftUp.y(), leftUp.z());
+        this.iArrVertices[index] = new XYZVertex(
+                new XYZCoordinate(
+                leftUp.coordinate.x() + TILE_LENGTH, leftUp.coordinate.y(), leftUp.coordinate.z()
+                ));
         this.iArrVertices[index++].color = color;
 
-        this.iArrVertices[index] = new XYZCoordinate(leftUp.x() + TILE_LENGTH, leftUp.y(), leftUp.z() + TILE_LENGTH);
+        this.iArrVertices[index] = new XYZVertex(
+                new XYZCoordinate(
+                leftUp.coordinate.x() + TILE_LENGTH, leftUp.coordinate.y(), leftUp.coordinate.z() + TILE_LENGTH
+                ));
         this.iArrVertices[index++].color = color;
     }
 
@@ -196,61 +202,84 @@ public class GameTerrain extends AbstractGameCavan {
         super.doDraw(viewMatrix, projectionMatrix, GL10.GL_TRIANGLES);
     }
 
-
-    /***
-     *  We'll use the theorem of Thales to find the startingPoint A on the plane GameTerrain.
-     *  Known points:
-     *  C = <code>startingPoint</code> parameter (normally it shall be the camera position)
-     *  A1 = will be calculated at a height of CB/2
-     *  B1 = will be calculated once A1 is calculated by B1[Cx, A1y, Cz]
-     *  B is actually like this: B[Cx, 0, Cz]
-     *  A = will be calculated once we know the distance CA by using Thales theorem.
-     *               /C
-     *              / |
-     *             /  |
-     *            /   |
-     *           A1   B1
-     *          /     |
-     *         /      |
-     *        A-------B
-     * @param startingPoint usually this is the point where camera is located.
-     * @param vector this is the vector for calculating the resulting point on the map starting from
-     *               startingPoint and following the vector.
-     */
-    public void processClickOnObject(final XYZCoordinate startingPoint, final XYZCoordinate vector){
-        final XYZCoordinate a1 = new XYZCoordinate(MathGLUtils.getPointOnVector(vector.asArray(), startingPoint.asArray(), startingPoint.y()/3.0f));
-        final XYZCoordinate b1 = new XYZCoordinate();
-        b1.setX(startingPoint.x());
-        b1.setY(a1.y());
-        b1.setZ(startingPoint.z());
-
-        final XYZCoordinate b = new XYZCoordinate();
-        b.setX(startingPoint.x());
-        b.setY(0.0f);
-        b.setZ(startingPoint.z());
-
-        //calculate CA = (BC x A1C) / B1C
-        final float bc = startingPoint.y(); //MathGLUtils.get3DPointsDistance(b, startingPoint);
-        final float a1c = MathGLUtils.get3DPointsDistance(a1, startingPoint);
-        final float b1c = MathGLUtils.get3DPointsDistance(b1, startingPoint);
-        final float ca = bc*a1c/b1c;
-
-        final float a[] = MathGLUtils.getPointOnVector(vector.asArray(), startingPoint.asArray(), ca);
-
-        System.out.printf("CLICK ON MAP x=%.2f y=%.2f z=%.2f\n\n", a[0], a[1], a[2]);
-        //System.out.println("searching tile on map: ");
-        this.searchTile(new XYZCoordinate(a));
+    @Override
+    public void onRestore() {
+        this.iIsDirty = false;
+        super.build(this.buildCoordinates(), this.buildIndexDrawOrder());
     }
 
-    private void searchTile(final XYZCoordinate tileCoordinate){
+//    @Override
+//    public void onResume() {
+//        if(super.isOnPause()){
+//            //we must rebuild the indexes
+//            super.buildDrawOrderBuffer(this.buildIndexDrawOrder());
+//            super.buildVertexBuffer(this.buildCoordinates());
+//        }
+//        super.onResume();
+//    }
+
+
+
+
+
+
+//    /***
+//     *  We'll use the theorem of Thales to find the startingPoint A on the plane GameTerrain.
+//     *  Known points:
+//     *  C = <code>startingPoint</code> parameter (normally it shall be the camera position)
+//     *  A1 = will be calculated at a height of CB/2
+//     *  B1 = will be calculated once A1 is calculated by B1[Cx, A1y, Cz]
+//     *  B is actually like this: B[Cx, 0, Cz]
+//     *  A = will be calculated once we know the distance CA by using Thales theorem.
+//     *               /C
+//     *              / |
+//     *             /  |
+//     *            /   |
+//     *           A1   B1
+//     *          /     |
+//     *         /      |
+//     *        A-------B
+//     * @param startingPoint usually this is the point where camera is located.
+//     * @param vector this is the vector for calculating the resulting point on the map starting from
+//     *               startingPoint and following the vector.
+//     */
+//    public void processClickOnObject(final XYZVertex startingPoint, final XYZVertex vector){
+//        final XYZVertex a1 = new XYZVertex(MathGLUtils.getPointOnVector(vector.asArray(), startingPoint.asArray(), startingPoint.y()/3.0f));
+//        final XYZVertex b1 = new XYZVertex();
+//        b1.setX(startingPoint.x());
+//        b1.setY(a1.y());
+//        b1.setZ(startingPoint.z());
+//
+//        final XYZVertex b = new XYZVertex();
+//        b.setX(startingPoint.x());
+//        b.setY(0.0f);
+//        b.setZ(startingPoint.z());
+//
+//        //calculate CA = (BC x A1C) / B1C
+//        final float bc = startingPoint.y(); //MathGLUtils.get3DPointsDistance(b, startingPoint);
+//        final float a1c = MathGLUtils.get3DPointsDistance(a1, startingPoint);
+//        final float b1c = MathGLUtils.get3DPointsDistance(b1, startingPoint);
+//        final float ca = bc*a1c/b1c;
+//
+//        final float a[] = MathGLUtils.getPointOnVector(vector.asArray(), startingPoint.asArray(), ca);
+//
+//        System.out.printf("CLICK ON MAP x=%.2f y=%.2f z=%.2f\n\n", a[0], a[1], a[2]);
+//        //System.out.println("searching tile on map: ");
+//        this.searchTile(new XYZVertex(a));
+//    }
+
+    private void searchTile(final XYZVertex tileCoordinate){
         //check if x is inside the map range.
-        if(this.iArrVertices[0].x() > tileCoordinate.x() ||
-                this.iArrVertices[this.iArrVertices.length-1].x() < tileCoordinate.x()){
-            System.out.println("IGNORED: X is out of the map range:" + tileCoordinate.x());
-        } else if(this.iArrVertices[0].z() > tileCoordinate.z() ||
-                this.iArrVertices[this.iArrVertices.length-1].z() < tileCoordinate.z()) {
-            System.out.println("IGNORED: Z is out of the map range:" + tileCoordinate.z() + "  this.iArrVertices[0].z()=" + this.iArrVertices[0].z() + "  this.iArrVertices[this.iArrVertices.length-1].z()=" +
-                    this.iArrVertices[this.iArrVertices.length-1].z());
+        if(this.iArrVertices[0].coordinate.x() > tileCoordinate.coordinate.x() ||
+                this.iArrVertices[this.iArrVertices.length-1].coordinate.x() < tileCoordinate.coordinate.x()){
+            System.out.println("IGNORED: X is out of the map range:" + tileCoordinate.coordinate.x());
+        } else if(this.iArrVertices[0].coordinate.z() > tileCoordinate.coordinate.z() ||
+                this.iArrVertices[this.iArrVertices.length-1].coordinate.z() < tileCoordinate.coordinate.z()) {
+            System.out.println(
+                    "IGNORED: Z is out of the map range:" + tileCoordinate.coordinate.z() +
+                            "  this.iArrVertices[0].z()=" + this.iArrVertices[0].coordinate.z() +
+                            "  this.iArrVertices[this.iArrVertices.length-1].z()=" +
+                            this.iArrVertices[this.iArrVertices.length-1].coordinate.z());
         } else {
             //do a binary search on X
             int xTile = -1;
@@ -263,11 +292,11 @@ public class GameTerrain extends AbstractGameCavan {
                 pivot = left + (right - left) / 2;
                 final int index = pivot * 4;
 //                System.out.print(pivot + ", ");
-                if(this.iArrVertices[index].x() <= tileCoordinate.x() &&
-                        this.iArrVertices[index + 2].x() >= tileCoordinate.x()){
+                if(this.iArrVertices[index].coordinate.x() <= tileCoordinate.coordinate.x() &&
+                        this.iArrVertices[index + 2].coordinate.x() >= tileCoordinate.coordinate.x()){
 //                    System.out.println("X TILE POSITION FOUND!");
                     break;
-                } else if (this.iArrVertices[index + 2].x() < tileCoordinate.x()) {
+                } else if (this.iArrVertices[index + 2].coordinate.x() < tileCoordinate.coordinate.x()) {
                     left = pivot + 1;
                 } else {
                     right = pivot - 1;
@@ -287,14 +316,14 @@ public class GameTerrain extends AbstractGameCavan {
                 pivot = left + (right - left) / 2;
                 final int index = (pivot * this.iMapWidthX + xTile)*4;
 
-                if(this.iArrVertices[index].z() <= tileCoordinate.z() &&
-                        this.iArrVertices[index + 1].z() >= tileCoordinate.z()){
+                if(this.iArrVertices[index].coordinate.z() <= tileCoordinate.coordinate.z() &&
+                        this.iArrVertices[index + 1].coordinate.z() >= tileCoordinate.coordinate.z()){
                     System.out.println("Z TILE POSITION FOUND at square no="
                             + (pivot * this.iMapWidthX + xTile) + " " +
                             "at index=" + index);
                     finalIndex = index;
                     break;
-                } else if (this.iArrVertices[index].z() < tileCoordinate.z()) {
+                } else if (this.iArrVertices[index].coordinate.z() < tileCoordinate.coordinate.z()) {
                     left = pivot + 1;
                 } else {
                     right = pivot - 1;

@@ -1,7 +1,14 @@
+/*
+ * Copyright (c) 2021.
+ * By using this source code from this project/file you agree with the therms listed at
+ * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
+ */
+
 package ro.sg.avioane.util;
 
 import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.geometry.XYZCoordinate;
+import ro.sg.avioane.geometry.XYZVertex;
 
 public class MathGLUtils {
 
@@ -94,9 +101,10 @@ public class MathGLUtils {
      * normalize a 3D matrix.
      * The determinant is calculated as follows:
      * <code>d=Math.sqrt(m[0]*m[0] + m[1]*m[1] + ... m[n]*m[n])</code>
-     * @param m
+     * @param m the matrix or vector to be normalized
+     * @return m normalized
      */
-    public static void matrixNormalize(float[] m) {
+    public static float[] matrixNormalize(float[] m) {
         final int SIZE = m.length;
 
         double determinant = 0.0;
@@ -112,6 +120,8 @@ public class MathGLUtils {
         for(int i=0; i<SIZE; i++){
             m[i] = m[i] / (float)determinant;
         }
+
+        return m;
     }
 
     /**
@@ -128,5 +138,97 @@ public class MathGLUtils {
     public static float[] getPointOnVector(float[] vector, final float[] initialPoint, final float length) {
         final float[] pointOnVector = MathGLUtils.matrixMultiplyWithValue(vector, length);
         return MathGLUtils.matrixAddMatrix(initialPoint, pointOnVector);
+    }
+
+    /**
+     * calculates the cross product (NOT dot!) between two points
+     * @param a
+     * @param b
+     * @return
+     */
+    public static XYZCoordinate crossProduct(final XYZCoordinate a, final XYZCoordinate b){
+        return new XYZCoordinate(
+                a.y() * b.z() - b.y()*a.z(),
+                a.z()*b.x() - b.z()*a.x(),
+                a.x()*b.y() - b.x()*a.y());
+    }
+
+    /**
+     * calculate the normal of a triangle represented by its vertices a,b,c.
+     * Calculus:
+     * triangle ( v1, v2, v3 )
+     * edge1 = v2-v1
+     * edge2 = v3-v1
+     * triangle.normal = cross(edge1, edge2).normalize()
+     *
+     * Important:
+     * - set the a,b,c parameters in the order they will be draw via the index array.
+     * - if the vertex is shared by more than one triangle then you must use getTriangleSharedNormal
+     *
+     * @param a
+     * @param b
+     * @param c
+     * @return
+     */
+    public static XYZCoordinate getTriangleNormal(final XYZCoordinate a, final XYZCoordinate b,
+                                              final XYZCoordinate c){
+        final XYZCoordinate edge1 = subtract(b, a);
+        final XYZCoordinate edge2 = subtract(c,a);
+        return new XYZCoordinate(matrixNormalize(crossProduct(edge1, edge2).asArray()));
+    }
+
+    /**
+     * in case of a vertex shared by more triangles we need to calculate the value against all
+     * triangles that shares that vertex.
+     * Calculus:
+     * vertex v1, v2, v3, ....
+     * triangle tr1, tr2, tr3 // all share vertex v1
+     * v1.normal = normalize( tr1.normal + tr2.normal + tr3.normal )
+     *
+     * @param arrTriangles having arrTriangles[0] the common vertex that must be calculated
+     * @return
+     */
+    public static XYZCoordinate getTriangleSharedNormal(final XYZCoordinate[] arrTriangles){
+        XYZCoordinate normalSum = null;
+        for (int i = 0; i < arrTriangles.length; i+=3) {
+            final XYZCoordinate a = arrTriangles[i];
+            final XYZCoordinate b = arrTriangles[i+1];
+            final XYZCoordinate c = arrTriangles[i+2];
+            if(normalSum==null){
+                normalSum = getTriangleNormal(a,b,c);
+            } else {
+                normalSum = add(normalSum, getTriangleNormal(a,b,c));
+            }
+        }
+
+        return new XYZCoordinate(
+                matrixNormalize(normalSum.asArray())
+        );
+    }
+
+    /**
+     * calculate the difference:
+     *  a - b
+     * @param a
+     * @param b
+     * @return the result in a new XYZVertex object
+     */
+    public static XYZCoordinate subtract(final XYZCoordinate a, final XYZCoordinate b){
+        return new XYZCoordinate(a.x() - b.x(),
+                a.y() - b.y(),
+                a.z() - b.z());
+    }
+
+    /**
+     * calculate a sum of two coordinates
+     * a+b
+     * @param a
+     * @param b
+     * @return a new object with the result
+     */
+    public static XYZCoordinate add(final XYZCoordinate a, final XYZCoordinate b){
+        return new XYZCoordinate(a.x() + b.x(),
+                a.y() + b.y(),
+                a.z() + b.z());
     }
 }

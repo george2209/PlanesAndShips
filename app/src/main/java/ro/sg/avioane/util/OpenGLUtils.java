@@ -1,53 +1,76 @@
+/*
+ * Copyright (c) 2021.
+ * By using this source code from this project/file you agree with the therms listed at
+ * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
+ */
+
 package ro.sg.avioane.util;
 
 import android.app.ActivityManager;
 import android.content.pm.ConfigurationInfo;
 import android.opengl.GLES20;
+import android.opengl.GLES30;
 
-import ro.sg.avioane.BuildConfig;
+import ro.sg.avioane.cavans.primitives.AbstractGameCavan;
 
 public class OpenGLUtils {
 
 
+//    /**
+//     * delete an existing buffer from the memory.
+//     * @param bufferID VBO
+//     * @param arrayID VAO
+//     */
+//    public static void deleteBuffer(final int bufferID, final int arrayID){
+//        if(bufferID != -1){
+//            final int buffers[] = new int[1];
+//            buffers[0] = bufferID;
+//            GLES30.glDeleteBuffers(1, buffers, 0);
+//        }
+//        if(arrayID != -1){
+//            final int buffers[] = new int[1];
+//            buffers[0] = arrayID;
+//            GLES30.glDeleteVertexArrays(1, buffers,0);
+//        }
+//    }
 
-    /**
-     * Creates a Vertex or Fragment shader depending on the param "shaderType"
-     *
-     * added by dumitrageorge@gmail.com:
-     * Take care! Shader calls should be within the "OpenGL thread"
-     * that is onSurfaceChanged(), onSurfaceCreated() or onDrawFrame() !!!
-     *
-     * @param shaderType it can be either GLES20.GL_VERTEX_SHADER or GLES20.GL_FRAGMENT_SHADER
-     * @param shaderCode the code that will be executed by this shader
-     * @return a handle to the respective shader
-     */
-    public static int getLoadShader(final int shaderType, final String shaderCode){
-        if (BuildConfig.DEBUG && (shaderType != GLES20.GL_VERTEX_SHADER && shaderType != GLES20.GL_FRAGMENT_SHADER)) {
-            throw new AssertionError("unknown shader type=" + shaderType);
-        }
-
-        int shader = GLES20.glCreateShader(shaderType);
-        if(shader == 0) {
-            throw new RuntimeException("FATAL ERROR !!! \n\n shader=" + shader + " ERROR =>>>> " + GLES20.glGetError() + "\n\n" + "shader source=" + shaderCode + " \nisShader=" + GLES20.glIsShader(shader));
-        } else {
-            GLES20.glShaderSource(shader, shaderCode);
-            GLES20.glCompileShader(shader);
-
-            // Get the compilation status.
-            final int[] compileStatus = new int[1];
-            GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compileStatus, 0);
-            // If the compilation failed, delete the shader.
-            if (compileStatus[0] == 0)
-            {
-                final String errorStr = GLES20.glGetShaderInfoLog(shader);
-                GLES20.glDeleteShader(shader);
-                //shader = 0;
-                throw new RuntimeException("\"FATAL ERROR !!! Compile shader error: \\n\\n" + errorStr + "\n\n");
-            }
-
-        }
-        return shader;
-    }
+//    /**
+//     *
+//     * @param bufferTarget GLES20.GL_ELEMENT_ARRAY_BUFFER or GLES20.GL_ARRAY_BUFFER
+//     * @param usage for the moment GLES20.GL_STATIC_DRAW is used
+//     * @param buffer a buffer with the data loaded already.
+//     * @return an array of size two with the following values:
+//     *  - index 0 = VAO
+//     *  - index 1 = VBO
+//     *
+//     */
+//    public static int[] createBuffer(final int bufferTarget, final int size, final java.nio.Buffer buffer,
+//                                   final int usage, int programPointer, int noCoordinatesPerVertex,
+//                                     int dataType, boolean isNormalized, int shaderStride,
+//                                     int offset){
+//        int VAO = -1;
+//        int VBO = -1;
+//        //create VertexArrayObject
+//        final int buffers[] = new int[1];
+//        GLES30.glGenVertexArrays(1, buffers, 0);
+//        VAO = buffers[0];
+//        //create VertexBufferObject
+//        GLES30.glGenBuffers(1, buffers, 0);
+//        VBO = buffers[0];
+//
+//        GLES30.glBindVertexArray(VAO);
+//        GLES30.glBindBuffer(bufferTarget, VBO);
+//        GLES30.glBufferData(bufferTarget, size, buffer, usage);
+//        GLES30.glVertexAttribPointer(programPointer, noCoordinatesPerVertex,
+//                dataType, isNormalized,
+//                shaderStride, offset);
+//
+//        GLES30.glEnableVertexAttribArray(0);
+//        GLES30.glBindBuffer(bufferTarget, 0);
+//        GLES30.glBindVertexArray(0);
+//
+//        return new int[]{VAO, VBO};
+//    }
 
     /***
      * check if the user`s device supports at least the OpenGL V2
@@ -55,8 +78,9 @@ public class OpenGLUtils {
      * @return true if supported.
      */
     public static boolean isOpenGL2Supported(final ActivityManager activityManager){
-        // Check if the system supports OpenGL ES 2.0.
+        // Check if the system supports OpenGL ES 3.0.
         final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
-        return configurationInfo.reqGlEsVersion >= 0x20000;
+        System.out.println("configurationInfo.reqGlEsVersion=" + configurationInfo.reqGlEsVersion);
+        return configurationInfo.reqGlEsVersion >= 0x00030000;
     }
 }

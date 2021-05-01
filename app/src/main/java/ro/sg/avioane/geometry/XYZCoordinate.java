@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2021.
+ * By using this source code from this project/file you agree with the therms listed at
+ * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
+ */
+
 package ro.sg.avioane.geometry;
 
 /**
@@ -5,14 +11,6 @@ package ro.sg.avioane.geometry;
  */
 public class XYZCoordinate {
     private final float iCoordinateArray[] = new float[3];
-
-    public XYZColor color = null; //opens the possibility to set the color per vertex
-
-    public XYZCoordinate(){
-        this.iCoordinateArray[0] = 0;
-        this.iCoordinateArray[1] = 0;
-        this.iCoordinateArray[2] = 0;
-    }
 
     public XYZCoordinate(final float[] arr){
         for(int i=0; i<3;i++)
@@ -40,11 +38,9 @@ public class XYZCoordinate {
     public float x(){
         return this.iCoordinateArray[0];
     }
-
     public float y(){
         return this.iCoordinateArray[1];
     }
-
     public float z(){
         return this.iCoordinateArray[2];
     }
@@ -56,4 +52,5 @@ public class XYZCoordinate {
     public float[] asArray(){
         return this.iCoordinateArray;
     }
+
 }

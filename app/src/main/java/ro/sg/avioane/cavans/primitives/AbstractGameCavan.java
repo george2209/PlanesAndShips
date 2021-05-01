@@ -1,372 +1,549 @@
+/*
+ * Copyright (c) 2021.
+ * By using this source code from this project/file you agree with the therms listed at
+ * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
+ */
+
 package ro.sg.avioane.cavans.primitives;
 
 import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.opengl.Matrix;
+
+import androidx.annotation.CallSuper;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-import javax.microedition.khronos.opengles.GL10;
-
 import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.geometry.XYZColor;
-import ro.sg.avioane.geometry.XYZCoordinate;
-import ro.sg.avioane.util.OpenGLUtils;
+import ro.sg.avioane.geometry.XYZVertex;
+import ro.sg.avioane.util.DebugUtils;
+import ro.sg.avioane.util.OpenGLBufferArray3;
+import ro.sg.avioane.util.OpenGLProgram;
+import ro.sg.avioane.util.OpenGLProgramUtils;
+import ro.sg.avioane.util.TextureUtils;
 
-public abstract class AbstractGameCavan {
-    private enum SHADER_COLOR_TYPE{
-        E_SHADER_WITH_COLOR_PER_VERTEX,
-        E_SHADER_WITH_COLOR_UNIFORM
-    };
-    protected static final byte NO_OF_COORDINATES_PER_VERTEX = 3; //use X,Y,Z
-    protected int iVertexBufferIdx = -1;
-    protected int iDrawOrderBufferIdx = -1;
+import static ro.sg.avioane.util.OpenGLProgramUtils.SHADER_ONLY_VERTICES;
+import static ro.sg.avioane.util.OpenGLProgramUtils.SHADER_UNDEFINED;
+import static ro.sg.avioane.util.OpenGLProgramUtils.SHADER_VERTICES_WITH_NORMALS;
+import static ro.sg.avioane.util.OpenGLProgramUtils.SHADER_VERTICES_WITH_OWN_COLOR;
+import static ro.sg.avioane.util.OpenGLProgramUtils.SHADER_VERTICES_WITH_TEXTURE;
+
+/**
+ * How the vertices shader is organized:
+ * X,Y,Z, [R,G,B,A,] [U,V], [Xn, Yn, Zn]
+ *      * where:
+ *      * - X,Y,Z: mandatory
+ *      * - R,G,B,A: optional (if missing then a global color will be set under a uniform).
+ *      * - U, V: optional (only if texture is supported)
+ *      * - Xn, Yn, Zn: optional. You can use the helper functions if the information is not available
+ *
+ *
+ *  1. only vertices are provided with no color (or one color as UNIFORM color):
+ *      array_of_float[] {X1,Y1,Z1, ... Xn,Yn,Zn}; SHADER_ONLY_VERTICES will by used.
+ *  2. vertices with color per vertex info (as VARYING color):
+ *      array_of_float[] {X1,Y1,Z1,R1,G1,B1,A1 ... Xn,Yn,Zn,Rn,Gn,Bn,An}; SHADER_ONLY_VERTICES will
+ *      be used.
+ *  3. vertices with texture (and implicit no color per vertex):
+ *      array_of_float[] {X1,Y1,Z1,U1,V1 .... Xn,Yn,Zn,Un,Vn};  SHADER_VERTICES_AND_TEXTURE will
+ *      be used.
+ *  4. vertices with texture and color (and implicit no color per vertex):
+ *  *      array_of_float[] {X1,Y1,Z1,,R1,G1,B1,A1,U1,V1 .... Xn,Yn,Zn,Un,Vn};
+ *  SHADER_VERTICES_AND_TEXTURE & SHADER_VERTICES_WITH_OWN_COLOR will be used.
+ */
+public abstract class AbstractGameCavan{
+
+    private final static short BYTES_PER_FLOAT = 4;
+    private final static short BYTES_PER_SHORT = 2;
+    private static final byte NO_OF_COORDINATES_PER_VERTEX = 3; //use X,Y,Z
+    private static final byte NO_OF_COLORS_PER_VERTEX = 4; //use R,G,B,A
+    private static final byte NO_OF_TEXTURES_PER_VERTEX = 2; //use U,V
+    private static final int VERTICES_OFFSET = 0;
+    private int COLOR_OFFSET = -1; //BYTES_PER_FLOAT * NO_OF_COORDINATES_PER_VERTEX;
+    private int TEXTURE_OFFSET = -1; //COLOR_OFFSET + BYTES_PER_FLOAT * NO_OF_COLORS_PER_VERTEX;
+    private int NORMAL_OFFSET = -1;
+
+    private OpenGLProgram iProgram = null;
+    private OpenGLBufferArray3 iOpenGL3Buffers = null;
+
+    private int iTextureDataIdx = -1;
+
     protected XYZColor iColor = new XYZColor(0.03671875f, 0.76953125f, 0.82265625f, 1.0f);
-    protected int iHandleProgram;
-    protected String iVertexShaderCode;
-    protected String iFragmentShaderCode;
-    private SHADER_COLOR_TYPE iShaderType = SHADER_COLOR_TYPE.E_SHADER_WITH_COLOR_UNIFORM;
+    private int iShaderType = SHADER_UNDEFINED;
     private int iIndexOrderLength = 0;
-    protected final static short BYTES_PER_FLOAT = 4;
-    protected final static short BYTES_PER_SHORT = 2;
+    private int iShaderStride = 0;
+
 
     public abstract void draw(final float[] viewMatrix, final float[] projectionMatrix);
-
-
-
-    //TODO: GL_TEXTURE_BUFFER
+    public abstract void onRestore();
 
 
     /**
-     * TODO: update it to support full calculus:
-     * TransformedVector = TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector;
-     * !!! BEWARE / TODO !!! This line actually performs the scaling FIRST, and THEN the rotation, and THEN the translation. This is how matrix multiplication works.
-     *
-     * loadImplicitShaderPrograms
+     * do the compilation & build of the GLSL code
+     * @param arrVertices the vertices array
+     * @param drawOrderArr the order of drawing the vertices
      */
-    private void loadDefaultShaderPrograms(){
-        StringBuilder sb = new StringBuilder();
-        sb.append("uniform mat4 vpmMatrix;"); //projection matrix
-        sb.append("attribute vec4 vPosition;"); //vertex coordinates
-        if(this.iShaderType == SHADER_COLOR_TYPE.E_SHADER_WITH_COLOR_PER_VERTEX) {
-            sb.append("attribute vec4 aColor;"); //vertex color
-            sb.append("varying vec4 vColor;"); // to be passed into the fragment shader.
-        }
-
-        sb.append("void main() {");
-        if(this.iShaderType == SHADER_COLOR_TYPE.E_SHADER_WITH_COLOR_PER_VERTEX)
-            sb.append("  vColor = aColor;");
-        sb.append("  gl_Position = vpmMatrix * vPosition;"); //set coordinates on the projection clip
-//        if (BuildConfig.DEBUG)
-//            sb.append("  gl_PointSize = 10.0;");
-        sb.append("}");
-
-
-        this.iVertexShaderCode = sb.toString();
-
-        sb = new StringBuilder();
-
-        //set GPU to medium precision
-        // (highp is not by all devices supported)
-        //alternatively can be set to lowp for tests or low performance devices.
-        //remove this in case of a Desktop App!!!
-        sb.append("precision mediump float;");
-        if(this.iShaderType == SHADER_COLOR_TYPE.E_SHADER_WITH_COLOR_PER_VERTEX) {
-            sb.append("varying vec4 vColor;");
-        } else {
-            sb.append("uniform vec4 vColor;");
-        }
-        sb.append("void main() {");
-        sb.append("  gl_FragColor = vColor;");
-        sb.append("}");
-
-        this.iFragmentShaderCode = sb.toString();
+    protected void build(final XYZVertex[] arrVertices, final short[] drawOrderArr){
+        this.calculateShaderType(arrVertices[0]);
+        this.iProgram = OpenGLProgramUtils.getInstance().getProgramForShader(this.iShaderType);
+        this.buildVertexBuffer(arrVertices);
+        this.buildDrawOrderBuffer(drawOrderArr);
     }
 
+    /**
+     *
+     * @param drawOrder
+     */
     protected void buildDrawOrderBuffer(final short[] drawOrder){
+        if(BuildConfig.DEBUG &&
+                this.iShaderType == SHADER_UNDEFINED)
+            throw new AssertionError("SHADER_UNDEFINED ERROR!");
+
         this.iIndexOrderLength = drawOrder.length;
         // initialize byte buffer for the draw list
         ByteBuffer bb = ByteBuffer.allocateDirect(
                 // (# of coordinate values * 2 bytes per short)
                 drawOrder.length * 2);
         bb.order(ByteOrder.nativeOrder());
-        final ShortBuffer iDrawOrderBuffer = bb.asShortBuffer();
-        iDrawOrderBuffer.put(drawOrder);
-        iDrawOrderBuffer.position(0);
+        final ShortBuffer drawOrderBuffer = bb.asShortBuffer();
+        drawOrderBuffer.put(drawOrder);
+        drawOrderBuffer.position(0);
 
-        //Load data into OpenGL memory from this point already.
-        {
-            final int buffers[] = new int[1];
-
-            //cleanup and previous unloaded buffer
-            if(this.iDrawOrderBufferIdx != -1){
-                buffers[0] = this.iDrawOrderBufferIdx;
-                GLES20.glDeleteBuffers(1, buffers, 0);
-                buffers[0] = -1;
-                this.iDrawOrderBufferIdx = -1;
-            }
-
-            GLES20.glGenBuffers(1, buffers, 0);
-            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, buffers[0]);
-
-            GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, iDrawOrderBuffer.capacity() * BYTES_PER_SHORT, iDrawOrderBuffer, GLES20.GL_STATIC_DRAW);
-            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
-
-            this.iDrawOrderBufferIdx = buffers[0];
-
-            //release main memory
-            iDrawOrderBuffer.limit(0);
+        //Load data into OpenGL memory
+        //cleanup and previous unloaded buffer
+        if(this.iOpenGL3Buffers != null) {
+            this.iOpenGL3Buffers.cleanVORBF();
+        } else {
+            this.iOpenGL3Buffers = new OpenGLBufferArray3();
         }
+
+        this.iOpenGL3Buffers.rebuildVertexDrawOrder(
+                drawOrderBuffer.capacity() * BYTES_PER_SHORT,
+                drawOrderBuffer, GLES20.GL_STATIC_DRAW);
+
+        //release main memory
+        drawOrderBuffer.limit(0);
     }
 
     /**
      * initialize the iVertexBuffer
-     * @param coordinates the xyz coordinates
+     * The expected stream of data of the iVertexBuffer has this profile stride (including optional
+     * information such as color per vertex and texture arrVertices)
+     *      X,Y,Z, [R,G,B,A,] [U,V], [Xn, Yn, Zn]
+     * where:
+     * - X,Y,Z: mandatory
+     * - R,G,B,A: optional (if missing then a global color will be set under a uniform).
+     * - U, V: optional (only if texture is supported)
+     * - Xn, Yn, Zn: optional. You can use the helper functions if the information is not available
+     * ex: MathGLUtils.getTriangleNormal(...)
+     * @param arrVertices the xyz arrVertices
      */
-    protected void buildVertexBuffer(XYZCoordinate[] coordinates) {
-        //check if the color is inside each vertex by checking the first vertex
-        boolean isColorPerVertex = coordinates[0].color != null;
-        int vertexStride = 3; // X, Y, Z, --> 0, 1, 2
+    protected void buildVertexBuffer(final XYZVertex[] arrVertices) {
+        if(BuildConfig.DEBUG &&
+                this.iShaderType == SHADER_UNDEFINED)
+            throw new AssertionError("SHADER_UNDEFINED ERROR!");
 
-        if(isColorPerVertex){
-            // X, Y, Z, --> 0, 1, 2,
-            // R, G, B, A --> 3, 4, 5, 6
-            vertexStride = 7;
-        }
-        final int coordinatesLength = coordinates.length * vertexStride;
+        final int vertexStride = this.iShaderStride/BYTES_PER_FLOAT; //getVertexStride(arrVertices[0]);
+        final int coordinatesLength = arrVertices.length * vertexStride;
 
-        // initialize vertex byte buffer for shape coordinates
+        // initialize vertex byte buffer for shape arrVertices
         final ByteBuffer bb = ByteBuffer.allocateDirect(
-                // (number of coordinate values * 3 coordinates(x,y,z) * 4 bytes per float)
-                coordinates.length * vertexStride * 4);
+                // (number of coordinate values * 3 arrVertices(x,y,z) * 4 bytes per float)
+                arrVertices.length * this.iShaderStride);
         // use the device hardware's native byte order
         bb.order(ByteOrder.nativeOrder());
 
         // create a floating point buffer from the ByteBuffer
         final FloatBuffer vertexBuffer = bb.asFloatBuffer();
 
-        // add the coordinates to the FloatBuffer
-        final float[] arrCoords = new float[coordinatesLength];
-        for(int i=0; i<coordinates.length; i++){
-            arrCoords[vertexStride*i] = coordinates[i].x();
-            arrCoords[vertexStride*i + 1] = coordinates[i].y();
-            arrCoords[vertexStride*i + 2] = coordinates[i].z();
-            if(isColorPerVertex){
-                arrCoords[vertexStride*i + 3] = coordinates[i].color.red;
-                arrCoords[vertexStride*i + 4] = coordinates[i].color.green;
-                arrCoords[vertexStride*i + 5] = coordinates[i].color.blue;
-                arrCoords[vertexStride*i + 6] = coordinates[i].color.alpha;
+        // add the arrVertices to the FloatBuffer
+        final float[] arrBufferVertices = new float[coordinatesLength];
+        for(int i=0; i<arrVertices.length; i++){
+            int dynamicStride = 0;
+            arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].coordinate.x(); dynamicStride++;
+            arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].coordinate.y(); dynamicStride++;
+            arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].coordinate.z(); dynamicStride++;
+            if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0){
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].color.red;
+                dynamicStride++;
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].color.green;
+                dynamicStride++;
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].color.blue;
+                dynamicStride++;
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].color.alpha;
+                dynamicStride++;
             }
-            //System.out.println("x=" + coordinates[i].x + " y=" + coordinates[i].y + " z=" + coordinates[i].z + "\n");
+            if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].texture.u();
+                dynamicStride++;
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].texture.v();
+                dynamicStride++;
+            }
+
+            if((this.iShaderType & SHADER_VERTICES_WITH_NORMALS) != 0){
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].normal.x();
+                dynamicStride++;
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].normal.y();
+                dynamicStride++;
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].normal.z();
+                //dynamicStride++;
+            }
+
         }
-        vertexBuffer.put(arrCoords);
+        vertexBuffer.put(arrBufferVertices);
         // set the buffer to read the first coordinate
         vertexBuffer.position(0);
 
-        //Load data into OpenGL memory from this point already.
-        boolean isShaderAlreadyBuild = false;
-        {
-            final int buffers[] = new int[1];
-
-            //cleanup and previous unloaded buffer
-            if(this.iVertexBufferIdx != -1){
-                System.out.println("vertex buffer already existed id=" + this.iVertexBufferIdx + " ..will be deleted");
-                buffers[0] = this.iVertexBufferIdx;
-                GLES20.glDeleteBuffers(1, buffers, 0);
-                isShaderAlreadyBuild = true;
-                this.iVertexBufferIdx = -1;
-                buffers[0] = -1;
-            }
-
-            GLES20.glGenBuffers(1, buffers, 0);
-            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0]);
-
-            int cap = vertexBuffer.capacity() * BYTES_PER_FLOAT;
-
-            GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, vertexBuffer.capacity() * BYTES_PER_FLOAT, vertexBuffer, GLES20.GL_STATIC_DRAW);
-            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
-
-            this.iVertexBufferIdx = buffers[0];
-
-            System.out.println("vertex buffer new id=" + this.iVertexBufferIdx);
-
-            //release main memory
-            vertexBuffer.limit(0);
+        //Load data into OpenGL memory
+        // cleanup and previous unloaded buffer
+        if(this.iOpenGL3Buffers != null) {
+            this.iOpenGL3Buffers.cleanVBOandVAO();
+        } else {
+            this.iOpenGL3Buffers = new OpenGLBufferArray3();
         }
 
-        if(!isShaderAlreadyBuild) {
-            if (isColorPerVertex) {
-                this.iShaderType = SHADER_COLOR_TYPE.E_SHADER_WITH_COLOR_PER_VERTEX;
-                this.loadDefaultShaderPrograms();
-            } else {
-                this.iShaderType = SHADER_COLOR_TYPE.E_SHADER_WITH_COLOR_UNIFORM;
-                this.loadDefaultShaderPrograms();
-            }
+        this.iOpenGL3Buffers.startBuildBuffers(
+                vertexBuffer.capacity() * BYTES_PER_FLOAT, vertexBuffer,
+                GLES20.GL_STATIC_DRAW, this.iProgram.iVerticesHandle,
+                AbstractGameCavan.NO_OF_COORDINATES_PER_VERTEX,
+                GLES20.GL_FLOAT, false,this.iShaderStride, VERTICES_OFFSET);
+
+        if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0){
+            this.iOpenGL3Buffers.addBuildBufferColors(this.iProgram.iColorHandle,
+                    AbstractGameCavan.NO_OF_COLORS_PER_VERTEX, this.iShaderStride,
+                    COLOR_OFFSET);
+        }
+
+        this.iOpenGL3Buffers.finishBuildBuffers();
+
+
+        //release main memory
+        vertexBuffer.limit(0);
+
+        if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
+            //TODO: implement texture per vertex info? Otherwise one texture for a collection of vertices?
+            this.iTextureDataIdx = TextureUtils.getInstance().
+                    getTextureWithName("test", arrVertices[0].texture.getTextureData());
         }
     }
 
-
-
     /**
-     * do the compilation of the GLSL code
+     * Calculate the vertex stride and shader type.
+     * See @link #buildVertexBuffer description for the format details
+     * Usually you call this method in case of an array of vertices with
+     * <code>getVertexStride(arr[0])</code>
+     * as all vertices will share the same format (data is of course different per vertex).
+     * @param vertex the vertex that needs this calculated.
+     * @return a value you can use to build the program against.
      */
-    protected void compileGLSL(){
-        final int vertexShader = OpenGLUtils.getLoadShader(GLES20.GL_VERTEX_SHADER,
-                iVertexShaderCode);
-        final int fragmentShader = OpenGLUtils.getLoadShader(GLES20.GL_FRAGMENT_SHADER,
-                iFragmentShaderCode);
+    private void calculateShaderType(XYZVertex vertex) {
+        int offset = VERTICES_OFFSET;
+        int vertexStride = 3; // X, Y, Z, --> 0, 1, 2
+        this.iShaderType = SHADER_ONLY_VERTICES;
 
-        // create empty OpenGL ES Program
-        iHandleProgram = GLES20.glCreateProgram();
-
-        // add the vertex shader to program
-        GLES20.glAttachShader(iHandleProgram, vertexShader);
-
-        // add the fragment shader to program
-        GLES20.glAttachShader(iHandleProgram, fragmentShader);
-
-        // Bind attributes
-        GLES20.glBindAttribLocation(iHandleProgram, 0, "vPosition");
-        if(this.iShaderType == SHADER_COLOR_TYPE.E_SHADER_WITH_COLOR_PER_VERTEX)
-            GLES20.glBindAttribLocation(iHandleProgram, 1, "aColor");
-
-        // creates OpenGL ES program executables
-        GLES20.glLinkProgram(iHandleProgram);
-
-        // Get the link status.
-        final int[] linkStatus = new int[1];
-        GLES20.glGetProgramiv(iHandleProgram, GLES20.GL_LINK_STATUS, linkStatus, 0);
-
-        // If the link failed, delete the program.
-        if (linkStatus[0] == 0)
-        {
-            final String errStr = GLES20.glGetProgramInfoLog(iHandleProgram);
-            GLES20.glDeleteProgram(iHandleProgram);
-            //iHandleProgram = 0;
-            throw new RuntimeException("FATAL ERROR !!! Program link failed with link status = " + linkStatus[0] + " \n\n " + errStr + " \n\n ");
+        if(vertex.color != null){
+            this.iShaderType |= SHADER_VERTICES_WITH_OWN_COLOR;
+            // X, Y, Z, --> 0, 1, 2,
+            // R, G, B, A --> 3, 4, 5, 6
+            vertexStride += 4;
+            offset += BYTES_PER_FLOAT * NO_OF_COORDINATES_PER_VERTEX;
+            COLOR_OFFSET = offset;
         }
+
+        if(vertex.texture != null){
+            this.iShaderType |= SHADER_VERTICES_WITH_TEXTURE;
+            //U,V
+            vertexStride += 2;
+            offset += BYTES_PER_FLOAT * NO_OF_COLORS_PER_VERTEX;
+            TEXTURE_OFFSET = offset;
+        }
+
+        if(vertex.normal != null ){
+            this.iShaderType |= SHADER_VERTICES_WITH_NORMALS;
+            //Xn,Yn,Zn
+            vertexStride += 3;
+            offset += BYTES_PER_FLOAT * NO_OF_TEXTURES_PER_VERTEX;
+            NORMAL_OFFSET = offset;
+        }
+
+        this.iShaderStride =  vertexStride * BYTES_PER_FLOAT;
     }
 
+
+
+
     /**
-     * process the main draw having in mind that all the matrices are already set into OpenGl memory
+     * process the main draw having in mind that all the matrices are already set into OpenGl memory.
+     * TODO: to be updated for checking
+     *      *      TransformedVector = TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector;
      * @param viewMatrix
      * @param projectionMatrix
      * @param FORM_TYPE
      */
     protected void doDraw(final float[] viewMatrix, final float[] projectionMatrix, final int FORM_TYPE){
-        //this.iVertexBuffer.position(0);
-        //this.iDrawOrderBuffer.position(0);
-
         // counterclockwise orientation of the ordered vertices
-        //GLES20.glFrontFace(GL10.GL_CCW);
+        GLES30.glFrontFace(GLES20.GL_CCW);
+        
         // Enable face culling.
-        //GLES20.glEnable(GL10.GL_CULL_FACE); //--> make sure is disabled at clean up!
+        GLES30.glEnable(GLES20.GL_CULL_FACE); //--> make sure is disabled at clean up!
         // What faces to remove with the face culling.
-        //GLES20.glCullFace(GL10.GL_FRONT); //GL_BACK
-
-        //GLES20.glDisable(GL10.GL_DEPTH_TEST);
-
+        GLES30.glCullFace(GLES20.GL_BACK); //GL_FRONT
+        //GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
         //1. Ask OpenGL ES to load the program
-        GLES20.glUseProgram(this.iHandleProgram);
+        GLES30.glUseProgram(this.iProgram.iProgramHandle);
+        DebugUtils.checkPrintGLError();
 
-        //2. Get a handle to the position vector
-        final int positionHandle = GLES20.glGetAttribLocation(this.iHandleProgram, "vPosition");
-        if(positionHandle < 0) {
-            System.err.println("WRONG POSITION HANDLE: " + positionHandle);
-            System.out.println("ERROR =>>>> " +       GLES20.glGetError());
+        GLES30.glBindVertexArray(this.iOpenGL3Buffers.VAO());
+
+
+        //set color
+        if(0 < (this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR)){
+            GLES20.glEnableVertexAttribArray(this.iProgram.iColorHandle);
+        } else {
+            this.iProgram.iColorHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramUtils.SHADER_VARIABLE_aColor);
+            DebugUtils.checkPrintGLError();
+            GLES20.glUniform4fv(this.iProgram.iColorHandle, 1, this.iColor.asFloatArray(), 0);
         }
+        DebugUtils.checkPrintGLError();
 
-        //3. Enable the loaded handle to load the data into
-        GLES20.glEnableVertexAttribArray(positionHandle);
-
-        int shaderStride = AbstractGameCavan.NO_OF_COORDINATES_PER_VERTEX * 4; /*4=FLOAT SIZE*/
-        if(this.iShaderType == SHADER_COLOR_TYPE.E_SHADER_WITH_COLOR_PER_VERTEX){
-            shaderStride = 7 * 4; //X,Y,Z,R,G,B,A x 4
-        }
-
-        //4. Load the coordinate data
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, this.iVertexBufferIdx);
-        GLES20.glVertexAttribPointer(positionHandle, AbstractGameCavan.NO_OF_COORDINATES_PER_VERTEX,
-                GLES20.GL_FLOAT, false,
-                shaderStride, 0);
-
-        //5. Now load the color
-        int colorHandle = 0;
-        if(this.iShaderType == SHADER_COLOR_TYPE.E_SHADER_WITH_COLOR_UNIFORM) {
-            colorHandle = GLES20.glGetUniformLocation(this.iHandleProgram, "vColor");
-
-            // 6. Set color for drawing the triangle
-            GLES20.glUniform4fv(colorHandle, 1, this.iColor.asFloatArray(), 0);
-        } else if(this.iShaderType == SHADER_COLOR_TYPE.E_SHADER_WITH_COLOR_PER_VERTEX){
-            colorHandle = GLES20.glGetAttribLocation(this.iHandleProgram, "aColor");
-            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, this.iVertexBufferIdx);
-            GLES20.glEnableVertexAttribArray(colorHandle);
-            GLES20.glVertexAttribPointer(colorHandle, 4 , //4=RGBA
-                    GLES20.GL_FLOAT, false,
-                    shaderStride, NO_OF_COORDINATES_PER_VERTEX * BYTES_PER_FLOAT);
-
-        } else
-            throw new RuntimeException("unkwn shader type=" + this.iShaderType);
 
         final float[] theMVPMatrix = new float[16];
 
         //needed to have the 4th last position as 1 (vector and not 0 as direction)!
         Matrix.setIdentityM(theMVPMatrix,0);
 
-        // This multiplies the modelview matrix by the projection matrix, and stores the result in the MVP matrix
+        //6. This multiplies the modelview matrix by the projection matrix, and stores the result in the MVP matrix
         Matrix.multiplyMM(theMVPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
 
         //7. do calculate transformation matrix
-        final int vpmatrixHandle = GLES20.glGetUniformLocation(this.iHandleProgram, "vpmMatrix");
+        final int vpmatrixHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, "vpmMatrix");
+        DebugUtils.checkPrintGLError();
 
         //8. Pass the projection and view transformation to the shader
         GLES20.glUniformMatrix4fv(vpmatrixHandle, 1, false, theMVPMatrix, 0);
+        DebugUtils.checkPrintGLError();
 
-        //8.1 bind the drawing order
-        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, this.iDrawOrderBufferIdx);
+
+        //2 bind the drawing order
+        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, this.iOpenGL3Buffers.getVertexOrderBuffer());
+        DebugUtils.checkPrintGLError();
+
+
 
         //9. Draw the form
-        if(GL10.GL_LINES == FORM_TYPE) {
-            GLES20.glDrawElements(GL10.GL_LINES, this.iIndexOrderLength, GL10.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
-        } else if(GL10.GL_TRIANGLE_STRIP == FORM_TYPE) {
-            GLES20.glDrawElements(GL10.GL_TRIANGLE_STRIP, this.iIndexOrderLength, GL10.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
-        } else if(GL10.GL_TRIANGLES == FORM_TYPE) {
-            GLES20.glDrawElements(GL10.GL_TRIANGLES, this.iIndexOrderLength, GL10.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
-        }else if(GL10.GL_POINTS == FORM_TYPE) {
-            GLES20.glDrawElements(GL10.GL_POINTS, this.iIndexOrderLength, GL10.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
-        } else if(GL10.GL_LINES == FORM_TYPE) {
-            GLES20.glDrawElements(GL10.GL_LINES, this.iIndexOrderLength, GL10.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+        if(GLES30.GL_LINES == FORM_TYPE) {
+            GLES30.glDrawElements(GLES20.GL_LINES, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+        } else if(GLES30.GL_TRIANGLE_STRIP == FORM_TYPE) {
+            GLES30.glDrawElements(GLES20.GL_TRIANGLE_STRIP, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+        } else if(GLES20.GL_TRIANGLES == FORM_TYPE) {
+            GLES30.glDrawElements(GLES20.GL_TRIANGLES, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+        }else if(GLES20.GL_POINTS == FORM_TYPE) {
+            GLES30.glDrawElements(GLES20.GL_POINTS, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+        } else if(GLES20.GL_LINES == FORM_TYPE) {
+            GLES30.glDrawElements(GLES20.GL_LINES, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
         } else {
             throw new RuntimeException("FATAL ERROR !!! unknown FORM_TYPE=" + FORM_TYPE);
         }
 
-        //System.out.println("ERROR =>>>> " +       GLES20.glGetError());
+        DebugUtils.checkPrintGLError();
 
-
-
-        //10. Cleanup: Disable vertex array
-        // Unbind element array.
-        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
-
-        if(this.iShaderType == SHADER_COLOR_TYPE.E_SHADER_WITH_COLOR_PER_VERTEX){
-            GLES20.glDisableVertexAttribArray(colorHandle);
+        if(0 < (this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR)){
+            GLES30.glDisableVertexAttribArray(this.iProgram.iColorHandle);
         }
-        GLES20.glDisableVertexAttribArray(positionHandle);
-        //GLES20.glDisable(GL10.GL_CULL_FACE);
+
+        //GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
+        GLES30.glBindVertexArray(0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //2. Load the coordinate data
+//        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, this.iOpenGL3Buffers.VBO());
+//        DebugUtils.checkPrintGLError();
+//        GLES20.glVertexAttribPointer(this.iProgram.iVerticesHandle, AbstractGameCavan.NO_OF_COORDINATES_PER_VERTEX,
+//                GLES20.GL_FLOAT, false,
+//                this.iShaderStride, VERTICES_OFFSET);
+//        DebugUtils.checkPrintGLError();
+//        //3. Enable the loaded handle to load the data into
+//        GLES20.glEnableVertexAttribArray(this.iProgram.iVerticesHandle); //positionHandle);
+//        DebugUtils.checkPrintGLError();
+
+//        //.4 Load color data
+//        if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR) > 0){
+//            GLES20.glVertexAttribPointer(this.iProgram.iColorHandle, AbstractGameCavan.NO_OF_COLORS_PER_VERTEX , //4=RGBA
+//                    GLES20.GL_FLOAT, false,
+//                    this.iShaderStride, COLOR_OFFSET);
+//            DebugUtils.checkPrintGLError();
+//            GLES20.glEnableVertexAttribArray(this.iProgram.iColorHandle); //colorHandle);
+//            DebugUtils.checkPrintGLError();
+//        } else { //all other shader types will load one single color then
+//            this.iProgram.iColorHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramUtils.SHADER_VARIABLE_aColor);
+//            DebugUtils.checkPrintGLError();
+//            GLES20.glUniform4fv(this.iProgram.iColorHandle, 1, this.iColor.asFloatArray(), 0);
+//            DebugUtils.checkPrintGLError();
+//        }
+//
+//        //5. load the texture if available
+//        if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
+//            GLES20.glVertexAttribPointer(this.iProgram.iTextureHandle,
+//                    AbstractGameCavan.NO_OF_TEXTURES_PER_VERTEX, //2=U,V
+//                    GLES20.GL_FLOAT, false,
+//                    this.iShaderStride, TEXTURE_OFFSET);
+//            DebugUtils.checkPrintGLError();
+//            GLES20.glEnableVertexAttribArray(this.iProgram.iTextureHandle);
+//            DebugUtils.checkPrintGLError();
+//            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+//            DebugUtils.checkPrintGLError();
+//            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, this.iTextureDataIdx);
+//            DebugUtils.checkPrintGLError();
+//        }
+//
+//
+//        final float[] theMVPMatrix = new float[16];
+//
+//        //needed to have the 4th last position as 1 (vector and not 0 as direction)!
+//        Matrix.setIdentityM(theMVPMatrix,0);
+//
+//        //6. This multiplies the modelview matrix by the projection matrix, and stores the result in the MVP matrix
+//        Matrix.multiplyMM(theMVPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
+//
+//        //7. do calculate transformation matrix
+//        final int vpmatrixHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, "vpmMatrix");
+//        DebugUtils.checkPrintGLError();
+//
+//        //8. Pass the projection and view transformation to the shader
+//        GLES20.glUniformMatrix4fv(vpmatrixHandle, 1, false, theMVPMatrix, 0);
+//        DebugUtils.checkPrintGLError();
+//
+//        //8.1 bind the drawing order
+//        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, this.iOpenGL3Buffers.VORBF());
+//        DebugUtils.checkPrintGLError();
+//
+//        //9. Draw the form
+//        if(GLES20.GL_LINES == FORM_TYPE) {
+//            GLES20.glDrawElements(GLES20.GL_LINES, this.iIndexOrderLength, GLES20.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+//        } else if(GLES20.GL_TRIANGLE_STRIP == FORM_TYPE) {
+//            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, this.iIndexOrderLength, GLES20.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+//        } else if(GLES20.GL_TRIANGLES == FORM_TYPE) {
+//            GLES20.glDrawElements(GLES20.GL_TRIANGLES, this.iIndexOrderLength, GLES20.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+//        }else if(GLES20.GL_POINTS == FORM_TYPE) {
+//            GLES20.glDrawElements(GLES20.GL_POINTS, this.iIndexOrderLength, GLES20.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+//        } else if(GLES20.GL_LINES == FORM_TYPE) {
+//            GLES20.glDrawElements(GLES20.GL_LINES, this.iIndexOrderLength, GLES20.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+//        } else {
+//            throw new RuntimeException("FATAL ERROR !!! unknown FORM_TYPE=" + FORM_TYPE);
+//        }
+//
+//        DebugUtils.checkPrintGLError();
+//
+//        //10. Cleanup: Disable vertex array
+//        // Unbind element array.
+//        if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
+//            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+//        }
+//        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
+//        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+//
+//        if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
+//            GLES20.glDisableVertexAttribArray(this.iProgram.iTextureHandle);
+//        }
+//
+//        if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR) > 0){
+//            GLES20.glDisableVertexAttribArray(this.iProgram.iColorHandle);
+//        }
+//        GLES20.glDisableVertexAttribArray(this.iProgram.iVerticesHandle);
+        GLES20.glDisable(GLES20.GL_CULL_FACE);
     }
 
-    public void onDestroy(){
-        if(this.iDrawOrderBufferIdx != -1){
-            final int buffers[] = new int[2];
-            buffers[0] = this.iDrawOrderBufferIdx;
-            buffers[1] = this.iVertexBufferIdx;
-            GLES20.glDeleteBuffers(2, buffers, 0);
-        }
+    @CallSuper
+    public void destroy(){
+        COLOR_OFFSET = -1;
+        TEXTURE_OFFSET = -1;
+        NORMAL_OFFSET = -1;
+
+        iProgram = null;
+        iOpenGL3Buffers = null;
+
+        iTextureDataIdx = -1;
+
+        iShaderType = SHADER_UNDEFINED;
+        iIndexOrderLength = 0;
+        iShaderStride = 0;
     }
+
+    /**
+     * From GameCavanLifeCycle
+     */
+//    public boolean isOnPause(){
+//        return this.iVertexBufferIdx == -1;
+//    }
+
+    /**
+     * call this at the end of your implementation of the onResume of the class that extend this
+     * class.
+     * Example:
+     * <code>
+     * class MyClass{
+     *     @Override
+     *     public void onResume() {
+     *      if(super.isOnPause()){
+     *             //we must rebuild the indexes as we are coming back from onPause
+     *             super.buildDrawOrderBuffer(...);
+     *             super.buildVertexBuffer(...);
+     *      }
+     *
+     *      ....your implementation here...then at the end you call this:
+     *      super.onResume()
+     *     }
+     * }
+     * </code>
+     * Otherwise you will have an exception thrown that the indexes are empty (in case of Activity
+     * going back from pause to resume)
+     */
+//    @CallSuper
+//    public void onResume() {
+//        if(this.iVertexBufferIdx == -1){
+//            throw new IndexOutOfBoundsException("no vertices buffer found! " +
+//                    "Are you calling super.onResume() " +
+//                    "method before building the vector buffer?");
+//        }
+//    }
+
+    /**
+     * From GameCavanLifeCycle
+     * calling this method will result on releasing all data inside of all buffers.
+     * It this object is about to be reused make sure that you build them back before draw is call.
+     */
+//    @CallSuper
+//    public void onPause(){
+//        this.iDrawOrderBufferIdx = OpenGLProgramUtils.deleteBuffer(this.iDrawOrderBufferIdx);
+//        this.iVertexBufferIdx = OpenGLProgramUtils.deleteBuffer(this.iVertexBufferIdx);
+//
+//        //cleanup is managed by TextureUtils and the textures will be only removed with the
+//        //main program at the "onStop" Activity request.
+//        //Reason:
+//        // - to avoid big loading timing in case of transitions of Activity
+//        this.iTextureDataIdx = -1;
+//    }
+
+
+//    @Override
+//    public void onRestart() {
+//        this.compileGLSL();
+//    }
 
 
 }

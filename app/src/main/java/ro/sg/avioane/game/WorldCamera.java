@@ -1,8 +1,15 @@
+/*
+ * Copyright (c) 2021.
+ * By using this source code from this project/file you agree with the therms listed at
+ * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
+ */
+
 package ro.sg.avioane.game;
 
 import android.opengl.Matrix;
 
 import ro.sg.avioane.geometry.XYZCoordinate;
+import ro.sg.avioane.geometry.XYZVertex;
 
 public class WorldCamera {
     private final float[] iViewMatrix = new float[16];

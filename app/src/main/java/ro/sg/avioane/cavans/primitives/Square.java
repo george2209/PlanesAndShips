@@ -33,6 +33,7 @@ public class Square extends AbstractGameCavan{
     private XYZVertex[] buildCoordinates(final XYZVertex upperLeftCoordinate, final float edgeSize){
         final XYZVertex[] coordinatesArray = new XYZVertex[4];
         coordinatesArray[0] = upperLeftCoordinate;
+        final XYZTexture squareTexture = upperLeftCoordinate.texture;
 
         coordinatesArray[1] = new XYZVertex(
                 new XYZCoordinate(
@@ -40,21 +41,24 @@ public class Square extends AbstractGameCavan{
                 upperLeftCoordinate.coordinate.z() + edgeSize
                 ));
         coordinatesArray[1].color = upperLeftCoordinate.color;
-        //coordinatesArray[1].texture = new XYZTexture(0,1, coordinatesArray[0].texture.getTextureData());
+        coordinatesArray[1].texture = new XYZTexture(0,1,
+                squareTexture.getTextureName(), squareTexture.getTextureData());
 
         coordinatesArray[2] = new XYZVertex(
                 new XYZCoordinate(
                 upperLeftCoordinate.coordinate.x() + edgeSize, upperLeftCoordinate.coordinate.y(),
                 upperLeftCoordinate.coordinate.z()));
         coordinatesArray[2].color = upperLeftCoordinate.color;
-        //coordinatesArray[2].texture = new XYZTexture(1,0, coordinatesArray[0].texture.getTextureData());
+        coordinatesArray[2].texture = new XYZTexture(1,0,
+                squareTexture.getTextureName(), squareTexture.getTextureData());
 
         coordinatesArray[3] = new XYZVertex(
                 new XYZCoordinate(
                 upperLeftCoordinate.coordinate.x() + edgeSize, upperLeftCoordinate.coordinate.y(),
                 upperLeftCoordinate.coordinate.z() + edgeSize));
         coordinatesArray[3].color = upperLeftCoordinate.color;
-        //coordinatesArray[3].texture = new XYZTexture(1,1, coordinatesArray[0].texture.getTextureData());
+        coordinatesArray[3].texture = new XYZTexture(1,1,
+                squareTexture.getTextureName(), squareTexture.getTextureData());
 
 //        coordinatesArray[0].normal = MathGLUtils.getTriangleNormal(
 //                coordinatesArray[0].coordinate,

@@ -6,8 +6,11 @@
 
 package ro.sg.avioane.util;
 
+import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLES30;
+
+import ro.sg.avioane.geometry.XYZTexture;
 
 /**
  * a class maintaining the VBO and the VAO of a specific vertex array
@@ -17,6 +20,7 @@ public class OpenGLBufferArray3 {
     private int VAO = -1;
     private int VBO = -1;
     private int iVertexOrderBuffer = -1;
+    private int iTextureDataBuffer = -1;
 
     public OpenGLBufferArray3(){
     }
@@ -93,6 +97,21 @@ public class OpenGLBufferArray3 {
     }
 
     /**
+     *
+     * @param texturePointer shader textureID
+     * @param noTexturesPerVertex normally is 2 (U,V)
+     * @param shaderStride
+     * @param offset the offset of the texture inside the vertex buffer
+     * @return
+     */
+    public OpenGLBufferArray3 addBuildTextures(int texturePointer, int noTexturesPerVertex,
+                                               int shaderStride, int offset, final XYZTexture textureObj){
+        this.iTextureDataBuffer = TextureUtils.getInstance().
+                getTextureWithName(textureObj.getTextureName(), textureObj.getTextureData());
+        return this.addBuildBufferColors(texturePointer, noTexturesPerVertex, shaderStride,offset);
+    }
+
+    /**
      * see @link #startBuildBuffers
      */
     public void finishBuildBuffers(/*int shaderType*/){
@@ -152,11 +171,9 @@ public class OpenGLBufferArray3 {
             System.out.println("iVertexOrderBuffer*************already build! Continue...");
         }
 
-        //GLES30.glBindVertexArray(VAO);
         GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, iVertexOrderBuffer);
         GLES30.glBufferData(GLES30.GL_ELEMENT_ARRAY_BUFFER, size, buffer, usage);
         GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, 0);
-        //GLES30.glBindVertexArray(0);
     }
 
 
@@ -199,6 +216,10 @@ public class OpenGLBufferArray3 {
     }
 
     public int getVertexOrderBuffer(){
-        return iVertexOrderBuffer;
+        return this.iVertexOrderBuffer;
+    }
+
+    public int getTextureDataBuffer(){
+        return this.iTextureDataBuffer;
     }
 }

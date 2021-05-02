@@ -6,17 +6,29 @@
 
 package ro.sg.avioane.geometry;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+
+import ro.sg.avioane.util.TextureUtils;
 
 public class XYZTexture {
 
     public Bitmap iTexture = null;
     private final float iTextureArray[] = new float[2];
+    private final String iTextureName;
 
-    public XYZTexture(final float u, final float v, Bitmap textureData){
+    public XYZTexture(final float u, final float v, final String textureName, final Context context){
+        iTextureArray[0] = u;
+        iTextureArray[1] = v;
+        this.iTexture = TextureUtils.loadTextureData(context,textureName);
+        this.iTextureName = textureName;
+    }
+
+    public XYZTexture(final float u, final float v, final String textureName, final Bitmap textureData){
         iTextureArray[0] = u;
         iTextureArray[1] = v;
         this.iTexture = textureData;
+        this.iTextureName = textureName;
     }
 
     public float u(){
@@ -41,5 +53,9 @@ public class XYZTexture {
 
     public Bitmap getTextureData(){
         return this.iTexture;
+    }
+
+    public String getTextureName(){
+        return  this.iTextureName;
     }
 }

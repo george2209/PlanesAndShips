@@ -69,8 +69,6 @@ public abstract class AbstractGameCavan{
     private OpenGLProgram iProgram = null;
     private OpenGLBufferArray3 iOpenGL3Buffers = null;
 
-    private int iTextureDataIdx = -1;
-
     protected XYZColor iColor = new XYZColor(0.03671875f, 0.76953125f, 0.82265625f, 1.0f);
     private int iShaderType = SHADER_UNDEFINED;
     private int iIndexOrderLength = 0;
@@ -217,17 +215,21 @@ public abstract class AbstractGameCavan{
                     COLOR_OFFSET);
         }
 
+        if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
+            //TODO: implement texture data per vertex buffer?
+            // Otherwise one texture for a collection of vertices?
+            this.iOpenGL3Buffers.addBuildTextures(this.iProgram.iTextureHandle,
+                    AbstractGameCavan.NO_OF_TEXTURES_PER_VERTEX, this.iShaderStride,
+                    TEXTURE_OFFSET, arrVertices[0].texture);
+        }
+
         this.iOpenGL3Buffers.finishBuildBuffers();
 
 
         //release main memory
         vertexBuffer.limit(0);
 
-        if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
-            //TODO: implement texture per vertex info? Otherwise one texture for a collection of vertices?
-            this.iTextureDataIdx = TextureUtils.getInstance().
-                    getTextureWithName("test", arrVertices[0].texture.getTextureData());
-        }
+
     }
 
     /**
@@ -301,7 +303,7 @@ public abstract class AbstractGameCavan{
 
 
         //set color
-        if(0 < (this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR)){
+        if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR)!= 0){
             GLES20.glEnableVertexAttribArray(this.iProgram.iColorHandle);
         } else {
             this.iProgram.iColorHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramUtils.SHADER_VARIABLE_aColor);
@@ -309,6 +311,18 @@ public abstract class AbstractGameCavan{
             GLES20.glUniform4fv(this.iProgram.iColorHandle, 1, this.iColor.asFloatArray(), 0);
         }
         DebugUtils.checkPrintGLError();
+
+        //set texture
+        if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE)!= 0){
+            //set U,V
+            GLES30.glEnableVertexAttribArray(this.iProgram.iTextureHandle);
+            DebugUtils.checkPrintGLError();
+
+            //set bitmap data
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, iOpenGL3Buffers.getTextureDataBuffer());
+            DebugUtils.checkPrintGLError();
+        }
 
 
         final float[] theMVPMatrix = new float[16];
@@ -343,8 +357,8 @@ public abstract class AbstractGameCavan{
             GLES30.glDrawElements(GLES20.GL_TRIANGLES, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
         }else if(GLES20.GL_POINTS == FORM_TYPE) {
             GLES30.glDrawElements(GLES20.GL_POINTS, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
-        } else if(GLES20.GL_LINES == FORM_TYPE) {
-            GLES30.glDrawElements(GLES20.GL_LINES, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+//        } else if(GLES20.GL_LINES == FORM_TYPE) {
+//            GLES30.glDrawElements(GLES20.GL_LINES, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
         } else {
             throw new RuntimeException("FATAL ERROR !!! unknown FORM_TYPE=" + FORM_TYPE);
         }
@@ -353,10 +367,22 @@ public abstract class AbstractGameCavan{
 
         if(0 < (this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR)){
             GLES30.glDisableVertexAttribArray(this.iProgram.iColorHandle);
+            DebugUtils.checkPrintGLError();
+        }
+
+        if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE)!= 0){
+            GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, 0);
+            GLES30.glDisableVertexAttribArray(this.iProgram.iTextureHandle);
+            DebugUtils.checkPrintGLError();
+
+            //GLES30.glDisable(GLES30.GL_TEXTURE_2D); //not needed??? glBindTexture(0) enough?
+            //DebugUtils.checkPrintGLError();
         }
 
         //GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
         GLES30.glBindVertexArray(0);
+        DebugUtils.checkPrintGLError();
+
 
 
 
@@ -476,8 +502,6 @@ public abstract class AbstractGameCavan{
 
         iProgram = null;
         iOpenGL3Buffers = null;
-
-        iTextureDataIdx = -1;
 
         iShaderType = SHADER_UNDEFINED;
         iIndexOrderLength = 0;

@@ -145,6 +145,8 @@ public class OpenGLProgramUtils {
      * </code>
      * This will build a shader having the X,Y,Z, R,G,B,A coordinates.
      *
+     * TODO: it must be improved to support and do all M,V,P matrices calculus here!
+     *
      * @param shaderType one of the values or a bitwise mix of the:
      *                   - SHADER_ONLY_VERTICES
      *                   - SHADER_VERTICES_WITH_OWN_COLOR

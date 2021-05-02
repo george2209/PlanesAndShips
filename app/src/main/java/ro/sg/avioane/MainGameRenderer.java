@@ -114,11 +114,11 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 
 
 
-//        final XYZVertex leftUpperSquare = new XYZVertex( new XYZCoordinate(0,0,0));
-//        leftUpperSquare.color = new XYZColor(1,0,0,1);
-//        //leftUpperSquare.texture = new XYZTexture(0.0f, 0.0f, TextureUtils.loadTextureData(this.iContext,"test"));
-//        this.iSquare = new Square( leftUpperSquare, 10);
-//        this.iWorld.add(this.iSquare);
+        final XYZVertex leftUpperSquare = new XYZVertex( new XYZCoordinate(0,0,0));
+        leftUpperSquare.color = new XYZColor(1,0,0,1);
+        leftUpperSquare.texture = new XYZTexture(0.0f, 0.0f, "test", this.iContext);
+        this.iSquare = new Square( leftUpperSquare, 10);
+        this.iWorld.add(this.iSquare);
     }
 
 

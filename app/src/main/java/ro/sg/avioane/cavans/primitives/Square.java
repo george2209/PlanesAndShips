@@ -28,6 +28,8 @@ public class Square extends AbstractGameCavan{
         this.iEdgeSize = edgeSize;
 
         super.build(buildCoordinates(upperLeftCoordinate, edgeSize), buildIndexDrawOrder());
+
+        //rotateYTest();
     }
 
     private XYZVertex[] buildCoordinates(final XYZVertex upperLeftCoordinate, final float edgeSize){
@@ -60,25 +62,25 @@ public class Square extends AbstractGameCavan{
         coordinatesArray[3].texture = new XYZTexture(1,1,
                 squareTexture.getTextureName(), squareTexture.getTextureData());
 
-//        coordinatesArray[0].normal = MathGLUtils.getTriangleNormal(
-//                coordinatesArray[0].coordinate,
-//                coordinatesArray[1].coordinate,
-//                coordinatesArray[2].coordinate);
-//
-//        coordinatesArray[1].normal = MathGLUtils.getTriangleSharedNormal(
-//                new XYZCoordinate[] {
-//                        //triangle 0
-//                        coordinatesArray[0].coordinate,
-//                        coordinatesArray[1].coordinate,
-//                        coordinatesArray[2].coordinate,
-//                        //triangle 1
-//                        coordinatesArray[2].coordinate,
-//                        coordinatesArray[1].coordinate,
-//                        coordinatesArray[3].coordinate
-//                });
-//
-//        coordinatesArray[2].normal = coordinatesArray[1].normal;
-//        coordinatesArray[3].normal = coordinatesArray[1].normal;
+        coordinatesArray[0].normal = MathGLUtils.getTriangleNormal(
+                coordinatesArray[0].coordinate,
+                coordinatesArray[1].coordinate,
+                coordinatesArray[2].coordinate);
+
+        coordinatesArray[1].normal = MathGLUtils.getTriangleSharedNormal(
+                new XYZCoordinate[] {
+                        //triangle 0
+                        coordinatesArray[0].coordinate,
+                        coordinatesArray[1].coordinate,
+                        coordinatesArray[2].coordinate,
+                        //triangle 1
+                        coordinatesArray[2].coordinate,
+                        coordinatesArray[1].coordinate,
+                        coordinatesArray[3].coordinate
+                });
+
+        coordinatesArray[2].normal = coordinatesArray[1].normal;
+        coordinatesArray[3].normal = coordinatesArray[1].normal;
 
 
         return coordinatesArray;
@@ -90,8 +92,21 @@ public class Square extends AbstractGameCavan{
         return new short[] {0,1,2,2,1,3};
     }
 
+    float strength = 0.1f;
+    long time = System.currentTimeMillis();
+
     @Override
     public void draw(float[] viewMatrix, float[] projectionMatrix) {
+        final long now = System.currentTimeMillis();
+        if(now - time > 500){
+            time = now;
+            strength += 0.1f;
+            if(strength > 1.0)
+                strength = 0.1f;
+        }
+        super.getAmbientLight().setAmbientColorStrength(strength);
+
+
         super.doDraw(viewMatrix, projectionMatrix, GL10.GL_TRIANGLES);
     }
 
@@ -100,23 +115,13 @@ public class Square extends AbstractGameCavan{
         super.build(buildCoordinates(this.iUpperLeftCoordinate, this.iEdgeSize), buildIndexDrawOrder());
     }
 
-//    @Override
-//    public void onStop() {
-//
-//    }
-
-//    @Override
-//    public void onRestart() {
-//        super.onRestart();
-//    }
-
-//    @Override
-//    public void onResume() {
-//        if(super.isOnPause()){
-//            //we must rebuild the indexes
-//            super.buildDrawOrderBuffer(this.buildIndexDrawOrder());
-//            super.buildVertexBuffer(this.buildCoordinates(iUpperLeftCoordinate, iEdgeSize));
-//        }
-//        super.onResume();
-//    }
+    //https://learnopengl.com/Getting-started/Transformations
+    public void rotateYTest(){
+        final float[] modelMatrix = super.getModelMatrix();
+        float val = 0.707106f; //45 degrees hardcoded for test
+        modelMatrix[0] = val;
+        modelMatrix[2] = val;
+        modelMatrix[8] = -val;
+        modelMatrix[10] = val;
+    }
 }

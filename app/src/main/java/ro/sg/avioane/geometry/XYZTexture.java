@@ -15,14 +15,23 @@ public class XYZTexture {
 
     public Bitmap iTexture = null;
     private final float iTextureArray[] = new float[2];
-    private final String iTextureName;
+    private String iTextureName;
 
-    public XYZTexture(final float u, final float v, final String textureName, final Context context){
-        iTextureArray[0] = u;
-        iTextureArray[1] = v;
-        this.iTexture = TextureUtils.loadTextureData(context,textureName);
-        this.iTextureName = textureName;
+    public XYZTexture(final float[] arr){
+        iTextureArray[0] = arr[0];
+        iTextureArray[1] = arr[1];
     }
+
+    public float[] asArray(){
+        return this.iTextureArray;
+    }
+
+//    public XYZTexture(final float u, final float v, final String textureName, final Context context){
+//        iTextureArray[0] = u;
+//        iTextureArray[1] = v;
+//        this.iTexture = TextureUtils.loadTextureData(context,textureName);
+//        this.iTextureName = textureName;
+//    }
 
     public XYZTexture(final float u, final float v, final String textureName, final Bitmap textureData){
         iTextureArray[0] = u;
@@ -47,9 +56,10 @@ public class XYZTexture {
 //        iTextureArray[1] = v;
 //    }
 
-//    public void setTextureData(Bitmap textureData){
-//        this.iTexture = textureData;
-//    }
+    public void setTextureData(final Bitmap textureData, final String textureName){
+        this.iTexture = textureData;
+        this.iTextureName = textureName;
+    }
 
     public Bitmap getTextureData(){
         return this.iTexture;

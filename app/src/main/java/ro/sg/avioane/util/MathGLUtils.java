@@ -12,6 +12,63 @@ import ro.sg.avioane.geometry.XYZVertex;
 
 public class MathGLUtils {
 
+    public static class Vector{
+
+        /**
+         *
+         * @param vector the vector (not position!) array coordinates
+         * @return the length/magnitude of a vector into float (low precision).
+         */
+        public static float getVectorLength(final float[] vector){
+            float sum = 0;
+            for (float u: vector ) {
+                sum += u*u;
+            }
+            return (float)Math.sqrt(sum);
+        }
+
+        public static float[] getVectorDirectionFromTwoPoints(final XYZCoordinate p1, final XYZCoordinate p2){
+            return new float[]{
+                    p2.x()-p1.x(),
+                    p2.y()-p1.y(),
+                    p2.z()-p1.z()
+            };
+        }
+
+        /**
+         * normalize a 3D vector.
+         * The determinant is calculated as follows:
+         * <code>d=Math.sqrt(m[0]*m[0] + m[1]*m[1] + ... m[n]*m[n])</code>
+         * @param v the vector to be normalized
+         * @return v normalized
+         */
+        public static float[] normalize(float[] v) {
+            final int SIZE = v.length;
+            final float determinant = Vector.getVectorLength(v);
+
+            for(int i=0; i<SIZE; i++){
+                v[i] = v[i] / (float)determinant;
+            }
+
+            return v;
+        }
+
+        /**
+         *
+         * @param vector
+         * @param val
+         * @return a new arrays having the results (V x val)
+         */
+        public static float[] multiplyByValue(final float[] vector, final float val){
+            final float[] res = new float[vector.length];
+            for (int i = 0; i < vector.length; i++) {
+                res[i] = vector[i] * val;
+            }
+            return res;
+        }
+
+    }
+
     /**
      * get3DPointsDistance
      * Used formula:
@@ -27,6 +84,8 @@ public class MathGLUtils {
                 Math.pow((p2.z() - p1.z()), 2)
         );
     }
+
+
 
     /**
      * add two matrices into a new matrix
@@ -97,32 +156,24 @@ public class MathGLUtils {
         return result;
     }
 
-    /**
-     * normalize a 3D matrix.
-     * The determinant is calculated as follows:
-     * <code>d=Math.sqrt(m[0]*m[0] + m[1]*m[1] + ... m[n]*m[n])</code>
-     * @param m the matrix or vector to be normalized
-     * @return m normalized
-     */
-    public static float[] matrixNormalize(float[] m) {
-        final int SIZE = m.length;
-
-        double determinant = 0.0;
-        for(int i=0; i<SIZE; i++){
-            determinant += m[i] * m[i];
-        }
-        determinant = Math.sqrt(determinant);
-
-        if (determinant == 0) {
-            throw new IllegalArgumentException("cannot normalize with 0 determinant!");
-        }
-
-        for(int i=0; i<SIZE; i++){
-            m[i] = m[i] / (float)determinant;
-        }
-
-        return m;
-    }
+//    /**
+//     * normalize a 3D matrix.
+//     * The determinant is calculated as follows:
+//     * <code>d=Math.sqrt(m[0]*m[0] + m[1]*m[1] + ... m[n]*m[n])</code>
+//     * that is the vector's magnitude
+//     * @param m the matrix or vector to be normalized
+//     * @return m normalized
+//     */
+//    public static float[] matrixNormalizeX(float[] m) {
+//        final int SIZE = m.length;
+//        final float determinant = Vector.getVectorLength(m);
+//
+//        for(int i=0; i<SIZE; i++){
+//            m[i] = m[i] / (float)determinant;
+//        }
+//
+//        return m;
+//    }
 
     /**
      * This method is returning a point that is placed at a specific length from the initial point
@@ -174,7 +225,7 @@ public class MathGLUtils {
                                               final XYZCoordinate c){
         final XYZCoordinate edge1 = subtract(b, a);
         final XYZCoordinate edge2 = subtract(c,a);
-        return new XYZCoordinate(matrixNormalize(crossProduct(edge1, edge2).asArray()));
+        return new XYZCoordinate( Vector.normalize(crossProduct(edge1, edge2).asArray()));
     }
 
     /**
@@ -202,7 +253,7 @@ public class MathGLUtils {
         }
 
         return new XYZCoordinate(
-                matrixNormalize(normalSum.asArray())
+                Vector.normalize(normalSum.asArray())
         );
     }
 

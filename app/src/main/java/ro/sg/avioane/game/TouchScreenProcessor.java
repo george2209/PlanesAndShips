@@ -286,13 +286,21 @@ public class TouchScreenProcessor {
         }
     }
 
+    /**
+     *
+     * @param x
+     * @param y
+     * @param viewMatrix
+     * @param projectionMatrix
+     * @return a normalized vector (inclusive consideration the perspective projection 4th variable)
+     */
     private float[] getVectorFromDisplayCoordinate(float x, float y, float[] viewMatrix, float[] projectionMatrix) {
         final int[] viewport = { 0, 0, this.iScreenWidth, this.iScreenHeight };
 
         final float[] resultNear = getUnProjectMatrix(x, y, 0.0f, viewport, viewMatrix, projectionMatrix);
         final float[] resultFar = getUnProjectMatrix(x, y, 1.0f, viewport, viewMatrix, projectionMatrix);
-        final float[] result = MathGLUtils.matrixDifference(resultFar, resultNear);
-        MathGLUtils.matrixNormalize(result);
+        final float[] result = MathGLUtils.matrixDifference(resultFar, resultNear); //calculate the direction
+        MathGLUtils.Vector.normalize(result);
         return result;
     }
 
@@ -303,7 +311,8 @@ public class TouchScreenProcessor {
      * @param y
      * @param winZ
      * @param viewport
-     * @return the x,y coordinated from screen translated into world coordinates
+     * @return a X,Y,Z coordinate that contains the x,y coordinated from screen
+     * translated into world coordinates
      */
     private float[] getUnProjectMatrix(float x, float y, float winZ,
                                        int[] viewport,

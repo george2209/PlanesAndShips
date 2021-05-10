@@ -7,6 +7,9 @@
 package ro.sg.avioane.geometry;
 
 public class XYZColor {
+    public final static float OPAQUE = 1.0f;
+    public final static float TRANSPARENT = 0.0f;
+
     public float red = 0.0f;
     public float green = 0.0f;
     public float blue = 0.0f;
@@ -21,6 +24,13 @@ public class XYZColor {
         this.green = green;
         this.blue = blue;
         this.alpha = alpha;
+    }
+
+    public XYZColor(final float[] colorArray){
+        this.red = colorArray[0];
+        this.green = colorArray[1];
+        this.blue = colorArray[2];
+        this.alpha = colorArray[3];
     }
 
     public float[] asFloatArray(){

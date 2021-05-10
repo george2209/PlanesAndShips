@@ -20,17 +20,17 @@ import java.nio.ShortBuffer;
 import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZVertex;
+import ro.sg.avioane.lighting.AmbientLight;
 import ro.sg.avioane.util.DebugUtils;
 import ro.sg.avioane.util.OpenGLBufferArray3;
 import ro.sg.avioane.util.OpenGLProgram;
-import ro.sg.avioane.util.OpenGLProgramUtils;
-import ro.sg.avioane.util.TextureUtils;
+import ro.sg.avioane.util.OpenGLProgramFactory;
 
-import static ro.sg.avioane.util.OpenGLProgramUtils.SHADER_ONLY_VERTICES;
-import static ro.sg.avioane.util.OpenGLProgramUtils.SHADER_UNDEFINED;
-import static ro.sg.avioane.util.OpenGLProgramUtils.SHADER_VERTICES_WITH_NORMALS;
-import static ro.sg.avioane.util.OpenGLProgramUtils.SHADER_VERTICES_WITH_OWN_COLOR;
-import static ro.sg.avioane.util.OpenGLProgramUtils.SHADER_VERTICES_WITH_TEXTURE;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_ONLY_VERTICES;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_UNDEFINED;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_NORMALS;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_OWN_COLOR;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_TEXTURE;
 
 /**
  * How the vertices shader is organized:
@@ -61,6 +61,7 @@ public abstract class AbstractGameCavan{
     private static final byte NO_OF_COORDINATES_PER_VERTEX = 3; //use X,Y,Z
     private static final byte NO_OF_COLORS_PER_VERTEX = 4; //use R,G,B,A
     private static final byte NO_OF_TEXTURES_PER_VERTEX = 2; //use U,V
+    private static final byte NO_OF_NORMAL_COORDINATES_PER_VERTEX = NO_OF_COORDINATES_PER_VERTEX;
     private static final int VERTICES_OFFSET = 0;
     private int COLOR_OFFSET = -1; //BYTES_PER_FLOAT * NO_OF_COORDINATES_PER_VERTEX;
     private int TEXTURE_OFFSET = -1; //COLOR_OFFSET + BYTES_PER_FLOAT * NO_OF_COLORS_PER_VERTEX;
@@ -70,14 +71,30 @@ public abstract class AbstractGameCavan{
     private OpenGLBufferArray3 iOpenGL3Buffers = null;
 
     protected XYZColor iColor = new XYZColor(0.03671875f, 0.76953125f, 0.82265625f, 1.0f);
+
+    //Light part
+    private AmbientLight iAmbientLight = new AmbientLight();
+
     private int iShaderType = SHADER_UNDEFINED;
     private int iIndexOrderLength = 0;
     private int iShaderStride = 0;
+    private final float[] iModelMatrix = new float[16];
 
 
     public abstract void draw(final float[] viewMatrix, final float[] projectionMatrix);
     public abstract void onRestore();
 
+    /**
+     *
+     * @return a reference to the model matrix
+     */
+    protected float[] getModelMatrix(){
+        return this.iModelMatrix;
+    }
+
+    protected AmbientLight getAmbientLight(){
+        return this.iAmbientLight;
+    }
 
     /**
      * do the compilation & build of the GLSL code
@@ -85,8 +102,9 @@ public abstract class AbstractGameCavan{
      * @param drawOrderArr the order of drawing the vertices
      */
     protected void build(final XYZVertex[] arrVertices, final short[] drawOrderArr){
+        Matrix.setIdentityM(this.iModelMatrix, 0);
         this.calculateShaderType(arrVertices[0]);
-        this.iProgram = OpenGLProgramUtils.getInstance().getProgramForShader(this.iShaderType);
+        this.iProgram = OpenGLProgramFactory.getInstance().getProgramForShader(this.iShaderType);
         this.buildVertexBuffer(arrVertices);
         this.buildDrawOrderBuffer(drawOrderArr);
     }
@@ -223,6 +241,12 @@ public abstract class AbstractGameCavan{
                     TEXTURE_OFFSET, arrVertices[0].texture);
         }
 
+        if((this.iShaderType & SHADER_VERTICES_WITH_NORMALS) != 0){
+            this.iOpenGL3Buffers.addBuildBufferColors(this.iProgram.iNormalHandle,
+                    AbstractGameCavan.NO_OF_NORMAL_COORDINATES_PER_VERTEX, this.iShaderStride,
+                    NORMAL_OFFSET);
+        }
+
         this.iOpenGL3Buffers.finishBuildBuffers();
 
 
@@ -267,7 +291,7 @@ public abstract class AbstractGameCavan{
             this.iShaderType |= SHADER_VERTICES_WITH_NORMALS;
             //Xn,Yn,Zn
             vertexStride += 3;
-            offset += BYTES_PER_FLOAT * NO_OF_TEXTURES_PER_VERTEX;
+            offset += BYTES_PER_FLOAT * NO_OF_NORMAL_COORDINATES_PER_VERTEX;
             NORMAL_OFFSET = offset;
         }
 
@@ -285,14 +309,16 @@ public abstract class AbstractGameCavan{
      * @param projectionMatrix
      * @param FORM_TYPE
      */
-    protected void doDraw(final float[] viewMatrix, final float[] projectionMatrix, final int FORM_TYPE){
+    @CallSuper
+    public void doDraw(final float[] viewMatrix, final float[] projectionMatrix,
+                       final int FORM_TYPE){
         // counterclockwise orientation of the ordered vertices
         GLES30.glFrontFace(GLES20.GL_CCW);
         
         // Enable face culling.
-        GLES30.glEnable(GLES20.GL_CULL_FACE); //--> make sure is disabled at clean up!
+        //GLES30.glEnable(GLES20.GL_CULL_FACE); //--> make sure is disabled at clean up!
         // What faces to remove with the face culling.
-        GLES30.glCullFace(GLES20.GL_BACK); //GL_FRONT
+        //GLES30.glCullFace(GLES20.GL_BACK); //GL_FRONT
         //GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
         //1. Ask OpenGL ES to load the program
@@ -301,18 +327,39 @@ public abstract class AbstractGameCavan{
 
         GLES30.glBindVertexArray(this.iOpenGL3Buffers.VAO());
 
+        //4set matrices
+        this.iProgram.iModelMatrixHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_theModelMatrix);
+        DebugUtils.checkPrintGLError();
+        GLES20.glUniformMatrix4fv(this.iProgram.iModelMatrixHandle, 1, false, this.iModelMatrix, 0);
+        DebugUtils.checkPrintGLError();
 
-        //set color
+        this.iProgram.iViewMatrixHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_theViewMatrix);
+        DebugUtils.checkPrintGLError();
+        GLES20.glUniformMatrix4fv(this.iProgram.iViewMatrixHandle, 1, false, viewMatrix, 0);
+        DebugUtils.checkPrintGLError();
+
+        this.iProgram.iProjectionMatrixHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_theProjectionMatrix);
+        DebugUtils.checkPrintGLError();
+        GLES20.glUniformMatrix4fv(this.iProgram.iProjectionMatrixHandle, 1, false, projectionMatrix, 0);
+        DebugUtils.checkPrintGLError();
+
+
+        //2set color
         if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR)!= 0){
             GLES20.glEnableVertexAttribArray(this.iProgram.iColorHandle);
         } else {
-            this.iProgram.iColorHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramUtils.SHADER_VARIABLE_aColor);
+            this.iProgram.iColorHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_aColor);
             DebugUtils.checkPrintGLError();
             GLES20.glUniform4fv(this.iProgram.iColorHandle, 1, this.iColor.asFloatArray(), 0);
         }
         DebugUtils.checkPrintGLError();
+        //2.1 set ambient color
+        this.iProgram.iAmbientColorHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_ambientLightColor);
+        DebugUtils.checkPrintGLError();
+        GLES20.glUniform4fv(this.iProgram.iAmbientColorHandle, 1, this.iAmbientLight.getAmbientColorCalculated().asFloatArray(), 0);
+        DebugUtils.checkPrintGLError();
 
-        //set texture
+        //3set texture
         if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE)!= 0){
             //set U,V
             GLES30.glEnableVertexAttribArray(this.iProgram.iTextureHandle);
@@ -324,31 +371,18 @@ public abstract class AbstractGameCavan{
             DebugUtils.checkPrintGLError();
         }
 
+        //set normals
+        if((this.iShaderType & SHADER_VERTICES_WITH_NORMALS)!= 0){
+            //set Xn, Yn, Zn
+            GLES30.glEnableVertexAttribArray(this.iProgram.iNormalHandle);
+            DebugUtils.checkPrintGLError();
+        }
 
-        final float[] theMVPMatrix = new float[16];
-
-        //needed to have the 4th last position as 1 (vector and not 0 as direction)!
-        Matrix.setIdentityM(theMVPMatrix,0);
-
-        //6. This multiplies the modelview matrix by the projection matrix, and stores the result in the MVP matrix
-        Matrix.multiplyMM(theMVPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
-
-        //7. do calculate transformation matrix
-        final int vpmatrixHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, "vpmMatrix");
-        DebugUtils.checkPrintGLError();
-
-        //8. Pass the projection and view transformation to the shader
-        GLES20.glUniformMatrix4fv(vpmatrixHandle, 1, false, theMVPMatrix, 0);
-        DebugUtils.checkPrintGLError();
-
-
-        //2 bind the drawing order
+        //5 bind the drawing order
         GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, this.iOpenGL3Buffers.getVertexOrderBuffer());
         DebugUtils.checkPrintGLError();
 
-
-
-        //9. Draw the form
+        //6. Draw the form
         if(GLES30.GL_LINES == FORM_TYPE) {
             GLES30.glDrawElements(GLES20.GL_LINES, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
         } else if(GLES30.GL_TRIANGLE_STRIP == FORM_TYPE) {
@@ -357,14 +391,12 @@ public abstract class AbstractGameCavan{
             GLES30.glDrawElements(GLES20.GL_TRIANGLES, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
         }else if(GLES20.GL_POINTS == FORM_TYPE) {
             GLES30.glDrawElements(GLES20.GL_POINTS, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
-//        } else if(GLES20.GL_LINES == FORM_TYPE) {
-//            GLES30.glDrawElements(GLES20.GL_LINES, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
         } else {
             throw new RuntimeException("FATAL ERROR !!! unknown FORM_TYPE=" + FORM_TYPE);
         }
-
         DebugUtils.checkPrintGLError();
 
+        //7 cleanup
         if(0 < (this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR)){
             GLES30.glDisableVertexAttribArray(this.iProgram.iColorHandle);
             DebugUtils.checkPrintGLError();
@@ -379,119 +411,15 @@ public abstract class AbstractGameCavan{
             //DebugUtils.checkPrintGLError();
         }
 
-        //GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
+        if((this.iShaderType & SHADER_VERTICES_WITH_NORMALS)!= 0){
+            GLES30.glDisableVertexAttribArray(this.iProgram.iNormalHandle);
+            DebugUtils.checkPrintGLError();
+        }
+
+        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
         GLES30.glBindVertexArray(0);
         DebugUtils.checkPrintGLError();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        //2. Load the coordinate data
-//        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, this.iOpenGL3Buffers.VBO());
-//        DebugUtils.checkPrintGLError();
-//        GLES20.glVertexAttribPointer(this.iProgram.iVerticesHandle, AbstractGameCavan.NO_OF_COORDINATES_PER_VERTEX,
-//                GLES20.GL_FLOAT, false,
-//                this.iShaderStride, VERTICES_OFFSET);
-//        DebugUtils.checkPrintGLError();
-//        //3. Enable the loaded handle to load the data into
-//        GLES20.glEnableVertexAttribArray(this.iProgram.iVerticesHandle); //positionHandle);
-//        DebugUtils.checkPrintGLError();
-
-//        //.4 Load color data
-//        if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR) > 0){
-//            GLES20.glVertexAttribPointer(this.iProgram.iColorHandle, AbstractGameCavan.NO_OF_COLORS_PER_VERTEX , //4=RGBA
-//                    GLES20.GL_FLOAT, false,
-//                    this.iShaderStride, COLOR_OFFSET);
-//            DebugUtils.checkPrintGLError();
-//            GLES20.glEnableVertexAttribArray(this.iProgram.iColorHandle); //colorHandle);
-//            DebugUtils.checkPrintGLError();
-//        } else { //all other shader types will load one single color then
-//            this.iProgram.iColorHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramUtils.SHADER_VARIABLE_aColor);
-//            DebugUtils.checkPrintGLError();
-//            GLES20.glUniform4fv(this.iProgram.iColorHandle, 1, this.iColor.asFloatArray(), 0);
-//            DebugUtils.checkPrintGLError();
-//        }
-//
-//        //5. load the texture if available
-//        if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
-//            GLES20.glVertexAttribPointer(this.iProgram.iTextureHandle,
-//                    AbstractGameCavan.NO_OF_TEXTURES_PER_VERTEX, //2=U,V
-//                    GLES20.GL_FLOAT, false,
-//                    this.iShaderStride, TEXTURE_OFFSET);
-//            DebugUtils.checkPrintGLError();
-//            GLES20.glEnableVertexAttribArray(this.iProgram.iTextureHandle);
-//            DebugUtils.checkPrintGLError();
-//            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-//            DebugUtils.checkPrintGLError();
-//            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, this.iTextureDataIdx);
-//            DebugUtils.checkPrintGLError();
-//        }
-//
-//
-//        final float[] theMVPMatrix = new float[16];
-//
-//        //needed to have the 4th last position as 1 (vector and not 0 as direction)!
-//        Matrix.setIdentityM(theMVPMatrix,0);
-//
-//        //6. This multiplies the modelview matrix by the projection matrix, and stores the result in the MVP matrix
-//        Matrix.multiplyMM(theMVPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
-//
-//        //7. do calculate transformation matrix
-//        final int vpmatrixHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, "vpmMatrix");
-//        DebugUtils.checkPrintGLError();
-//
-//        //8. Pass the projection and view transformation to the shader
-//        GLES20.glUniformMatrix4fv(vpmatrixHandle, 1, false, theMVPMatrix, 0);
-//        DebugUtils.checkPrintGLError();
-//
-//        //8.1 bind the drawing order
-//        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, this.iOpenGL3Buffers.VORBF());
-//        DebugUtils.checkPrintGLError();
-//
-//        //9. Draw the form
-//        if(GLES20.GL_LINES == FORM_TYPE) {
-//            GLES20.glDrawElements(GLES20.GL_LINES, this.iIndexOrderLength, GLES20.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
-//        } else if(GLES20.GL_TRIANGLE_STRIP == FORM_TYPE) {
-//            GLES20.glDrawElements(GLES20.GL_TRIANGLE_STRIP, this.iIndexOrderLength, GLES20.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
-//        } else if(GLES20.GL_TRIANGLES == FORM_TYPE) {
-//            GLES20.glDrawElements(GLES20.GL_TRIANGLES, this.iIndexOrderLength, GLES20.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
-//        }else if(GLES20.GL_POINTS == FORM_TYPE) {
-//            GLES20.glDrawElements(GLES20.GL_POINTS, this.iIndexOrderLength, GLES20.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
-//        } else if(GLES20.GL_LINES == FORM_TYPE) {
-//            GLES20.glDrawElements(GLES20.GL_LINES, this.iIndexOrderLength, GLES20.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
-//        } else {
-//            throw new RuntimeException("FATAL ERROR !!! unknown FORM_TYPE=" + FORM_TYPE);
-//        }
-//
-//        DebugUtils.checkPrintGLError();
-//
-//        //10. Cleanup: Disable vertex array
-//        // Unbind element array.
-//        if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
-//            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
-//        }
-//        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
-//        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
-//
-//        if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
-//            GLES20.glDisableVertexAttribArray(this.iProgram.iTextureHandle);
-//        }
-//
-//        if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR) > 0){
-//            GLES20.glDisableVertexAttribArray(this.iProgram.iColorHandle);
-//        }
-//        GLES20.glDisableVertexAttribArray(this.iProgram.iVerticesHandle);
-        GLES20.glDisable(GLES20.GL_CULL_FACE);
+        //GLES20.glDisable(GLES20.GL_CULL_FACE);
     }
 
     @CallSuper
@@ -553,8 +481,8 @@ public abstract class AbstractGameCavan{
      */
 //    @CallSuper
 //    public void onPause(){
-//        this.iDrawOrderBufferIdx = OpenGLProgramUtils.deleteBuffer(this.iDrawOrderBufferIdx);
-//        this.iVertexBufferIdx = OpenGLProgramUtils.deleteBuffer(this.iVertexBufferIdx);
+//        this.iDrawOrderBufferIdx = OpenGLProgramFactory.deleteBuffer(this.iDrawOrderBufferIdx);
+//        this.iVertexBufferIdx = OpenGLProgramFactory.deleteBuffer(this.iVertexBufferIdx);
 //
 //        //cleanup is managed by TextureUtils and the textures will be only removed with the
 //        //main program at the "onStop" Activity request.

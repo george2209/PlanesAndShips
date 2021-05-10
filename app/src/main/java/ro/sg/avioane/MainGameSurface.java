@@ -17,8 +17,8 @@ public class MainGameSurface extends GLSurfaceView {
     public MainGameSurface(Context context) {
         super(context);
 
-        // Create an OpenGL ES 2.0 context
-        setEGLContextClientVersion(2);
+        // Create an OpenGL ES 3.0 context
+        setEGLContextClientVersion(3);
 
         //not preserved anymore...save some GPU resources.
         super.setPreserveEGLContextOnPause(true);

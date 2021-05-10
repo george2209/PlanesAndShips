@@ -8,24 +8,32 @@ package ro.sg.avioane.util;
 
 import android.opengl.GLES20;
 
-import static ro.sg.avioane.util.OpenGLProgramUtils.SHADER_VERTICES_WITH_OWN_COLOR;
-import static ro.sg.avioane.util.OpenGLProgramUtils.SHADER_VERTICES_WITH_TEXTURE;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_NORMALS;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_OWN_COLOR;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_TEXTURE;
 
 public class OpenGLProgram {
 
     public int iProgramHandle = -1;
     public int iVerticesHandle = -1;
     public int iColorHandle = -1;
+    public int iAmbientColorHandle = -1;
     public int iTextureHandle = -1;
+    public int iNormalHandle = -1;
+
+
+    public int iProjectionMatrixHandle = -1;
+    public int iViewMatrixHandle = -1;
+    public int iModelMatrixHandle = -1;
 
     public int iVertexShader = -1;
     public int iFragmentShader = -1;
 
 
     public OpenGLProgram(final String vertexShaderCode, final String fragmentShaderCode, final int shaderType){
-        this.iVertexShader = OpenGLProgramUtils.getLoadShader(GLES20.GL_VERTEX_SHADER,
+        this.iVertexShader = OpenGLProgramFactory.getLoadShader(GLES20.GL_VERTEX_SHADER,
                 vertexShaderCode);
-        this.iFragmentShader = OpenGLProgramUtils.getLoadShader(GLES20.GL_FRAGMENT_SHADER,
+        this.iFragmentShader = OpenGLProgramFactory.getLoadShader(GLES20.GL_FRAGMENT_SHADER,
                 fragmentShaderCode);
 
         // create empty OpenGL ES Program
@@ -42,16 +50,30 @@ public class OpenGLProgram {
         // Bind attributes
         int attributeIndex = 0;
         iVerticesHandle = attributeIndex++;
-        GLES20.glBindAttribLocation(iProgramHandle, iVerticesHandle, OpenGLProgramUtils.SHADER_VARIABLE_aPosition);
+        GLES20.glBindAttribLocation(iProgramHandle, iVerticesHandle, OpenGLProgramFactory.SHADER_VARIABLE_aPosition);
+
+        iProjectionMatrixHandle = attributeIndex++;
+        GLES20.glBindAttribLocation(iProgramHandle, iProjectionMatrixHandle, OpenGLProgramFactory.SHADER_VARIABLE_theProjectionMatrix);
+
+        iViewMatrixHandle = attributeIndex++;
+        GLES20.glBindAttribLocation(iProgramHandle, iViewMatrixHandle, OpenGLProgramFactory.SHADER_VARIABLE_theViewMatrix);
+
+        iModelMatrixHandle = attributeIndex++;
+        GLES20.glBindAttribLocation(iProgramHandle, iModelMatrixHandle, OpenGLProgramFactory.SHADER_VARIABLE_theModelMatrix);
 
         if((shaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0) {
             iColorHandle = attributeIndex++;
-            GLES20.glBindAttribLocation(iProgramHandle, iColorHandle, OpenGLProgramUtils.SHADER_VARIABLE_aColor);
+            GLES20.glBindAttribLocation(iProgramHandle, iColorHandle, OpenGLProgramFactory.SHADER_VARIABLE_aColor);
         }
 
         if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
             iTextureHandle = attributeIndex++;
-            GLES20.glBindAttribLocation(iProgramHandle, iTextureHandle, OpenGLProgramUtils.SHADER_VARIABLE_aTexture);
+            GLES20.glBindAttribLocation(iProgramHandle, iTextureHandle, OpenGLProgramFactory.SHADER_VARIABLE_aTexture);
+        }
+
+        if((shaderType & SHADER_VERTICES_WITH_NORMALS) != 0){
+            iNormalHandle = attributeIndex++;
+            GLES20.glBindAttribLocation(iProgramHandle, iNormalHandle, OpenGLProgramFactory.SHADER_VARIABLE_aNormal);
         }
 
         // creates OpenGL ES program executables

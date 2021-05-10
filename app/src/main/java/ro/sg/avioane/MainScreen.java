@@ -15,7 +15,9 @@ import android.view.WindowManager;
 
 import java.util.Objects;
 
-import ro.sg.avioane.util.OpenGLProgramUtils;
+import ro.sg.avioane.cavans.BlenderObjCavan;
+import ro.sg.avioane.cavans.blender.ObjParser;
+import ro.sg.avioane.util.OpenGLProgramFactory;
 import ro.sg.avioane.util.OpenGLUtils;
 import ro.sg.avioane.util.TextureUtils;
 
@@ -109,7 +111,7 @@ public class MainScreen extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         System.out.println("onDestroy!!!");
-        OpenGLProgramUtils.killInstance();
+        OpenGLProgramFactory.killInstance();
         TextureUtils.killInstance();
         this.iGameSurface = null;
         super.onDestroy();

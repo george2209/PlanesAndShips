@@ -7,6 +7,8 @@
 
 package ro.sg.avioane.cavans;
 
+import android.opengl.Matrix;
+
 import javax.microedition.khronos.opengles.GL10;
 
 import ro.sg.avioane.BuildConfig;
@@ -44,6 +46,8 @@ public class GameTerrain extends AbstractGameCavan {
     private boolean iIsDirty = false;
 
     private int iClickedTileIndex = -1;
+
+
 
     /**
      *

@@ -11,12 +11,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Bundle;
+import android.view.Window;
 import android.view.WindowManager;
 
 import java.util.Objects;
 
-import ro.sg.avioane.cavans.BlenderObjCavan;
-import ro.sg.avioane.cavans.blender.ObjParser;
 import ro.sg.avioane.util.OpenGLProgramFactory;
 import ro.sg.avioane.util.OpenGLUtils;
 import ro.sg.avioane.util.TextureUtils;
@@ -40,11 +39,11 @@ public class MainScreen extends AppCompatActivity {
 
         this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //remove the status and battery.
-        //this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 
         //Remove title bar
-        //this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         try {
             Objects.requireNonNull(this.getSupportActionBar()).hide();
         }catch (NullPointerException npe){

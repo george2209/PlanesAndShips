@@ -7,6 +7,7 @@
 package ro.sg.avioane;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
@@ -14,15 +15,20 @@ import android.view.MotionEvent;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import ro.sg.avioane.cavans.BlenderObjCavan;
 import ro.sg.avioane.cavans.blender.ObjParser;
+import ro.sg.avioane.cavans.blender.ParsedObjBlender;
+import ro.sg.avioane.cavans.primitives.Square;
 import ro.sg.avioane.cavans.primitives.XYZAxis;
 import ro.sg.avioane.game.TouchScreenListener;
 import ro.sg.avioane.game.TouchScreenProcessor;
 import ro.sg.avioane.game.WorldCamera;
 import ro.sg.avioane.game.WorldScene;
+import ro.sg.avioane.game.spirits.GameTerrain;
+import ro.sg.avioane.game.spirits.MovingCube;
+import ro.sg.avioane.game.spirits.StaticCube;
 import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
+import ro.sg.avioane.geometry.XYZTexture;
 import ro.sg.avioane.geometry.XYZVertex;
 import ro.sg.avioane.util.MathGLUtils;
 import ro.sg.avioane.util.OpenGLProgramFactory;
@@ -38,14 +44,14 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
     //private XYZPoint iPoint = null;
     private XYZAxis iWorldAxis = null;
     //private Line iMovingLine = null;
-    //private Square iSquare = null;
+    private Square iSquare = null;
 
-    //private Cube iCube = null;
+    ////////////////private StaticCube staticBlenderCube = null;
+//    MovingCube movingCube = null;
 
-    BlenderObjCavan testBlenderOBJ = null;
+    /////////////////private GameTerrain iGameTerrain = null;
 
-    //private Bundle iPersistenceObject = null; //will be used later for persistence
-    //private boolean isGLContext = false;
+
 
     private final WorldCamera iCamera = new WorldCamera();
     private final WorldScene iWorld;
@@ -88,11 +94,31 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
     }
 
     private void addDrawObjects() {
+
+//        this.iGameTerrain = new GameTerrain(80,26, this.iContext);
+//        this.iWorld.add(this.iGameTerrain);
+
         this.iWorldAxis = new XYZAxis();
         this.iWorld.add(this.iWorldAxis);
 
-        this.testBlenderOBJ = new ObjParser().parseOBJ(this.iContext, R.raw.cube_obj);
-        this.iWorld.add(this.testBlenderOBJ);
+        final XYZVertex upperLeft = new XYZVertex(new XYZCoordinate(0,0,0));
+        upperLeft.normal = new XYZCoordinate(0,1,0);
+        upperLeft.texture = new XYZTexture(0,0,
+                "me",
+                BitmapFactory.decodeResource(this.iContext.getResources(), R.drawable.me));
+
+        this.iSquare = new Square(upperLeft, 10);
+        this.iWorld.add(this.iSquare);
+
+//        ParsedObjBlender blenderData = new ObjParser().parseOBJ(this.iContext, R.raw.cube_obj);
+//        this.staticBlenderCube = new StaticCube(blenderData.vertexArray, blenderData.drawOrderArray);
+//        this.iWorld.add(this.staticBlenderCube);
+
+
+
+//        blenderData = new ObjParser().parseOBJ(this.iContext, R.raw.cube_obj);
+//        this.movingCube = new MovingCube(blenderData.vertexArray, blenderData.drawOrderArray);
+//        this.iWorld.add(this.movingCube);
 
         /*{
             final XYZVertex coordinate = new XYZVertex(1.0f, 0.0f, 0.0f);
@@ -111,20 +137,6 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 //        this.iWorld.add(this.iMovingLine);
 //
 //
-//        this.iGamePlane = new GameTerrain(100,100);
-//        this.iWorld.add(this.iGamePlane);
-
-
-
-
-//        final XYZVertex leftUpperSquare = new XYZVertex( new XYZCoordinate(0,2.0f,2.0f));
-//        leftUpperSquare.color = new XYZColor(1,0,0,1);
-//        leftUpperSquare.texture = new XYZTexture(0.0f, 0.0f, "test", this.iContext);
-//        this.iSquare = new Square( leftUpperSquare, 10);
-//        this.iWorld.add(this.iSquare);
-
-//        this.iCube = new Cube(leftUpperSquare, 2.0f);
-//        this.iWorld.add(this.iCube);
     }
 
 
@@ -139,17 +151,6 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
             this.addDrawObjects();
         }
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.8f);
-
-
-
-//        if (!this.isGLContext) {
-//            this.isGLContext = true;
-//            // Set the background frame color
-//            GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.8f);
-//            this.addDrawObjects();
-//        } else if(BuildConfig.DEBUG) {
-//                throw new AssertionError("this.isGLContext ************ALREADY LOADED??????");
-//        }
     }
 
     @Override
@@ -162,10 +163,25 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 
     }
 
+
+//    float strength = 0.1f;
+//    long time = System.currentTimeMillis();
+
     @Override
     public void onDrawFrame(GL10 gl) {
         GLES20.glClear(GL10.GL_COLOR_BUFFER_BIT |
                 GL10.GL_DEPTH_BUFFER_BIT);
+
+        //play a little with the ambient light as parts of the test.
+//        final long now = System.currentTimeMillis();
+//        if(now - time > 500){
+//            time = now;
+//            strength += 0.1f;
+//            if(strength > 1.0)
+//                strength = 0.1f;
+//        }
+//        AmbientLight.getStaticInstance().setAmbientColorStrength(strength);
+
         this.iWorld.onDraw();
     }
 
@@ -223,13 +239,5 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         cameraPosition.setY(cameraPosition.y()*(1-zoomingFactor));
         this.iCamera.setCameraPosition(cameraPosition);
     }
-
-//    protected void onPause(){
-//        this.isGLContext = false;
-//        this.iWorld.clear();
-//        TextureUtils.getInstance().onDestroy();
-//        OpenGLProgramFactory.getInstance().onDestroy();
-//        //this.iWorld.onPause();
-//    }
 
 }

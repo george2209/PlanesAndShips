@@ -8,12 +8,13 @@ package ro.sg.avioane.cavans.primitives;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import ro.sg.avioane.cavans.AbstractGameCavan;
 import ro.sg.avioane.geometry.XYZCoordinate;
 import ro.sg.avioane.geometry.XYZVertex;
 import ro.sg.avioane.geometry.XYZTexture;
 import ro.sg.avioane.util.MathGLUtils;
 
-public class Square extends AbstractGameCavan{
+public class Square extends AbstractGameCavan {
 
     private final XYZVertex iUpperLeftCoordinate;
     private final float iEdgeSize;
@@ -92,19 +93,11 @@ public class Square extends AbstractGameCavan{
         return new short[] {0,1,2,2,1,3};
     }
 
-    float strength = 0.1f;
-    long time = System.currentTimeMillis();
+
 
     @Override
     public void draw(float[] viewMatrix, float[] projectionMatrix) {
-        final long now = System.currentTimeMillis();
-        if(now - time > 500){
-            time = now;
-            strength += 0.1f;
-            if(strength > 1.0)
-                strength = 0.1f;
-        }
-        super.getAmbientLight().setAmbientColorStrength(strength);
+
 
 
         super.doDraw(viewMatrix, projectionMatrix, GL10.GL_TRIANGLES);

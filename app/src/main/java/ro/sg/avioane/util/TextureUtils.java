@@ -20,6 +20,8 @@ import ro.sg.avioane.R;
 public class TextureUtils {
     private static TextureUtils _instance = null;
 
+    //keep the matching {<texture name>, <shader handler>}
+    //to make sure that the same texture is only once loaded into memory
     private HashMap<String, Integer> iTextureHandlers = new HashMap<String, Integer>();
 
 
@@ -45,6 +47,12 @@ public class TextureUtils {
         }
     }
 
+    /**
+     * Used to get a static handler to be used when setting inside the shader the respective texture.
+     * @param textureName
+     * @param textureData
+     * @return a handler to the respective texture inside the OpenGL memory
+     */
     public int getTextureWithName(final String textureName, final Bitmap textureData){
         Integer textureHandler = this.iTextureHandlers.get(textureName);
         if(textureHandler == null){
@@ -75,7 +83,7 @@ public class TextureUtils {
 
 
     /**
-     *
+     * TODO: a review is needed.
      * @return true if there was anything to be destroyed
      */
     public boolean onDestroy(){

@@ -7,6 +7,7 @@
 package ro.sg.avioane.lighting;
 
 import ro.sg.avioane.geometry.XYZColor;
+import ro.sg.avioane.geometry.XYZVertex;
 import ro.sg.avioane.util.MathGLUtils;
 
 /**
@@ -18,6 +19,19 @@ import ro.sg.avioane.util.MathGLUtils;
 public class AmbientLight {
     private XYZColor iAmbientColor = new XYZColor(5,5,5, XYZColor.OPAQUE); //grey
     private float iAmbientColorStrength = 0.1f;
+
+    private static final AmbientLight iStaticInstance = new AmbientLight();
+
+    /**
+     *
+     * @return a static instance with standard values over the all App.
+     * The reason fo this is to have for all objects the same ambient light behaviour unless
+     * an ambient light is set for a specific object (cavan) separately (in such case a new
+     * instance of AmbientLight will be separately build for that object).
+     */
+    public static AmbientLight getStaticInstance(){
+        return iStaticInstance;
+    }
 
     /**
      *

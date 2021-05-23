@@ -4,12 +4,11 @@
  * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
  */
 
-package ro.sg.avioane.cavans;
+package ro.sg.avioane.cavans.blender;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import ro.sg.avioane.cavans.primitives.AbstractGameCavan;
-import ro.sg.avioane.geometry.XYZCoordinate;
+import ro.sg.avioane.cavans.AbstractGameCavan;
 import ro.sg.avioane.geometry.XYZVertex;
 
 public class BlenderObjCavan extends AbstractGameCavan {

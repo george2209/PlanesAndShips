@@ -10,7 +10,7 @@ import android.opengl.Matrix;
 import android.view.MotionEvent;
 import java.util.ArrayList;
 import java.util.List;
-import ro.sg.avioane.cavans.primitives.AbstractGameCavan;
+import ro.sg.avioane.cavans.AbstractGameCavan;
 
 public class WorldScene {
     //TODO: update this number once the game is ready to be released!!!!!
@@ -65,33 +65,6 @@ public class WorldScene {
     }
 
     /**
-     * this method will re-build all the buffers to prepare the objects for rendering.
-     */
-//    public void onResume(){
-//        for (AbstractGameCavan entity: this.iGameEntities) {
-//            entity.onResume();
-//        }
-//    }
-
-//    /**
-//     * this method call onPause on each of the world components releasing some of the memory used.
-//     */
-//    public void onPause(){
-//        for (AbstractGameCavan entity: this.iGameEntities) {
-//            entity.onPause();
-//        }
-//    }
-//
-//    /**
-//     * rebuild all programs and reload all textures used by each object
-//     */
-//    public void onRestart(){
-//        for (AbstractGameCavan entity: this.iGameEntities) {
-//            entity.onRestart();
-//        }
-//    }
-
-    /**
      * This method must be called whenever the display resolution of the device was changed
      * I.E.: call it on "onSurfaceChanged" of the Renderer.
      * @param screenWidth device display width
@@ -103,6 +76,7 @@ public class WorldScene {
         this.iCamera.doRecalibration(screenWidth, screenHeight);
 
         final float ratio = (float) screenWidth / (float) screenHeight; //calculate the aspect ration on the far clip
+        Matrix.setIdentityM(iProjectionMatrix, 0);
         Matrix.frustumM(iProjectionMatrix, 0, -ratio, ratio, -1.0f, 1.0f, NEAR_CAMERA_FIELD, FAR_CAMERA_FIELD);
     }
 

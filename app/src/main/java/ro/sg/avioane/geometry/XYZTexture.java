@@ -12,10 +12,10 @@ import android.graphics.Bitmap;
 import ro.sg.avioane.util.TextureUtils;
 
 public class XYZTexture {
-
-    public Bitmap iTexture = null;
-    private final float iTextureArray[] = new float[2];
+    private Bitmap iTexture = null;
     private String iTextureName;
+    private final float iTextureArray[] = new float[2];
+
 
     public XYZTexture(final float[] arr){
         iTextureArray[0] = arr[0];
@@ -56,9 +56,16 @@ public class XYZTexture {
 //        iTextureArray[1] = v;
 //    }
 
-    public void setTextureData(final Bitmap textureData, final String textureName){
+    /**
+     *
+     * @param textureData
+     * @param textureName
+     * @return an instance of this object.
+     */
+    public XYZTexture setTextureData(final Bitmap textureData, final String textureName){
         this.iTexture = textureData;
         this.iTextureName = textureName;
+        return this;
     }
 
     public Bitmap getTextureData(){

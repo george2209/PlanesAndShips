@@ -8,10 +8,6 @@ package ro.sg.avioane.util;
 
 import android.app.ActivityManager;
 import android.content.pm.ConfigurationInfo;
-import android.opengl.GLES20;
-import android.opengl.GLES30;
-
-import ro.sg.avioane.cavans.primitives.AbstractGameCavan;
 
 public class OpenGLUtils {
 

@@ -4,11 +4,10 @@
  * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
  */
 
-package ro.sg.avioane.cavans.primitives;
+package ro.sg.avioane.cavans;
 
 import android.opengl.GLES20;
 import android.opengl.GLES30;
-import android.opengl.Matrix;
 
 import androidx.annotation.CallSuper;
 
@@ -18,6 +17,7 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
 import ro.sg.avioane.BuildConfig;
+import ro.sg.avioane.cavans.features.CavanMovements;
 import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZVertex;
 import ro.sg.avioane.lighting.AmbientLight;
@@ -54,7 +54,7 @@ import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_TEXTU
  *  *      array_of_float[] {X1,Y1,Z1,,R1,G1,B1,A1,U1,V1 .... Xn,Yn,Zn,Un,Vn};
  *  SHADER_VERTICES_AND_TEXTURE & SHADER_VERTICES_WITH_OWN_COLOR will be used.
  */
-public abstract class AbstractGameCavan{
+public abstract class AbstractGameCavan extends CavanMovements {
 
     private final static short BYTES_PER_FLOAT = 4;
     private final static short BYTES_PER_SHORT = 2;
@@ -73,12 +73,11 @@ public abstract class AbstractGameCavan{
     protected XYZColor iColor = new XYZColor(0.03671875f, 0.76953125f, 0.82265625f, 1.0f);
 
     //Light part
-    private AmbientLight iAmbientLight = new AmbientLight();
+    private AmbientLight iAmbientLight = AmbientLight.getStaticInstance();
 
     private int iShaderType = SHADER_UNDEFINED;
     private int iIndexOrderLength = 0;
     private int iShaderStride = 0;
-    private final float[] iModelMatrix = new float[16];
 
 
     public abstract void draw(final float[] viewMatrix, final float[] projectionMatrix);
@@ -96,13 +95,17 @@ public abstract class AbstractGameCavan{
         return this.iAmbientLight;
     }
 
+    protected void setAmbientLight(final AmbientLight ambientLight){
+        this.iAmbientLight = ambientLight;
+    }
+
+
     /**
      * do the compilation & build of the GLSL code
      * @param arrVertices the vertices array
      * @param drawOrderArr the order of drawing the vertices
      */
     protected void build(final XYZVertex[] arrVertices, final short[] drawOrderArr){
-        Matrix.setIdentityM(this.iModelMatrix, 0);
         this.calculateShaderType(arrVertices[0]);
         this.iProgram = OpenGLProgramFactory.getInstance().getProgramForShader(this.iShaderType);
         this.buildVertexBuffer(arrVertices);
@@ -316,9 +319,9 @@ public abstract class AbstractGameCavan{
         GLES30.glFrontFace(GLES20.GL_CCW);
         
         // Enable face culling.
-        //GLES30.glEnable(GLES20.GL_CULL_FACE); //--> make sure is disabled at clean up!
+        GLES30.glEnable(GLES20.GL_CULL_FACE); //--> make sure is disabled at clean up!
         // What faces to remove with the face culling.
-        //GLES30.glCullFace(GLES20.GL_BACK); //GL_FRONT
+        GLES30.glCullFace(GLES20.GL_BACK); //GL_FRONT
         //GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
         //1. Ask OpenGL ES to load the program
@@ -419,7 +422,7 @@ public abstract class AbstractGameCavan{
         GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
         GLES30.glBindVertexArray(0);
         DebugUtils.checkPrintGLError();
-        //GLES20.glDisable(GLES20.GL_CULL_FACE);
+        GLES20.glDisable(GLES20.GL_CULL_FACE);
     }
 
     @CallSuper
@@ -435,67 +438,5 @@ public abstract class AbstractGameCavan{
         iIndexOrderLength = 0;
         iShaderStride = 0;
     }
-
-    /**
-     * From GameCavanLifeCycle
-     */
-//    public boolean isOnPause(){
-//        return this.iVertexBufferIdx == -1;
-//    }
-
-    /**
-     * call this at the end of your implementation of the onResume of the class that extend this
-     * class.
-     * Example:
-     * <code>
-     * class MyClass{
-     *     @Override
-     *     public void onResume() {
-     *      if(super.isOnPause()){
-     *             //we must rebuild the indexes as we are coming back from onPause
-     *             super.buildDrawOrderBuffer(...);
-     *             super.buildVertexBuffer(...);
-     *      }
-     *
-     *      ....your implementation here...then at the end you call this:
-     *      super.onResume()
-     *     }
-     * }
-     * </code>
-     * Otherwise you will have an exception thrown that the indexes are empty (in case of Activity
-     * going back from pause to resume)
-     */
-//    @CallSuper
-//    public void onResume() {
-//        if(this.iVertexBufferIdx == -1){
-//            throw new IndexOutOfBoundsException("no vertices buffer found! " +
-//                    "Are you calling super.onResume() " +
-//                    "method before building the vector buffer?");
-//        }
-//    }
-
-    /**
-     * From GameCavanLifeCycle
-     * calling this method will result on releasing all data inside of all buffers.
-     * It this object is about to be reused make sure that you build them back before draw is call.
-     */
-//    @CallSuper
-//    public void onPause(){
-//        this.iDrawOrderBufferIdx = OpenGLProgramFactory.deleteBuffer(this.iDrawOrderBufferIdx);
-//        this.iVertexBufferIdx = OpenGLProgramFactory.deleteBuffer(this.iVertexBufferIdx);
-//
-//        //cleanup is managed by TextureUtils and the textures will be only removed with the
-//        //main program at the "onStop" Activity request.
-//        //Reason:
-//        // - to avoid big loading timing in case of transitions of Activity
-//        this.iTextureDataIdx = -1;
-//    }
-
-
-//    @Override
-//    public void onRestart() {
-//        this.compileGLSL();
-//    }
-
 
 }

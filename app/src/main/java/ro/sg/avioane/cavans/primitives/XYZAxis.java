@@ -8,11 +8,11 @@ package ro.sg.avioane.cavans.primitives;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import ro.sg.avioane.geometry.XYZColor;
+import ro.sg.avioane.cavans.AbstractGameCavan;
 import ro.sg.avioane.geometry.XYZCoordinate;
 import ro.sg.avioane.geometry.XYZVertex;
 
-public class XYZAxis extends AbstractGameCavan{
+public class XYZAxis extends AbstractGameCavan {
 
     public XYZAxis(){
         super.build(this.buildCoordinates(), this.buildIndexes());

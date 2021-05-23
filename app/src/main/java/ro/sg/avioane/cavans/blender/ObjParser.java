@@ -18,7 +18,6 @@ import java.util.LinkedList;
 import java.util.Scanner;
 
 import ro.sg.avioane.BuildConfig;
-import ro.sg.avioane.cavans.BlenderObjCavan;
 import ro.sg.avioane.geometry.XYZCoordinate;
 import ro.sg.avioane.geometry.XYZTexture;
 import ro.sg.avioane.geometry.XYZVertex;
@@ -45,7 +44,7 @@ public class ObjParser {
      * @param id
      * @return
      */
-    public BlenderObjCavan parseOBJ(Context context, @RawRes int id){
+    public ParsedObjBlender parseOBJ(Context context, @RawRes int id){
         final BufferedReader reader = new BufferedReader(new InputStreamReader(
                 context.getResources().openRawResource(id)));
 
@@ -61,11 +60,11 @@ public class ObjParser {
                 parseOBJLine(textLine, coordinatesList, normalsList, texturesList, verticesList);
                 textLine = reader.readLine();
             }
-            final XYZVertex[] arrV = new XYZVertex[verticesList.size()];
-            this.listToArray(arrV, verticesList);
-            final short[] arrI = new short[arrV.length];
-            this.fillShortArray(arrI);
-            final BlenderObjCavan result = new BlenderObjCavan(arrV, arrI);
+            final ParsedObjBlender result = new ParsedObjBlender();
+            result.vertexArray = new XYZVertex[verticesList.size()];
+            this.listToArray(result.vertexArray, verticesList);
+            result.drawOrderArray = new short[result.vertexArray.length];
+            this.fillShortArray(result.drawOrderArray);
             return result;
         } catch (IOException e) {
             e.printStackTrace();

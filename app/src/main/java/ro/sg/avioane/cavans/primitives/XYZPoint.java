@@ -8,9 +8,10 @@ package ro.sg.avioane.cavans.primitives;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import ro.sg.avioane.cavans.AbstractGameCavan;
 import ro.sg.avioane.geometry.XYZVertex;
 
-public class XYZPoint extends AbstractGameCavan{
+public class XYZPoint extends AbstractGameCavan {
 
     private XYZVertex iCoordinate;
 

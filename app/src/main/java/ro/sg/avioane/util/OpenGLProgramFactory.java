@@ -115,38 +115,42 @@ public class OpenGLProgramFactory {
         sb.append("in vec3 ").append(SHADER_VARIABLE_aPosition).append(";\n");
 
         if( (shaderType & SHADER_VERTICES_WITH_NORMALS) != 0) {
-            sb.append("in vec3 ").append(SHADER_VARIABLE_aNormal).append(";");
+            sb.append("in vec3 ").append(SHADER_VARIABLE_aNormal).append(";\n");
         }
 
         if( (shaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0) {
-            sb.append("in vec4 ").append(SHADER_VARIABLE_aColor).append(";"); //vertex color
-            sb.append("out vec4 vColor;"); // to be passed into the fragment shader.
+            sb.append("in vec4 ").append(SHADER_VARIABLE_aColor).append(";\n"); //vertex color
+            sb.append("out vec4 vColor;\n"); // to be passed into the fragment shader.
         }
 
         if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
-            sb.append("in vec4 ").append(SHADER_VARIABLE_aTexture).append(";");
-            sb.append("out vec2 vTexture;");
+            sb.append("in vec2 ").append(SHADER_VARIABLE_aTexture).append(";\n");//vec4
+            sb.append("out vec2 vTexture;\n");
         }
 
         ////shader main function////
-        sb.append("void main() {");
+        sb.append("void main() {\n");
         if( (shaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0) {
             sb.append("  vColor = ").append(SHADER_VARIABLE_aColor).append(";\n");
         }
 
         if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
             sb.append("  vTexture = vec2(").append(SHADER_VARIABLE_aTexture).append(".x, ")
-                    .append(SHADER_VARIABLE_aTexture). append(".y);");
+                    .append(SHADER_VARIABLE_aTexture). append(".y);\n");
         }
         //Calculus: gl_Position = Projection * View * Model * position;
         sb.append("  gl_Position = ").append(SHADER_VARIABLE_theProjectionMatrix).append(" * ")
                 .append(SHADER_VARIABLE_theViewMatrix).append(" * ")
                 .append(SHADER_VARIABLE_theModelMatrix).append(" * vec4(")
-                .append(SHADER_VARIABLE_aPosition).append(", 1.0);");
+                .append(SHADER_VARIABLE_aPosition).append(", 1.0);\n");
 
 //        if (BuildConfig.DEBUG)
 //            sb.append("  gl_PointSize = 10.0;");
         sb.append("}");
+
+        if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
+            System.out.println("PROGRAM SHADER=\n\n" + sb.toString() + "\n\n");
+        }
 
         return sb.toString();
     }
@@ -181,17 +185,20 @@ public class OpenGLProgramFactory {
             sb.append("in vec4 vColor;\n");
             sb.append("uniform vec4 ").append(SHADER_VARIABLE_ambientLightColor).append(";\n");
         } else {
-            sb.append("uniform vec4 ").append(SHADER_VARIABLE_aColor).append(";\n");
+            if( (shaderType & SHADER_VERTICES_WITH_TEXTURE) == 0) {
+                //add a global color only if there is no texture
+                sb.append("uniform vec4 ").append(SHADER_VARIABLE_aColor).append(";\n");
+            }
             sb.append("uniform vec4 ").append(SHADER_VARIABLE_ambientLightColor).append(";\n");
         }
 
         if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
-            sb.append("in vec2 vTexture;");
-            sb.append("uniform sampler2D vImageTexture;");
+            sb.append("in vec2 vTexture;\n");
+            sb.append("uniform sampler2D vImageTexture;\n");
         }
 
-        sb.append("out vec4 fragColor;");
-        sb.append("void main() {");
+        sb.append("out vec4 fragColor;\n");
+        sb.append("void main() {\n");
 
         //vec3 objectColor = texture(uTexture, mobileTextureCoordinate).xyz;
         //vec3 phong = (ambient + diffuse) * objectColor + specular;
@@ -204,16 +211,20 @@ public class OpenGLProgramFactory {
         } else {
             //color only
             if( (shaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0) {
-                sb.append("  fragColor = vColor;");
+//                sb.append("  fragColor = vColor;");
 
-//                sb.append("  fragColor = ").append(SHADER_VARIABLE_ambientLightColor)
-//                        .append(" * vColor;\n");
+                sb.append("  fragColor = ").append(SHADER_VARIABLE_ambientLightColor)
+                        .append(" * vColor;\n");
             } else {
                 sb.append("  fragColor = ").append(SHADER_VARIABLE_ambientLightColor).append(" * ")
                     .append(SHADER_VARIABLE_aColor).append(";\n");
             }
         }
         sb.append("}");
+
+        if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
+            System.out.println("FRAGMENT SHADER=\n\n" + sb.toString() + "\n\n");
+        }
 
         return sb.toString();
     }

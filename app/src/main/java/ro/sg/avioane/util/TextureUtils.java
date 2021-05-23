@@ -113,12 +113,12 @@ public class TextureUtils {
     }
 
 
-    public static Bitmap loadTextureData(final Context context, final String textureName){
-        Bitmap bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.me);
-        if(bm == null) {
-            throw new AssertionError("null bitmap detected");
-        }
-
-        return bm;
-    }
+//    public static Bitmap loadTextureData(final Context context, final String textureName){
+//        Bitmap bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.me);
+//        if(bm == null) {
+//            throw new AssertionError("null bitmap detected");
+//        }
+//
+//        return bm;
+//    }
 }

@@ -17,8 +17,8 @@ import ro.sg.avioane.util.MathGLUtils;
  * speed penalties.
  */
 public class AmbientLight {
-    private XYZColor iAmbientColor = new XYZColor(5,5,5, XYZColor.OPAQUE); //grey
-    private float iAmbientColorStrength = 0.1f;
+    private XYZColor iAmbientColor = new XYZColor(0.96f,0.94f,0.56f, XYZColor.OPAQUE); //grey
+    private float iAmbientColorStrength = 0.9f;
 
     private static final AmbientLight iStaticInstance = new AmbientLight();
 
@@ -34,7 +34,8 @@ public class AmbientLight {
     }
 
     /**
-     *
+     * TODO: to the computation only once when the either AmbientColor or AmbientColorStrength is
+     * updated.
      * @return the complete (AmbientColor *  AmbientColorStrength) result as a new
      * XYZColor instance
      */

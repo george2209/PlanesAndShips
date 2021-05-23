@@ -43,7 +43,7 @@ public class Square extends AbstractGameCavan {
                 upperLeftCoordinate.coordinate.x(), upperLeftCoordinate.coordinate.y(),
                 upperLeftCoordinate.coordinate.z() + edgeSize
                 ));
-        coordinatesArray[1].color = upperLeftCoordinate.color;
+        coordinatesArray[1].backgroundColor = upperLeftCoordinate.backgroundColor;
         coordinatesArray[1].texture = new XYZTexture(0,1,
                 squareTexture.getTextureName(), squareTexture.getTextureData());
 
@@ -51,7 +51,7 @@ public class Square extends AbstractGameCavan {
                 new XYZCoordinate(
                 upperLeftCoordinate.coordinate.x() + edgeSize, upperLeftCoordinate.coordinate.y(),
                 upperLeftCoordinate.coordinate.z()));
-        coordinatesArray[2].color = upperLeftCoordinate.color;
+        coordinatesArray[2].backgroundColor = upperLeftCoordinate.backgroundColor;
         coordinatesArray[2].texture = new XYZTexture(1,0,
                 squareTexture.getTextureName(), squareTexture.getTextureData());
 
@@ -59,7 +59,7 @@ public class Square extends AbstractGameCavan {
                 new XYZCoordinate(
                 upperLeftCoordinate.coordinate.x() + edgeSize, upperLeftCoordinate.coordinate.y(),
                 upperLeftCoordinate.coordinate.z() + edgeSize));
-        coordinatesArray[3].color = upperLeftCoordinate.color;
+        coordinatesArray[3].backgroundColor = upperLeftCoordinate.backgroundColor;
         coordinatesArray[3].texture = new XYZTexture(1,1,
                 squareTexture.getTextureName(), squareTexture.getTextureData());
 

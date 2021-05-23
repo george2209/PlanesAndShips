@@ -485,7 +485,7 @@ public class GameTerrain extends AbstractGameCavan {
             }
 
             for (int i = 0; i < 4; i++) {
-                this.iArrVertices[i+finalIndex].color = new XYZColor(0.5f, 0.5f, 0.5f, 1.0f);
+                this.iArrVertices[i+finalIndex].backgroundColor = new XYZColor(0.5f, 0.5f, 0.5f, 1.0f);
             }
 
             this.iIsDirty = true;

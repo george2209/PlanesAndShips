@@ -70,7 +70,7 @@ public abstract class AbstractGameCavan extends CavanMovements {
     private OpenGLProgram iProgram = null;
     private OpenGLBufferArray3 iOpenGL3Buffers = null;
 
-    protected XYZColor iColor = new XYZColor(0.03671875f, 0.76953125f, 0.82265625f, 1.0f);
+    protected XYZColor iColor = new XYZColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     //Light part
     private AmbientLight iAmbientLight = AmbientLight.getStaticInstance();
@@ -186,13 +186,13 @@ public abstract class AbstractGameCavan extends CavanMovements {
             arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].coordinate.y(); dynamicStride++;
             arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].coordinate.z(); dynamicStride++;
             if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0){
-                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].color.red;
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].backgroundColor.red;
                 dynamicStride++;
-                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].color.green;
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].backgroundColor.green;
                 dynamicStride++;
-                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].color.blue;
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].backgroundColor.blue;
                 dynamicStride++;
-                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].color.alpha;
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].backgroundColor.alpha;
                 dynamicStride++;
             }
             if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
@@ -269,33 +269,34 @@ public abstract class AbstractGameCavan extends CavanMovements {
      * @return a value you can use to build the program against.
      */
     private void calculateShaderType(XYZVertex vertex) {
-        int offset = VERTICES_OFFSET;
-        int vertexStride = 3; // X, Y, Z, --> 0, 1, 2
+        int vertexStride = NO_OF_COORDINATES_PER_VERTEX; // X, Y, Z, --> 0, 1, 2
+        int offset = BYTES_PER_FLOAT * NO_OF_COORDINATES_PER_VERTEX;
         this.iShaderType = SHADER_ONLY_VERTICES;
 
-        if(vertex.color != null){
+        if(vertex.backgroundColor != null){
             this.iShaderType |= SHADER_VERTICES_WITH_OWN_COLOR;
             // X, Y, Z, --> 0, 1, 2,
             // R, G, B, A --> 3, 4, 5, 6
-            vertexStride += 4;
-            offset += BYTES_PER_FLOAT * NO_OF_COORDINATES_PER_VERTEX;
+            vertexStride += NO_OF_COLORS_PER_VERTEX;
             COLOR_OFFSET = offset;
+            offset += BYTES_PER_FLOAT * NO_OF_COLORS_PER_VERTEX;
+
         }
 
         if(vertex.texture != null){
             this.iShaderType |= SHADER_VERTICES_WITH_TEXTURE;
             //U,V
-            vertexStride += 2;
-            offset += BYTES_PER_FLOAT * NO_OF_COLORS_PER_VERTEX;
+            vertexStride += NO_OF_TEXTURES_PER_VERTEX;
             TEXTURE_OFFSET = offset;
+            offset += BYTES_PER_FLOAT * NO_OF_TEXTURES_PER_VERTEX;
         }
 
         if(vertex.normal != null ){
             this.iShaderType |= SHADER_VERTICES_WITH_NORMALS;
             //Xn,Yn,Zn
-            vertexStride += 3;
-            offset += BYTES_PER_FLOAT * NO_OF_NORMAL_COORDINATES_PER_VERTEX;
+            vertexStride += NO_OF_NORMAL_COORDINATES_PER_VERTEX;
             NORMAL_OFFSET = offset;
+            offset += BYTES_PER_FLOAT * NO_OF_NORMAL_COORDINATES_PER_VERTEX;
         }
 
         this.iShaderStride =  vertexStride * BYTES_PER_FLOAT;
@@ -350,7 +351,7 @@ public abstract class AbstractGameCavan extends CavanMovements {
         //2set color
         if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR)!= 0){
             GLES20.glEnableVertexAttribArray(this.iProgram.iColorHandle);
-        } else {
+        } else if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) == 0){
             this.iProgram.iColorHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_aColor);
             DebugUtils.checkPrintGLError();
             GLES20.glUniform4fv(this.iProgram.iColorHandle, 1, this.iColor.asFloatArray(), 0);

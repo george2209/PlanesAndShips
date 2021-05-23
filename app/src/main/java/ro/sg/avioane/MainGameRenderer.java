@@ -15,17 +15,12 @@ import android.view.MotionEvent;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import ro.sg.avioane.cavans.blender.ObjParser;
-import ro.sg.avioane.cavans.blender.ParsedObjBlender;
 import ro.sg.avioane.cavans.primitives.Square;
 import ro.sg.avioane.cavans.primitives.XYZAxis;
 import ro.sg.avioane.game.TouchScreenListener;
 import ro.sg.avioane.game.TouchScreenProcessor;
 import ro.sg.avioane.game.WorldCamera;
 import ro.sg.avioane.game.WorldScene;
-import ro.sg.avioane.game.spirits.GameTerrain;
-import ro.sg.avioane.game.spirits.MovingCube;
-import ro.sg.avioane.game.spirits.StaticCube;
 import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
 import ro.sg.avioane.geometry.XYZTexture;
@@ -103,6 +98,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 
         final XYZVertex upperLeft = new XYZVertex(new XYZCoordinate(0,0,0));
         upperLeft.normal = new XYZCoordinate(0,1,0);
+        //upperLeft.backgroundColor = new XYZColor(0,0,0,1);
         upperLeft.texture = new XYZTexture(0,0,
                 "me",
                 BitmapFactory.decodeResource(this.iContext.getResources(), R.drawable.me));
@@ -216,8 +212,8 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 
         final XYZVertex p1Line = new XYZVertex(new XYZCoordinate(p1));
         final XYZVertex p2Line = new XYZVertex(new XYZCoordinate(p2));
-        p1Line.color = new XYZColor(1.0f, 0 , 0.0f, 1);
-        p2Line.color = new XYZColor(1.0f, 0 , 0.0f, 1);
+        p1Line.backgroundColor = new XYZColor(1.0f, 0 , 0.0f, 1);
+        p2Line.backgroundColor = new XYZColor(1.0f, 0 , 0.0f, 1);
 
 //        this.iMovingLine.updateCoordinates(
 //                    p1Line,

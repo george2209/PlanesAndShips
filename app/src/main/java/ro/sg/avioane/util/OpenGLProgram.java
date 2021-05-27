@@ -19,6 +19,7 @@ public class OpenGLProgram {
     public int iColorHandle = -1;
     public int iAmbientColorHandle = -1;
     public int iTextureHandle = -1;
+    public int iTextureBitmapSamplers[] = null;
     public int iNormalHandle = -1;
 
 
@@ -30,7 +31,9 @@ public class OpenGLProgram {
     public int iFragmentShader = -1;
 
 
-    public OpenGLProgram(final String vertexShaderCode, final String fragmentShaderCode, final int shaderType){
+    public OpenGLProgram(final String vertexShaderCode,
+                         final String fragmentShaderCode,
+                         final int shaderType){
         this.iVertexShader = OpenGLProgramFactory.getLoadShader(GLES20.GL_VERTEX_SHADER,
                 vertexShaderCode);
         this.iFragmentShader = OpenGLProgramFactory.getLoadShader(GLES20.GL_FRAGMENT_SHADER,
@@ -67,8 +70,8 @@ public class OpenGLProgram {
         }
 
         if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
-            iTextureHandle = attributeIndex++;
-            GLES20.glBindAttribLocation(iProgramHandle, iTextureHandle, OpenGLProgramFactory.SHADER_VARIABLE_aTexture);
+            this.iTextureHandle = attributeIndex++;
+            GLES20.glBindAttribLocation(iProgramHandle, this.iTextureHandle, OpenGLProgramFactory.SHADER_VARIABLE_aTexture);
         }
 
         if((shaderType & SHADER_VERTICES_WITH_NORMALS) != 0){

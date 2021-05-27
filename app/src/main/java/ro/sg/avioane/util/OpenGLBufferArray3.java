@@ -6,10 +6,11 @@
 
 package ro.sg.avioane.util;
 
-import android.graphics.Bitmap;
-import android.opengl.GLES20;
 import android.opengl.GLES30;
 
+import java.util.Collection;
+
+import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.geometry.XYZTexture;
 
 /**
@@ -20,7 +21,7 @@ public class OpenGLBufferArray3 {
     private int VAO = -1;
     private int VBO = -1;
     private int iVertexOrderBuffer = -1;
-    private int iTextureDataBuffer = -1;
+    private int iTextureDataBuffers[] = null;
 
     public OpenGLBufferArray3(){
     }
@@ -89,6 +90,7 @@ public class OpenGLBufferArray3 {
     public OpenGLBufferArray3 addBuildBufferColors(int colorPointer, int noColorsPerVertex,
                                                    int shaderStride,
                                                    int offset){
+
         GLES30.glVertexAttribPointer(colorPointer, noColorsPerVertex ,
                     GLES30.GL_FLOAT, false,
                 shaderStride, offset);
@@ -99,16 +101,26 @@ public class OpenGLBufferArray3 {
     /**
      *
      * @param texturePointer shader textureID
-     * @param noTexturesPerVertex normally is 2 (U,V)
+     * @param noTexturesPerVertex normally is 3 (U,V,textureID)
      * @param shaderStride
      * @param offset the offset of the texture inside the vertex buffer
+     * @param textureIDCollection a collection of size [1..TextureUtils.MAX_TEXTURES_SUPPORTED]
      * @return
      */
     public OpenGLBufferArray3 addBuildTextures(int texturePointer, int noTexturesPerVertex,
-                                               int shaderStride, int offset, final XYZTexture textureObj){
-        this.iTextureDataBuffer = TextureUtils.getInstance().
-                getTextureWithName(textureObj.getTextureName(), textureObj.getTextureData());
-        return this.addBuildBufferColors(texturePointer, noTexturesPerVertex, shaderStride,offset);
+                                               int shaderStride, int offset, final Collection<Integer> textureIDCollection){
+        if(BuildConfig.DEBUG &&
+                (textureIDCollection.size() > TextureUtils.MAX_TEXTURES_SUPPORTED_PER_OBJ))
+            throw new AssertionError("MAX_TEXTURES_SUPPORTED reached = " + textureIDCollection.size());
+
+        this.iTextureDataBuffers = new int[textureIDCollection.size()];
+        int i = 0;
+        for (int textureID:textureIDCollection) {
+            this.iTextureDataBuffers[i] = TextureUtils.getInstance().getTextureDataBuffer(textureID);
+            i++;
+        }
+        this.addBuildBufferColors(texturePointer, noTexturesPerVertex, shaderStride, offset);
+        return this;
     }
 
     /**
@@ -219,7 +231,7 @@ public class OpenGLBufferArray3 {
         return this.iVertexOrderBuffer;
     }
 
-    public int getTextureDataBuffer(){
-        return this.iTextureDataBuffer;
+    public int getTextureDataBuffer(final int index){
+        return this.iTextureDataBuffers[index];
     }
 }

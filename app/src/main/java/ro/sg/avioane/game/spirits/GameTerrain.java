@@ -11,6 +11,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import java.util.Random;
+
 import javax.microedition.khronos.opengles.GL10;
 
 import ro.sg.avioane.BuildConfig;
@@ -21,13 +23,14 @@ import ro.sg.avioane.geometry.XYZCoordinate;
 import ro.sg.avioane.geometry.XYZTexture;
 import ro.sg.avioane.geometry.XYZVertex;
 import ro.sg.avioane.util.MathGLUtils;
+import ro.sg.avioane.util.TextureUtils;
 
 public class GameTerrain extends AbstractGameCavan {
 
     private float iLowestYTerrainPoint = 0.0f;
 
 
-    private static final float TILE_LENGTH = 1.0f;
+    private static final float TILE_LENGTH = 10.0f;
     //private final XYZVertex[] iTriangleCoordinates;
     //private final short[] iIndexOrder;
 
@@ -107,31 +110,28 @@ public class GameTerrain extends AbstractGameCavan {
 //        final XYZColor green = new XYZColor(0.1f,1.0f,0.3f,1.0f);
 //        final XYZColor blue = new XYZColor(0.1f,0.2f,1.0f,1.0f);
         int index = 0;
+        final int TEXTURE_WATER =  super.registerTexture(TextureUtils.TEXTURE_GAME_WATER);
+        final int TEXTURE_LAND =  super.registerTexture(TextureUtils.TEXTURE_GAME_GRASS);
+        final int TEXTURE_ROCK = super.registerTexture(TextureUtils.TEXTURE_GAME_ROCKS);
+        int currTexture = TEXTURE_WATER;
+
 
 
         //build the map upper surface
         for (int j = -this.iMapLengthZ/2; j < this.iMapLengthZ/2; j++) {
             for (int i = -this.iMapWidthX/2; i < this.iMapWidthX/2; i++) {
-//                XYZColor tmpColor = null;
-//                if(i<0) {
-//                    //water side.
-//
-//
-//                    final int colorCode = (i + (j + 1));
-//                    if (colorCode % 2 == 0)
-//                        tmpColor = green;
-//                    else /*if (colorCode % 3 == 0)*/
-//                        tmpColor = blue;
-//                } else {
-//                    tmpColor = red;
-//                }
-
-                final Bitmap waterBitmap = BitmapFactory.decodeResource(this.iContext.getResources(), R.drawable.me);
-                if (waterBitmap == null)
-                    throw new NullPointerException("null picture");
+                if(i<0) {
+                    //water side.
+                    currTexture = TEXTURE_WATER;
+                } else {
+                    if(System.currentTimeMillis() % 10 == 0)
+                        currTexture = TEXTURE_ROCK;
+                    else
+                        currTexture = TEXTURE_LAND;
+                }
 
                 final XYZVertex leftUp = new XYZVertex(new XYZCoordinate(i*TILE_LENGTH, 0.0f, j*TILE_LENGTH));
-                this.fillSquareCoordinates(leftUp, waterBitmap, "water", index);
+                this.fillSquareCoordinates(leftUp, currTexture, index);
                 index+=4;
             }
         }
@@ -140,24 +140,21 @@ public class GameTerrain extends AbstractGameCavan {
         //final XYZColor colorDirt = new XYZColor(.79f, 0.3f, 0.06f,1);
         //build the map front side lower
         {
-            final Bitmap waterBitmap = BitmapFactory.decodeResource(this.iContext.getResources(), R.drawable.me);
-            if (waterBitmap == null)
-                throw new NullPointerException("null picture");
             //front side
             int leftBottom = (this.iMapLengthZ-1) * this.iMapWidthX * 4 + 1;
             int rightBottom = index -1; // this.iArrVertices.length-8 + 3; //-8 not -4 as the next 4 will be used for front square
             //+1 to take the right hand side of the square.
-            index = makeSideMap(index, waterBitmap, "water", leftBottom, rightBottom, 1, -1);
+            index = makeSideMap(index, TEXTURE_ROCK, leftBottom, rightBottom, 1, -1);
 
             //left hand side
             rightBottom = leftBottom;
             leftBottom = 0;
-            index = makeSideMap(index, waterBitmap, "water", leftBottom, rightBottom, -1, -1);
+            index = makeSideMap(index, TEXTURE_ROCK, leftBottom, rightBottom, -1, -1);
 
             //right hand side
             leftBottom = index - 1 - 5;
             rightBottom = this.iMapWidthX * 4 - 2;
-            index = makeSideMap(index, waterBitmap, "water", leftBottom, rightBottom, 1, 1);
+            index = makeSideMap(index, TEXTURE_ROCK, leftBottom, rightBottom, 1, 1);
         }
 
 
@@ -167,8 +164,7 @@ public class GameTerrain extends AbstractGameCavan {
     /**
      *
      * @param index
-     * @param textureData
-     * @param textureName
+     * @param textureID
      * @param leftBottom
      * @param rightBottom
      * @param rightSideMultiplier
@@ -176,18 +172,17 @@ public class GameTerrain extends AbstractGameCavan {
      * @return
      */
     private int makeSideMap(int index,
-                            final Bitmap textureData,
-                            final String textureName,
+                            final int textureID,
                             int leftBottom,
                             int rightBottom,
                             int rightSideMultiplier ,
                             int leftSideMultiplier) {
-        final float deltaTrapeze = 2.0f;
+        final float deltaTrapeze = TILE_LENGTH/2; //2.0f;
         //1. upper left vertex is already added inside  buildIndexDrawOrder leftBottom
         this.iArrVertices[index] = new XYZVertex(
                 new XYZCoordinate(this.iArrVertices[leftBottom].coordinate.asArray())
         );
-        this.iArrVertices[index].texture = new XYZTexture(0,0,textureName, textureData);
+        this.iArrVertices[index].texture = new XYZTexture(0,0, textureID);
         index++;
 
         //2. low left
@@ -200,13 +195,13 @@ public class GameTerrain extends AbstractGameCavan {
                 this.iArrVertices[index].coordinate.y() - MAP_DEPTH);
         this.iArrVertices[index].coordinate.setZ(
                 this.iArrVertices[index].coordinate.z() + deltaTrapeze);
-        this.iArrVertices[index].texture = new XYZTexture(0,1,textureName, textureData);
+        this.iArrVertices[index].texture = new XYZTexture(0,1, textureID);
         index++;
         //3. right bottom
         this.iArrVertices[index] = new XYZVertex(
                 new XYZCoordinate(this.iArrVertices[rightBottom].coordinate.asArray())
         );
-        this.iArrVertices[index].texture = new XYZTexture(1,0,textureName, textureData);
+        this.iArrVertices[index].texture = new XYZTexture(1,0, textureID);
         index++;
 
         //4. low right
@@ -219,7 +214,7 @@ public class GameTerrain extends AbstractGameCavan {
                 this.iArrVertices[index].coordinate.y() - MAP_DEPTH);
         this.iArrVertices[index].coordinate.setZ(
                 this.iArrVertices[index].coordinate.z() + deltaTrapeze);
-        this.iArrVertices[index].texture = new XYZTexture(1,1,textureName, textureData);
+        this.iArrVertices[index].texture = new XYZTexture(1,1, textureID);
         index++;
 
 
@@ -239,36 +234,36 @@ public class GameTerrain extends AbstractGameCavan {
 
 
     /**
+     *
      * @param leftUp
-     * @param textureData
-     * @param textureName
+     * @param textureID
+     * @param index
      */
-    private void fillSquareCoordinates(XYZVertex leftUp,
-                                       final Bitmap textureData,
-                                       final String textureName,
+    private void fillSquareCoordinates(final XYZVertex leftUp,
+                                       final int textureID,
                                        int index){
 
         this.iArrVertices[index] = leftUp;
-        this.iArrVertices[index++].texture = new XYZTexture(0,0,textureName, textureData);
+        this.iArrVertices[index++].texture = new XYZTexture(0,0, textureID);
 
 
         this.iArrVertices[index] = new XYZVertex(
                 new XYZCoordinate(
                 leftUp.coordinate.x(), leftUp.coordinate.y(), leftUp.coordinate.z() + TILE_LENGTH
                 ));
-        this.iArrVertices[index++].texture = new XYZTexture(0,1,textureName, textureData);
+        this.iArrVertices[index++].texture = new XYZTexture(0,1, textureID);
 
 
         this.iArrVertices[index] = new XYZVertex(
                 new XYZCoordinate(
                 leftUp.coordinate.x() + TILE_LENGTH, leftUp.coordinate.y(), leftUp.coordinate.z()
                 ));
-        this.iArrVertices[index++].texture = new XYZTexture(1,0,textureName, textureData);
+        this.iArrVertices[index++].texture = new XYZTexture(1,0, textureID);
         this.iArrVertices[index] = new XYZVertex(
                 new XYZCoordinate(
                 leftUp.coordinate.x() + TILE_LENGTH, leftUp.coordinate.y(), leftUp.coordinate.z() + TILE_LENGTH
                 ));
-        this.iArrVertices[index++].texture = new XYZTexture(1,1,textureName, textureData);
+        this.iArrVertices[index++].texture = new XYZTexture(1,1, textureID);
 
         {
             //normal triangle 1

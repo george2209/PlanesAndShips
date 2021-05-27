@@ -6,39 +6,34 @@
 
 package ro.sg.avioane.geometry;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 
-import ro.sg.avioane.util.TextureUtils;
-
 public class XYZTexture {
-    private Bitmap iTexture = null;
-    private String iTextureName;
+//    private Bitmap iTextureBitmap = null;
+//    private String iTextureName;
+
     private final float iTextureArray[] = new float[2];
+    private int iTextureID = -1;
 
 
-    public XYZTexture(final float[] arr){
-        iTextureArray[0] = arr[0];
-        iTextureArray[1] = arr[1];
-    }
-
-    public float[] asArray(){
-        return this.iTextureArray;
-    }
-
-//    public XYZTexture(final float u, final float v, final String textureName, final Context context){
-//        iTextureArray[0] = u;
-//        iTextureArray[1] = v;
-//        this.iTexture = TextureUtils.loadTextureData(context,textureName);
-//        this.iTextureName = textureName;
+//    public XYZTexture(final float[] arr){
+//        iTextureArray[0] = arr[0];
+//        iTextureArray[1] = arr[1];
 //    }
 
-    public XYZTexture(final float u, final float v, final String textureName, final Bitmap textureData){
+    public XYZTexture(final float u, final float v, final int textureID){
         iTextureArray[0] = u;
         iTextureArray[1] = v;
-        this.iTexture = textureData;
-        this.iTextureName = textureName;
+        iTextureID = textureID;
     }
+
+//    public XYZTexture(final float u, final float v, final String textureName, final Bitmap textureBitmap){
+//        iTextureArray[0] = u;
+//        iTextureArray[1] = v;
+//        iTextureArray[2] = 0; //start with texture index 0
+//        this.iTextureBitmap = textureBitmap;
+//        this.iTextureName = textureName;
+//    }
 
     public float u(){
         return iTextureArray[0];
@@ -46,6 +41,10 @@ public class XYZTexture {
 
     public float v(){
         return iTextureArray[1];
+    }
+
+    public int textureID(){
+        return this.iTextureID;
     }
 
 //    public void setU(final float u){
@@ -56,23 +55,11 @@ public class XYZTexture {
 //        iTextureArray[1] = v;
 //    }
 
-    /**
-     *
-     * @param textureData
-     * @param textureName
-     * @return an instance of this object.
-     */
-    public XYZTexture setTextureData(final Bitmap textureData, final String textureName){
-        this.iTexture = textureData;
-        this.iTextureName = textureName;
-        return this;
-    }
-
-    public Bitmap getTextureData(){
-        return this.iTexture;
-    }
-
-    public String getTextureName(){
-        return  this.iTextureName;
-    }
+//    public Bitmap getTextureBitmap(){
+//        return this.iTextureBitmap;
+//    }
+//
+//    public String getTextureName(){
+//        return  this.iTextureName;
+//    }
 }

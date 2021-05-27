@@ -94,7 +94,9 @@ public class ObjParser {
             } else if (textLine.startsWith(OBJ_VERTEX_TEXTURE)) {
                 final int NO_OF_ELEMENTS = 2;
                 final float[] tmp = tokenizeLine(OBJ_VERTEX_TEXTURE, textLine, NO_OF_ELEMENTS);
-                texturesList.addLast(new XYZTexture(tmp));
+                //texturesList.addLast(new XYZTexture(tmp));
+                if(BuildConfig.DEBUG)
+                    throw new AssertionError("texture name and registration to be implemented!");
             } else if (textLine.startsWith(OBJ_VERTEX_NORMAL)) {
                 final int NO_OF_ELEMENTS = 3;
                 final float[] tmp = tokenizeLine(OBJ_VERTEX_NORMAL, textLine, NO_OF_ELEMENTS);

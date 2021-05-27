@@ -15,12 +15,16 @@ import android.view.MotionEvent;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import ro.sg.avioane.cavans.blender.ObjParser;
+import ro.sg.avioane.cavans.blender.ParsedObjBlender;
 import ro.sg.avioane.cavans.primitives.Square;
 import ro.sg.avioane.cavans.primitives.XYZAxis;
 import ro.sg.avioane.game.TouchScreenListener;
 import ro.sg.avioane.game.TouchScreenProcessor;
 import ro.sg.avioane.game.WorldCamera;
 import ro.sg.avioane.game.WorldScene;
+import ro.sg.avioane.game.spirits.GameTerrain;
+import ro.sg.avioane.game.spirits.StaticCube;
 import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
 import ro.sg.avioane.geometry.XYZTexture;
@@ -37,14 +41,14 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
     //private GameTerrain iGamePlane = null;
 
     //private XYZPoint iPoint = null;
-    private XYZAxis iWorldAxis = null;
+    //private XYZAxis iWorldAxis = null;
     //private Line iMovingLine = null;
-    private Square iSquare = null;
+    //private Square iSquare = null;
 
-    ////////////////private StaticCube staticBlenderCube = null;
+//    private StaticCube staticBlenderCube = null;
 //    MovingCube movingCube = null;
 
-    /////////////////private GameTerrain iGameTerrain = null;
+    private GameTerrain iGameTerrain = null;
 
 
 
@@ -90,21 +94,21 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 
     private void addDrawObjects() {
 
-//        this.iGameTerrain = new GameTerrain(80,26, this.iContext);
-//        this.iWorld.add(this.iGameTerrain);
+        this.iGameTerrain = new GameTerrain(20,40, this.iContext);
+        this.iWorld.add(this.iGameTerrain);
 
-        this.iWorldAxis = new XYZAxis();
-        this.iWorld.add(this.iWorldAxis);
+//        this.iWorldAxis = new XYZAxis();
+//        this.iWorld.add(this.iWorldAxis);
 
-        final XYZVertex upperLeft = new XYZVertex(new XYZCoordinate(0,0,0));
-        upperLeft.normal = new XYZCoordinate(0,1,0);
-        //upperLeft.backgroundColor = new XYZColor(0,0,0,1);
-        upperLeft.texture = new XYZTexture(0,0,
-                "me",
-                BitmapFactory.decodeResource(this.iContext.getResources(), R.drawable.me));
-
-        this.iSquare = new Square(upperLeft, 10);
-        this.iWorld.add(this.iSquare);
+//        final XYZVertex upperLeft = new XYZVertex(new XYZCoordinate(0,0,0));
+//        upperLeft.normal = new XYZCoordinate(0,1,0);
+//        //upperLeft.backgroundColor = new XYZColor(0,0,0,1);
+//        upperLeft.texture = new XYZTexture(0,0,
+//                "me",
+//                BitmapFactory.decodeResource(this.iContext.getResources(), R.drawable.water));
+//
+//        this.iSquare = new Square(upperLeft, 10);
+//        this.iWorld.add(this.iSquare);
 
 //        ParsedObjBlender blenderData = new ObjParser().parseOBJ(this.iContext, R.raw.cube_obj);
 //        this.staticBlenderCube = new StaticCube(blenderData.vertexArray, blenderData.drawOrderArray);
@@ -138,14 +142,17 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        boolean isRestoreNeeded = TextureUtils.getInstance().onDestroy();
+        final TextureUtils textureUtils = TextureUtils.getInstance();
+        boolean isRestoreNeeded = textureUtils.onDestroy();
         isRestoreNeeded |= OpenGLProgramFactory.getInstance().onDestroy();
+        textureUtils.loadTextures(this.iContext);
         if(isRestoreNeeded && this.iWorld.count() > 0){
             System.out.println("A restore of the world is needed***");
             this.iWorld.onRestoreWorld();
         } else {
             this.addDrawObjects();
         }
+        textureUtils.releaseTextures();
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.8f);
     }
 
@@ -192,15 +199,15 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
     public void fireMovement(float xPercent, float zPercent) {
         final XYZCoordinate cameraPosition = this.iCamera.getCameraPosition();
         final float ratio = TouchScreenProcessor.TOUCH_MOVEMENT_ACCELERATION_FACTOR * (float) this.iScreenWidth / (float) this.iScreenHeight;
+        final float toleranceFactor = 5.0f; //TODO: this shall depend on the map zoom level.
 
-        //System.out.println("xPercent=" + xPercent + " zPercent=" + zPercent);
-        cameraPosition.setX( cameraPosition.x() - (ratio/100.0f) * xPercent * 2.0f) ;
-        cameraPosition.setZ( cameraPosition.z() - (ratio/100.0f) * zPercent );
+        cameraPosition.setX( cameraPosition.x() - (ratio/100.0f) * xPercent * 2.0f * toleranceFactor) ;
+        cameraPosition.setZ( cameraPosition.z() - (ratio/100.0f) * zPercent * toleranceFactor);
         this.iCamera.setCameraPosition(cameraPosition);
 
         final XYZCoordinate lookAtPosition = this.iCamera.getiLookAtPosition();
-        lookAtPosition.setX( lookAtPosition.x() - (ratio/100.0f) * xPercent * 2.0f );
-        lookAtPosition.setZ( lookAtPosition.z() - (ratio/100.0f) * zPercent );
+        lookAtPosition.setX( lookAtPosition.x() - (ratio/100.0f) * xPercent * 2.0f * toleranceFactor);
+        lookAtPosition.setZ( lookAtPosition.z() - (ratio/100.0f) * zPercent * toleranceFactor);
         this.iCamera.setLookAtPosition(lookAtPosition);
 
     }

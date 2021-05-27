@@ -12,6 +12,7 @@ import android.opengl.GLES30;
 import java.util.HashMap;
 
 import ro.sg.avioane.BuildConfig;
+import ro.sg.avioane.geometry.XYZVertex;
 
 public class OpenGLProgramFactory {
 
@@ -32,6 +33,7 @@ public class OpenGLProgramFactory {
     public static final String SHADER_VARIABLE_theViewMatrix = "theViewMatrix";
     public static final String SHADER_VARIABLE_theProjectionMatrix = "theProjectionMatrix";
     public static final String SHADER_VARIABLE_ambientLightColor = "ambientLightColor";
+    public static final String SHADER_VARIABLE_textureShader = "textureShader";
 
 
     private HashMap<Integer, OpenGLProgram> iProgramMap = new HashMap<Integer, OpenGLProgram>();
@@ -64,14 +66,16 @@ public class OpenGLProgramFactory {
     /**
      * This is the central point for building and retrieving a program for a specific shader type.
      * @param shaderType
+     * @noOfTextureSamplers if there is no texture needed then it is ignored. However if the
+     *      * shaderType is of type SHADER_VERTICES_WITH_TEXTURE then this is needed.
      * @return the existing to be reused or a new program
      */
-    public OpenGLProgram getProgramForShader(final int shaderType){
+    public OpenGLProgram getProgramForShader(final int shaderType, final int noOfTextureSamplers){
         if (BuildConfig.DEBUG &&
                 (
                         (shaderType & SHADER_ONLY_VERTICES) + (shaderType & SHADER_VERTICES_WITH_NORMALS) +
-                        (shaderType & SHADER_VERTICES_WITH_OWN_COLOR) +
-                        (shaderType & SHADER_VERTICES_WITH_TEXTURE)
+                                (shaderType & SHADER_VERTICES_WITH_OWN_COLOR) +
+                                (shaderType & SHADER_VERTICES_WITH_TEXTURE)
                 ) == 0) {
             throw new AssertionError("unknown shader type=" + shaderType);
         }
@@ -79,7 +83,7 @@ public class OpenGLProgramFactory {
         OpenGLProgram program = this.iProgramMap.get(shaderType);
         if(program == null){
             program = new OpenGLProgram(getBuildShader(shaderType),
-                    getBuildFragmentShader(shaderType),
+                    getBuildFragmentShader(shaderType, noOfTextureSamplers),
                     shaderType);
             this.iProgramMap.put(shaderType, program);
         }
@@ -124,8 +128,9 @@ public class OpenGLProgramFactory {
         }
 
         if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
-            sb.append("in vec2 ").append(SHADER_VARIABLE_aTexture).append(";\n");//vec4
+            sb.append("in vec3 ").append(SHADER_VARIABLE_aTexture).append(";\n");//vec2
             sb.append("out vec2 vTexture;\n");
+            sb.append("out int iUseTextureID;\n");
         }
 
         ////shader main function////
@@ -137,6 +142,7 @@ public class OpenGLProgramFactory {
         if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
             sb.append("  vTexture = vec2(").append(SHADER_VARIABLE_aTexture).append(".x, ")
                     .append(SHADER_VARIABLE_aTexture). append(".y);\n");
+            sb.append("  iUseTextureID = int(").append(SHADER_VARIABLE_aTexture).append(".z);\n");
         }
         //Calculus: gl_Position = Projection * View * Model * position;
         sb.append("  gl_Position = ").append(SHADER_VARIABLE_theProjectionMatrix).append(" * ")
@@ -171,9 +177,11 @@ public class OpenGLProgramFactory {
      *                   - SHADER_ONLY_VERTICES
      *                   - SHADER_VERTICES_WITH_OWN_COLOR
      *                   - SHADER_VERTICES_WITH_TEXTURE
+     * @noOfTextureSamplers if there is no texture needed then it is ignored. However if the
+     * shaderType is of type SHADER_VERTICES_WITH_TEXTURE then this is needed.
      * @return
      */
-    private String getBuildFragmentShader(final int shaderType){
+    private String getBuildFragmentShader(final int shaderType, final int noOfTextureSamplers){
         StringBuilder sb = new StringBuilder();
         //set GPU to medium precision
         // (highp is not by all devices supported)
@@ -194,7 +202,13 @@ public class OpenGLProgramFactory {
 
         if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
             sb.append("in vec2 vTexture;\n");
-            sb.append("uniform sampler2D vImageTexture;\n");
+            sb.append("flat in int iUseTextureID;\n");
+            for (int i = 0; i < noOfTextureSamplers; i++) {
+                sb.append("uniform sampler2D ")
+                        .append(SHADER_VARIABLE_textureShader)
+                        .append("" + i)
+                        .append(";\n");
+            }
         }
 
         sb.append("out vec4 fragColor;\n");
@@ -205,8 +219,18 @@ public class OpenGLProgramFactory {
         //finalColor = vec4(phong, 1.0f); //Send lighting results to GPU
 
         if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
-            sb.append("fragColor = ").append(SHADER_VARIABLE_ambientLightColor)
-                    .append(" * ").append("texture(vImageTexture, vTexture);\n");
+            sb.append("fragColor = ").append(SHADER_VARIABLE_ambientLightColor).append(";\n");
+            sb.append("if (iUseTextureID==0)\n");
+            sb.append("   fragColor = fragColor * texture(").append(SHADER_VARIABLE_textureShader +
+                    "0, vTexture);\n");
+            for (int i = 1; i < TextureUtils.MAX_TEXTURES_SUPPORTED_PER_OBJ; i++) {
+                sb.append("else if (iUseTextureID==" + i + ")\n");
+                sb.append("   fragColor = fragColor * texture(").append(SHADER_VARIABLE_textureShader +
+                        i + ", vTexture);\n");
+            }
+
+//            sb.append("fragColor = ").append(SHADER_VARIABLE_ambientLightColor)
+//                    .append(" * ").append("texture(tmpTexID, vTexture);\n");
 
         } else {
             //color only
@@ -217,7 +241,7 @@ public class OpenGLProgramFactory {
                         .append(" * vColor;\n");
             } else {
                 sb.append("  fragColor = ").append(SHADER_VARIABLE_ambientLightColor).append(" * ")
-                    .append(SHADER_VARIABLE_aColor).append(";\n");
+                        .append(SHADER_VARIABLE_aColor).append(";\n");
             }
         }
         sb.append("}");

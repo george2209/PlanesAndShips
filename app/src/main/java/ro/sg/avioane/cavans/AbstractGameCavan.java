@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.util.HashSet;
 
 import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.cavans.features.CavanMovements;
@@ -25,6 +26,7 @@ import ro.sg.avioane.util.DebugUtils;
 import ro.sg.avioane.util.OpenGLBufferArray3;
 import ro.sg.avioane.util.OpenGLProgram;
 import ro.sg.avioane.util.OpenGLProgramFactory;
+import ro.sg.avioane.util.TextureUtils;
 
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_ONLY_VERTICES;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_UNDEFINED;
@@ -60,7 +62,7 @@ public abstract class AbstractGameCavan extends CavanMovements {
     private final static short BYTES_PER_SHORT = 2;
     private static final byte NO_OF_COORDINATES_PER_VERTEX = 3; //use X,Y,Z
     private static final byte NO_OF_COLORS_PER_VERTEX = 4; //use R,G,B,A
-    private static final byte NO_OF_TEXTURES_PER_VERTEX = 2; //use U,V
+    private static final byte NO_OF_TEXTURES_PER_VERTEX = 3; //use U,V,texture_index
     private static final byte NO_OF_NORMAL_COORDINATES_PER_VERTEX = NO_OF_COORDINATES_PER_VERTEX;
     private static final int VERTICES_OFFSET = 0;
     private int COLOR_OFFSET = -1; //BYTES_PER_FLOAT * NO_OF_COORDINATES_PER_VERTEX;
@@ -78,6 +80,7 @@ public abstract class AbstractGameCavan extends CavanMovements {
     private int iShaderType = SHADER_UNDEFINED;
     private int iIndexOrderLength = 0;
     private int iShaderStride = 0;
+    private HashSet<Integer> iTextureSet = new HashSet<>(TextureUtils.MAX_TEXTURES_SUPPORTED_PER_OBJ);
 
 
     public abstract void draw(final float[] viewMatrix, final float[] projectionMatrix);
@@ -99,6 +102,17 @@ public abstract class AbstractGameCavan extends CavanMovements {
         this.iAmbientLight = ambientLight;
     }
 
+    /**
+     * register a texture to be loaded for this object.
+     * If the texture is already registered the method will ignore the request.
+     * @param textureID
+     * @return the value of textureID
+     */
+    protected int registerTexture(final int textureID){
+        iTextureSet.add(textureID);
+        return textureID;
+    }
+
 
     /**
      * do the compilation & build of the GLSL code
@@ -107,7 +121,7 @@ public abstract class AbstractGameCavan extends CavanMovements {
      */
     protected void build(final XYZVertex[] arrVertices, final short[] drawOrderArr){
         this.calculateShaderType(arrVertices[0]);
-        this.iProgram = OpenGLProgramFactory.getInstance().getProgramForShader(this.iShaderType);
+        this.iProgram = OpenGLProgramFactory.getInstance().getProgramForShader(this.iShaderType, this.iTextureSet.size());
         this.buildVertexBuffer(arrVertices);
         this.buildDrawOrderBuffer(drawOrderArr);
     }
@@ -123,7 +137,7 @@ public abstract class AbstractGameCavan extends CavanMovements {
 
         this.iIndexOrderLength = drawOrder.length;
         // initialize byte buffer for the draw list
-        ByteBuffer bb = ByteBuffer.allocateDirect(
+        final ByteBuffer bb = ByteBuffer.allocateDirect(
                 // (# of coordinate values * 2 bytes per short)
                 drawOrder.length * 2);
         bb.order(ByteOrder.nativeOrder());
@@ -180,6 +194,7 @@ public abstract class AbstractGameCavan extends CavanMovements {
 
         // add the arrVertices to the FloatBuffer
         final float[] arrBufferVertices = new float[coordinatesLength];
+
         for(int i=0; i<arrVertices.length; i++){
             int dynamicStride = 0;
             arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].coordinate.x(); dynamicStride++;
@@ -200,6 +215,8 @@ public abstract class AbstractGameCavan extends CavanMovements {
                 dynamicStride++;
                 arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].texture.v();
                 dynamicStride++;
+                arrBufferVertices[vertexStride*i + dynamicStride] = (float)arrVertices[i].texture.textureID();
+                dynamicStride++;
             }
 
             if((this.iShaderType & SHADER_VERTICES_WITH_NORMALS) != 0){
@@ -210,7 +227,6 @@ public abstract class AbstractGameCavan extends CavanMovements {
                 arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].normal.z();
                 //dynamicStride++;
             }
-
         }
         vertexBuffer.put(arrBufferVertices);
         // set the buffer to read the first coordinate
@@ -237,11 +253,9 @@ public abstract class AbstractGameCavan extends CavanMovements {
         }
 
         if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
-            //TODO: implement texture data per vertex buffer?
-            // Otherwise one texture for a collection of vertices?
             this.iOpenGL3Buffers.addBuildTextures(this.iProgram.iTextureHandle,
                     AbstractGameCavan.NO_OF_TEXTURES_PER_VERTEX, this.iShaderStride,
-                    TEXTURE_OFFSET, arrVertices[0].texture);
+                    TEXTURE_OFFSET, this.iTextureSet);
         }
 
         if((this.iShaderType & SHADER_VERTICES_WITH_NORMALS) != 0){
@@ -284,8 +298,13 @@ public abstract class AbstractGameCavan extends CavanMovements {
         }
 
         if(vertex.texture != null){
+            if(BuildConfig.DEBUG &&
+                    this.iTextureSet.size()==0){
+                throw new AssertionError("no texture registered. You need to call <registerTexture> before this!");
+            }
+
             this.iShaderType |= SHADER_VERTICES_WITH_TEXTURE;
-            //U,V
+            //U,V, texID
             vertexStride += NO_OF_TEXTURES_PER_VERTEX;
             TEXTURE_OFFSET = offset;
             offset += BYTES_PER_FLOAT * NO_OF_TEXTURES_PER_VERTEX;
@@ -352,6 +371,7 @@ public abstract class AbstractGameCavan extends CavanMovements {
         if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR)!= 0){
             GLES20.glEnableVertexAttribArray(this.iProgram.iColorHandle);
         } else if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) == 0){
+            //TODO: move this part inside initialization block as it makes no sense inside the draw loop.
             this.iProgram.iColorHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_aColor);
             DebugUtils.checkPrintGLError();
             GLES20.glUniform4fv(this.iProgram.iColorHandle, 1, this.iColor.asFloatArray(), 0);
@@ -365,14 +385,24 @@ public abstract class AbstractGameCavan extends CavanMovements {
 
         //3set texture
         if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE)!= 0){
-            //set U,V
+            //set U,V, texID
             GLES30.glEnableVertexAttribArray(this.iProgram.iTextureHandle);
             DebugUtils.checkPrintGLError();
 
-            //set bitmap data
-            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, iOpenGL3Buffers.getTextureDataBuffer());
-            DebugUtils.checkPrintGLError();
+            //set bitmap data for the texture handle
+            final int texturesNo = this.iTextureSet.size();
+            for (int i = 0; i < texturesNo; i++) {
+                GLES20.glActiveTexture(GLES20.GL_TEXTURE0 + i);
+                DebugUtils.checkPrintGLError();
+                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, iOpenGL3Buffers.getTextureDataBuffer(i));
+                DebugUtils.checkPrintGLError();
+
+                //TODO: move this at init and not inside the draw loop.
+                final int t = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_textureShader + i);
+                DebugUtils.checkPrintGLError();
+                GLES30.glUniform1i(t, i);
+                DebugUtils.checkPrintGLError();
+            }
         }
 
         //set normals
@@ -411,7 +441,7 @@ public abstract class AbstractGameCavan extends CavanMovements {
             GLES30.glDisableVertexAttribArray(this.iProgram.iTextureHandle);
             DebugUtils.checkPrintGLError();
 
-            //GLES30.glDisable(GLES30.GL_TEXTURE_2D); //not needed??? glBindTexture(0) enough?
+            //GLES30.glDisable(GLES30.GL_TEXTURE_2D); //not needed here but at cleanup. only glBindTexture(0) enough.
             //DebugUtils.checkPrintGLError();
         }
 

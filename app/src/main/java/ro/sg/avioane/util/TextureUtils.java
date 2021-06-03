@@ -14,6 +14,8 @@ import android.opengl.GLES30;
 import android.opengl.GLU;
 import android.opengl.GLUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 
 import ro.sg.avioane.R;
@@ -26,7 +28,7 @@ public class TextureUtils {
     public static final int TEXTURE_GAME_WATER = 0;
     public static final int TEXTURE_GAME_GRASS = 1;
     public static final int TEXTURE_GAME_ROCKS = 2;
-    private static final int TOTAL_TEXTURES = 3;
+    private static int TOTAL_TEXTURES = 3;
 
     /**
      * keep the matching {<texture ID>, <shader handler>}
@@ -70,6 +72,22 @@ public class TextureUtils {
         iTextureData.put(TEXTURE_GAME_WATER, BitmapFactory.decodeResource(context.getResources(), R.drawable.water));
         iTextureData.put(TEXTURE_GAME_GRASS, BitmapFactory.decodeResource(context.getResources(), R.drawable.grass));
         iTextureData.put(TEXTURE_GAME_ROCKS, BitmapFactory.decodeResource(context.getResources(), R.drawable.rocks));
+    }
+
+    /**
+     *
+     * @param context
+     * @param fileName
+     * @return the texture ID was assigned or -1 in case of a failure.
+     * @throws IOException
+     */
+    public int addTextureFromAssets(final Context context, final String fileName) throws IOException {
+        final String fn = "obj/" + fileName;
+        final InputStream inputStream = context.getAssets().open(fn);
+        final int textureID = TOTAL_TEXTURES; TOTAL_TEXTURES++;
+        iTextureData.put(textureID, BitmapFactory.decodeStream(inputStream));
+        inputStream.close();
+        return textureID;
     }
 
     /**

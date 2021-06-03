@@ -6,6 +6,10 @@
 
 package ro.sg.avioane.geometry;
 
+import androidx.annotation.NonNull;
+
+import ro.sg.avioane.BuildConfig;
+
 public class XYZColor {
     public final static float OPAQUE = 1.0f;
     public final static float TRANSPARENT = 0.0f;
@@ -26,11 +30,21 @@ public class XYZColor {
         this.alpha = alpha;
     }
 
-    public XYZColor(final float[] colorArray){
+    /**
+     *
+     * @param colorArray float array of size 3(alpha will be OPAQUE) or 4 (if alpha is also supplier)
+     */
+    public XYZColor(@NonNull final float[] colorArray){
+        if(BuildConfig.DEBUG &&
+                (colorArray.length <3 || colorArray.length > 4))
+            throw new AssertionError("index out of range=" + colorArray.length);
         this.red = colorArray[0];
         this.green = colorArray[1];
         this.blue = colorArray[2];
-        this.alpha = colorArray[3];
+        if(colorArray.length == 4)
+            this.alpha = colorArray[3];
+        else
+            this.alpha = XYZColor.OPAQUE;
     }
 
     public float[] asFloatArray(){

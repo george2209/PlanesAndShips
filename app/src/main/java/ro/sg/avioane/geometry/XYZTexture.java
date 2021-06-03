@@ -16,10 +16,10 @@ public class XYZTexture {
     private int iTextureID = -1;
 
 
-//    public XYZTexture(final float[] arr){
-//        iTextureArray[0] = arr[0];
-//        iTextureArray[1] = arr[1];
-//    }
+    public XYZTexture(final float[] arr){
+        iTextureArray[0] = arr[0];
+        iTextureArray[1] = arr[1];
+    }
 
     public XYZTexture(final float u, final float v, final int textureID){
         iTextureArray[0] = u;
@@ -45,6 +45,10 @@ public class XYZTexture {
 
     public int textureID(){
         return this.iTextureID;
+    }
+
+    public void setTextureID(int textureID){
+        this.iTextureID = textureID;
     }
 
 //    public void setU(final float u){

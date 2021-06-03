@@ -12,9 +12,13 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
 
+import java.io.IOException;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import ro.sg.avioane.cavans.blender.BlenderObjCavan;
+import ro.sg.avioane.cavans.blender.MaterialParser;
 import ro.sg.avioane.cavans.blender.ObjParser;
 import ro.sg.avioane.cavans.blender.ParsedObjBlender;
 import ro.sg.avioane.cavans.primitives.Square;
@@ -44,6 +48,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
     //private XYZAxis iWorldAxis = null;
     //private Line iMovingLine = null;
     //private Square iSquare = null;
+    private BlenderObjCavan iAirPlane = null;
 
 //    private StaticCube staticBlenderCube = null;
 //    MovingCube movingCube = null;
@@ -64,38 +69,27 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         this.iWorld = new WorldScene(this.iCamera);
         this.iTouchProcessor.addTouchScreenListener(this);
 
-//        final XYZVertex t1 = MathGLUtils.getTriangleNormal(
-//                new XYZVertex(-113.748047f, -13.510292f, 250.230896f),
-//                new XYZVertex(-111.487404f, -45.606571f, 225.793869f),
-//                new XYZVertex(-123.862007f, -14.288765f, 244.758011f)
-//        );
-//
-//        final XYZVertex t2 = MathGLUtils.getTriangleNormal(
-//                new XYZVertex(-113.748047f, -13.510292f, 250.230896f),
-//                new XYZVertex(-98.904160f, -44.577564f, 230.430054f),
-//                new XYZVertex(-111.487404f, -45.606571f, 225.793869f)
-//        );
-//
-//        final XYZVertex t3 = MathGLUtils.getTriangleNormal(
-//                new XYZVertex(-98.904160f, -44.577564f, 230.430054f),
-//                new XYZVertex(-113.748047f, -13.510292f, 250.230896f),
-//                new XYZVertex(-113.202438f, -13.474716f, 250.301163f)
-//        );
-//
-//        final XYZVertex nor = new XYZVertex(
-//                MathGLUtils.matrixNormalize(MathGLUtils.add(
-//                        MathGLUtils.add(t1, t2), t3
-//                ).asArray()));
-//
-//        System.out.println("\n\n\n*******************************************");
-//        System.out.println("Nx=" + nor.x() + " Ny=" + nor.y() + " Nz=" + nor.z());
-//        System.out.println("\n\n\n*******************************************");
+//        try {
+//            new MaterialParser().parseFile(context, "plane.mtl");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private void addDrawObjects() {
 
-        this.iGameTerrain = new GameTerrain(20,40, this.iContext);
-        this.iWorld.add(this.iGameTerrain);
+        //this.iGameTerrain = new GameTerrain(50,50, this.iContext);
+        //this.iWorld.add(this.iGameTerrain);
+
+        final ObjParser objParser = new ObjParser();
+        try {
+            final ParsedObjBlender parsedObjBlender = objParser.parseOBJ(this.iContext, "plane.obj");
+            iAirPlane = new BlenderObjCavan(parsedObjBlender.vertexArray, parsedObjBlender.drawOrderArray);
+            this.iWorld.add(iAirPlane);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 
 //        this.iWorldAxis = new XYZAxis();
 //        this.iWorld.add(this.iWorldAxis);

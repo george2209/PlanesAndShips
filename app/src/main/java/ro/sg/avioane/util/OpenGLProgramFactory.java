@@ -154,9 +154,9 @@ public class OpenGLProgramFactory {
 //            sb.append("  gl_PointSize = 10.0;");
         sb.append("}");
 
-        if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
-            System.out.println("PROGRAM SHADER=\n\n" + sb.toString() + "\n\n");
-        }
+//        if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
+//            System.out.println("PROGRAM SHADER=\n\n" + sb.toString() + "\n\n");
+//        }
 
         return sb.toString();
     }
@@ -246,9 +246,9 @@ public class OpenGLProgramFactory {
         }
         sb.append("}");
 
-        if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
-            System.out.println("FRAGMENT SHADER=\n\n" + sb.toString() + "\n\n");
-        }
+//        if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0) {
+//            System.out.println("FRAGMENT SHADER=\n\n" + sb.toString() + "\n\n");
+//        }
 
         return sb.toString();
     }

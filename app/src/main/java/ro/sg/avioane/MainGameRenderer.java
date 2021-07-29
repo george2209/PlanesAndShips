@@ -7,31 +7,21 @@
 package ro.sg.avioane;
 
 import android.content.Context;
-import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
 
-import java.io.IOException;
-
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import ro.sg.avioane.cavans.AbstractGameCavan;
 import ro.sg.avioane.cavans.blender.BlenderObjCavan;
-import ro.sg.avioane.cavans.blender.MaterialParser;
-import ro.sg.avioane.cavans.blender.ObjParser;
-import ro.sg.avioane.cavans.blender.ParsedObjBlender;
-import ro.sg.avioane.cavans.primitives.Square;
-import ro.sg.avioane.cavans.primitives.XYZAxis;
 import ro.sg.avioane.game.TouchScreenListener;
 import ro.sg.avioane.game.TouchScreenProcessor;
 import ro.sg.avioane.game.WorldCamera;
 import ro.sg.avioane.game.WorldScene;
-import ro.sg.avioane.game.spirits.GameTerrain;
-import ro.sg.avioane.game.spirits.StaticCube;
 import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
-import ro.sg.avioane.geometry.XYZTexture;
 import ro.sg.avioane.geometry.XYZVertex;
 import ro.sg.avioane.util.MathGLUtils;
 import ro.sg.avioane.util.OpenGLProgramFactory;
@@ -53,7 +43,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 //    private StaticCube staticBlenderCube = null;
 //    MovingCube movingCube = null;
 
-    private GameTerrain iGameTerrain = null;
+    //private GameTerrain iGameTerrain = null;
 
 
 
@@ -76,19 +66,24 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 //        }
     }
 
+    public void addCanvan(final AbstractGameCavan entity){
+        this.iWorld.add(entity);
+    }
+
     private void addDrawObjects() {
 
         //this.iGameTerrain = new GameTerrain(50,50, this.iContext);
         //this.iWorld.add(this.iGameTerrain);
 
-        final ObjParser objParser = new ObjParser();
-        try {
-            final ParsedObjBlender parsedObjBlender = objParser.parseOBJ(this.iContext, "plane.obj");
-            iAirPlane = new BlenderObjCavan(parsedObjBlender.vertexArray, parsedObjBlender.drawOrderArray);
-            this.iWorld.add(iAirPlane);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        final ObjParser objParser = new ObjParser();
+        
+//        try {
+//            //final ParsedObjBlender parsedObjBlender = objParser.parseOBJ(this.iContext, "plane.obj");
+//            //iAirPlane = new BlenderObjCavan(parsedObjBlender.vertexArray, parsedObjBlender.drawOrderArray);
+//            //this.iWorld.add(iAirPlane);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
 
 //        this.iWorldAxis = new XYZAxis();
@@ -97,7 +92,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 //        final XYZVertex upperLeft = new XYZVertex(new XYZCoordinate(0,0,0));
 //        upperLeft.normal = new XYZCoordinate(0,1,0);
 //        //upperLeft.backgroundColor = new XYZColor(0,0,0,1);
-//        upperLeft.texture = new XYZTexture(0,0,
+//        upperLeft.texture = new XYZTextureUV(0,0,
 //                "me",
 //                BitmapFactory.decodeResource(this.iContext.getResources(), R.drawable.water));
 //
@@ -139,7 +134,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         final TextureUtils textureUtils = TextureUtils.getInstance();
         boolean isRestoreNeeded = textureUtils.onDestroy();
         isRestoreNeeded |= OpenGLProgramFactory.getInstance().onDestroy();
-        textureUtils.loadTextures(this.iContext);
+        //textureUtils.loadTextures(this.iContext);
         if(isRestoreNeeded && this.iWorld.count() > 0){
             System.out.println("A restore of the world is needed***");
             this.iWorld.onRestoreWorld();

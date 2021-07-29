@@ -12,9 +12,16 @@ package ro.sg.avioane.geometry;
 public class XYZVertex {
 
     public XYZCoordinate coordinate = null;
-    public XYZColor backgroundColor = null; //opens the possibility to set the color per vertex
-    public XYZTexture texture = null;
+    public XYZTextureUV uvTexture = null;
     public XYZCoordinate normal = null;
+    public XYZMaterial material = null;
+
+    //opens the possibility to set the color per vertex instead of having a material defined.
+    //not sure if it will be used...
+    public XYZColor backgroundColor = null;
+
+
+
 
     public XYZVertex(final XYZCoordinate coordinate){
         this.coordinate = coordinate;

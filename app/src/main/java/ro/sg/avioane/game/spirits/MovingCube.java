@@ -17,7 +17,7 @@ public class MovingCube extends BlenderObjCavan{
     private final int timeout = 50;
 
     public MovingCube(final XYZVertex[] arr, short[] indexDrawOrder) {
-        super(arr, indexDrawOrder);
+        //////////////////////////////////////////////////////////////super(arr, indexDrawOrder);
         this.translate(1,3.0f,3.0f);
     }
 

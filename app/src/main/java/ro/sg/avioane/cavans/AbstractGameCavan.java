@@ -211,11 +211,11 @@ public abstract class AbstractGameCavan extends CavanMovements {
                 dynamicStride++;
             }
             if((this.iShaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
-                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].texture.u();
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].uvTexture.u;
                 dynamicStride++;
-                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].texture.v();
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].uvTexture.v;
                 dynamicStride++;
-                arrBufferVertices[vertexStride*i + dynamicStride] = (float)arrVertices[i].texture.textureID();
+                arrBufferVertices[vertexStride*i + dynamicStride] = (float)arrVertices[i].uvTexture.textureID();
                 dynamicStride++;
             }
 

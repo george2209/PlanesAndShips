@@ -11,7 +11,6 @@ import android.opengl.GLES30;
 import java.util.Collection;
 
 import ro.sg.avioane.BuildConfig;
-import ro.sg.avioane.geometry.XYZTexture;
 
 /**
  * a class maintaining the VBO and the VAO of a specific vertex array

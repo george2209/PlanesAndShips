@@ -17,30 +17,43 @@ import android.opengl.GLUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import ro.sg.avioane.R;
 
 public class TextureUtils {
+    public static class TextureSharerInfo {
+        public Bitmap bitmap = null;
+        public Integer shaderHandler = new Integer(OpenGLUtils.INVALID_UNSIGNED_VALUE);
+    }
+
     private static TextureUtils _instance = null;
 
     public static final short MAX_TEXTURES_SUPPORTED_PER_OBJ = 3;
 
-    public static final int TEXTURE_GAME_WATER = 0;
-    public static final int TEXTURE_GAME_GRASS = 1;
-    public static final int TEXTURE_GAME_ROCKS = 2;
-    private static int TOTAL_TEXTURES = 3;
+//    public static final int TEXTURE_GAME_WATER = 0;
+//    public static final int TEXTURE_GAME_GRASS = 1;
+//    public static final int TEXTURE_GAME_ROCKS = 2;
 
+    private static int TOTAL_TEXTURES = 0;
+
+    //TODO: merge the two hash maps into one single hash map
     /**
      * keep the matching {<texture ID>, <shader handler>}
      * to make sure that the same texture is only once loaded into memory
      */
-    private HashMap<Integer, Integer> iTextureHandlers = new HashMap<Integer, Integer>();
+    //private HashMap<Integer, Integer> iTextureHandlers = new HashMap<Integer, Integer>();
 
     /**
-     * keep the matching {<texture ID>, <texture binary>}
+     * keep the matching {<texture ID>, <texture binary, shader handler>}
      * used with a life time between <code>loadTextures</code> and <code>releaseTextures</code>
      */
-    private HashMap<Integer, Bitmap> iTextureData = new HashMap<Integer, Bitmap>(TOTAL_TEXTURES);
+    private HashMap<Integer, TextureSharerInfo> iTextureData = new HashMap<Integer, TextureSharerInfo>();
+
+    /**
+     * keep the matching {<texture file name>, <texture ID>}
+     */
+    private HashMap<String, Integer> iTextureNames = new HashMap<String, Integer>();
 
 
     private TextureUtils(){
@@ -68,11 +81,11 @@ public class TextureUtils {
      * loads all textures from the main storage.
      * @param context
      */
-    public void loadTextures(final Context context){
-        iTextureData.put(TEXTURE_GAME_WATER, BitmapFactory.decodeResource(context.getResources(), R.drawable.water));
-        iTextureData.put(TEXTURE_GAME_GRASS, BitmapFactory.decodeResource(context.getResources(), R.drawable.grass));
-        iTextureData.put(TEXTURE_GAME_ROCKS, BitmapFactory.decodeResource(context.getResources(), R.drawable.rocks));
-    }
+//    public void loadTextures(final Context context){
+//        iTextureData.put(TEXTURE_GAME_WATER, BitmapFactory.decodeResource(context.getResources(), R.drawable.water));
+//        iTextureData.put(TEXTURE_GAME_GRASS, BitmapFactory.decodeResource(context.getResources(), R.drawable.grass));
+//        iTextureData.put(TEXTURE_GAME_ROCKS, BitmapFactory.decodeResource(context.getResources(), R.drawable.rocks));
+//    }
 
     /**
      *
@@ -84,8 +97,12 @@ public class TextureUtils {
     public int addTextureFromAssets(final Context context, final String fileName) throws IOException {
         final String fn = "obj/" + fileName;
         final InputStream inputStream = context.getAssets().open(fn);
-        final int textureID = TOTAL_TEXTURES; TOTAL_TEXTURES++;
-        iTextureData.put(textureID, BitmapFactory.decodeStream(inputStream));
+        final int textureID = TOTAL_TEXTURES;
+        final TextureSharerInfo textureSharerInfo = new TextureSharerInfo();
+        textureSharerInfo.bitmap = BitmapFactory.decodeStream(inputStream);
+        TOTAL_TEXTURES++;
+        iTextureData.put(textureID, textureSharerInfo);
+        iTextureNames.put(fileName, textureID);
         inputStream.close();
         return textureID;
     }
@@ -111,7 +128,7 @@ public class TextureUtils {
      * @return a bitmap object containing the texture or null in case such texture is not loaded.
      */
     public Bitmap getTextureBitmap(final int textureID){
-        return this.iTextureData.get(textureID);
+        return this.iTextureData.get(textureID).bitmap;
     }
 
     /**
@@ -120,9 +137,12 @@ public class TextureUtils {
      * @return a handler to the respective texture inside the OpenGL memory
      */
     public int getTextureDataBuffer(final int textureID ){
-        Integer textureHandler = this.iTextureHandlers.get(textureID);
-        final Bitmap textureBitmap = getTextureBitmap(textureID);
-        if(textureHandler == null){
+        final TextureSharerInfo textureInfo = this.iTextureData.get(textureID);
+        if(textureInfo == null){
+            throw new AssertionError("texture not loaded " + textureID);
+        }
+
+        if(textureInfo.shaderHandler == OpenGLUtils.INVALID_UNSIGNED_VALUE){
             final int textures[] = new int[1];
             GLES30.glGenTextures(1, textures, 0);
             GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textures[0]);
@@ -136,16 +156,15 @@ public class TextureUtils {
             GLES30.glTexParameterf(GLES30.GL_TEXTURE_2D,
                     GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
 
-            GLUtils.texImage2D(GLES30.GL_TEXTURE_2D, 0, textureBitmap, 0);
+            GLUtils.texImage2D(GLES30.GL_TEXTURE_2D, 0, textureInfo.bitmap, 0);
             GLES30.glGenerateMipmap(GLES30.GL_TEXTURE_2D);
 
             GLES30.glBindTexture(GLES30.GL_TEXTURE_2D,0 ); //cleanup
 
-            textureHandler = textures[0];
-            this.iTextureHandlers.put(textureID, textureHandler);
+            textureInfo.shaderHandler = textures[0];
         }
 
-        return textureHandler.intValue();
+        return textureInfo.shaderHandler;
     }
 
 
@@ -160,8 +179,8 @@ public class TextureUtils {
 
         boolean isContextDirty = false;
 
-        for (Integer textureID: iTextureHandlers.values()) {
-            isContextDirty = !GLES30.glIsTexture(textureID);
+        for (final TextureSharerInfo textureInfo: iTextureData.values()) {
+            isContextDirty = !GLES30.glIsTexture(textureInfo.shaderHandler);
             if(isContextDirty)
                 break;
 //            final int buffers[] = new int[1];
@@ -173,7 +192,8 @@ public class TextureUtils {
 
         if(isContextDirty) {
             System.out.println("ALL TEXTURES DISCARDED FROM Program Utils!!!");
-            iTextureHandlers.clear();
+            iTextureData.clear();
+            //iTextureHandlers.clear();
         }
 
         return isContextDirty;

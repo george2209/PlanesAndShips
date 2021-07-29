@@ -10,6 +10,8 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
 
+import ro.sg.avioane.cavans.AbstractGameCavan;
+
 public class MainGameSurface extends GLSurfaceView {
 
     private MainGameRenderer iGameRenderer;
@@ -34,11 +36,16 @@ public class MainGameSurface extends GLSurfaceView {
         });*/
         super.setRenderer(this.iGameRenderer);
 
+
         // Render the view only when there is a change in the drawing data
         // if you uncomment this line then the rendering will take place only when you call
         // super.requestRender();
         //super.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
+    }
+
+    public void addCanvan(final AbstractGameCavan entity){
+        this.iGameRenderer.addCanvan(entity);
     }
 
 

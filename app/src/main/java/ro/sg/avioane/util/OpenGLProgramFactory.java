@@ -228,10 +228,6 @@ public class OpenGLProgramFactory {
                 sb.append("   fragColor = fragColor * texture(").append(SHADER_VARIABLE_textureShader +
                         i + ", vTexture);\n");
             }
-
-//            sb.append("fragColor = ").append(SHADER_VARIABLE_ambientLightColor)
-//                    .append(" * ").append("texture(tmpTexID, vTexture);\n");
-
         } else {
             //color only
             if( (shaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0) {

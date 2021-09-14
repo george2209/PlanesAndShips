@@ -29,11 +29,7 @@ public class TextureUtils {
 
     private static TextureUtils _instance = null;
 
-    public static final short MAX_TEXTURES_SUPPORTED_PER_OBJ = 3;
-
-//    public static final int TEXTURE_GAME_WATER = 0;
-//    public static final int TEXTURE_GAME_GRASS = 1;
-//    public static final int TEXTURE_GAME_ROCKS = 2;
+    //public static final short MAX_TEXTURES_SUPPORTED_PER_OBJ = 3;
 
     private static int TOTAL_TEXTURES = 0;
 
@@ -78,16 +74,6 @@ public class TextureUtils {
     }
 
     /**
-     * loads all textures from the main storage.
-     * @param context
-     */
-//    public void loadTextures(final Context context){
-//        iTextureData.put(TEXTURE_GAME_WATER, BitmapFactory.decodeResource(context.getResources(), R.drawable.water));
-//        iTextureData.put(TEXTURE_GAME_GRASS, BitmapFactory.decodeResource(context.getResources(), R.drawable.grass));
-//        iTextureData.put(TEXTURE_GAME_ROCKS, BitmapFactory.decodeResource(context.getResources(), R.drawable.rocks));
-//    }
-
-    /**
      *
      * @param context
      * @param fileName
@@ -127,6 +113,7 @@ public class TextureUtils {
      * @param textureID a value from TEXTURE_GAME_WATER, TEXTURE_GAME_GRASS.....
      * @return a bitmap object containing the texture or null in case such texture is not loaded.
      */
+    @Deprecated
     public Bitmap getTextureBitmap(final int textureID){
         return this.iTextureData.get(textureID).bitmap;
     }
@@ -136,7 +123,7 @@ public class TextureUtils {
      * @param textureID
      * @return a handler to the respective texture inside the OpenGL memory
      */
-    public int getTextureDataBuffer(final int textureID ){
+    public int getTextureDataBuffer(final int textureID){
         final TextureSharerInfo textureInfo = this.iTextureData.get(textureID);
         if(textureInfo == null){
             throw new AssertionError("texture not loaded " + textureID);
@@ -157,6 +144,12 @@ public class TextureUtils {
                     GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
 
             GLUtils.texImage2D(GLES30.GL_TEXTURE_2D, 0, textureInfo.bitmap, 0);
+            //cleanup bitmap as it is not needed anymore
+            {
+                final Bitmap b = textureInfo.bitmap;
+                textureInfo.bitmap = null;
+                b.recycle();
+            }
             GLES30.glGenerateMipmap(GLES30.GL_TEXTURE_2D);
 
             GLES30.glBindTexture(GLES30.GL_TEXTURE_2D,0 ); //cleanup

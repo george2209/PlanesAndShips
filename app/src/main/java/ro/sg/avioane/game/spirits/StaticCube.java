@@ -13,7 +13,7 @@ public class StaticCube extends BlenderObjCavan{
 
 
     public StaticCube(final XYZVertex[] arr, short[] indexDrawOrder){
-        //////////////////////////////////////////////////////////super(arr, indexDrawOrder);
+        super("StaticCube", arr, indexDrawOrder, null);
         this.translate(-1f,0.5f,0.5f);
     }
 }

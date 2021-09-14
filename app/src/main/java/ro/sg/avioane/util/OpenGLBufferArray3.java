@@ -20,7 +20,7 @@ public class OpenGLBufferArray3 {
     private int VAO = -1;
     private int VBO = -1;
     private int iVertexOrderBuffer = -1;
-    private int iTextureDataBuffers[] = null;
+    ////////////////////////private int iTextureDataBuffers[] = null;
 
     public OpenGLBufferArray3(){
     }
@@ -86,9 +86,9 @@ public class OpenGLBufferArray3 {
      * @param offset the offset of the color inside the vertex buffer
      * @return
      */
-    public OpenGLBufferArray3 addBuildBufferColors(int colorPointer, int noColorsPerVertex,
-                                                   int shaderStride,
-                                                   int offset){
+    public OpenGLBufferArray3 addBuildVDOBuffer(int colorPointer, int noColorsPerVertex,
+                                                int shaderStride,
+                                                int offset){
 
         GLES30.glVertexAttribPointer(colorPointer, noColorsPerVertex ,
                     GLES30.GL_FLOAT, false,
@@ -106,21 +106,18 @@ public class OpenGLBufferArray3 {
      * @param textureIDCollection a collection of size [1..TextureUtils.MAX_TEXTURES_SUPPORTED]
      * @return
      */
-    public OpenGLBufferArray3 addBuildTextures(int texturePointer, int noTexturesPerVertex,
-                                               int shaderStride, int offset, final Collection<Integer> textureIDCollection){
-        if(BuildConfig.DEBUG &&
-                (textureIDCollection.size() > TextureUtils.MAX_TEXTURES_SUPPORTED_PER_OBJ))
-            throw new AssertionError("MAX_TEXTURES_SUPPORTED reached = " + textureIDCollection.size());
-
-        this.iTextureDataBuffers = new int[textureIDCollection.size()];
-        int i = 0;
-        for (int textureID:textureIDCollection) {
-            this.iTextureDataBuffers[i] = TextureUtils.getInstance().getTextureDataBuffer(textureID);
-            i++;
-        }
-        this.addBuildBufferColors(texturePointer, noTexturesPerVertex, shaderStride, offset);
-        return this;
-    }
+//    public OpenGLBufferArray3 addBuildTextures(int texturePointer, int noTexturesPerVertex,
+//                                               int shaderStride, int offset, final Collection<Integer> textureIDCollection){
+//
+//        this.iTextureDataBuffers = new int[textureIDCollection.size()];
+//        int i = 0;
+//        for (int textureID:textureIDCollection) {
+//            this.iTextureDataBuffers[i] = TextureUtils.getInstance().getTextureDataBuffer(textureID);
+//            i++;
+//        }
+//        this.addBuildVDOBuffer(texturePointer, noTexturesPerVertex, shaderStride, offset);
+//        return this;
+//    }
 
     /**
      * see @link #startBuildBuffers
@@ -230,7 +227,7 @@ public class OpenGLBufferArray3 {
         return this.iVertexOrderBuffer;
     }
 
-    public int getTextureDataBuffer(final int index){
-        return this.iTextureDataBuffers[index];
-    }
+//    public int getTextureDataBuffer(final int index){
+//        return this.iTextureDataBuffers[index];
+//    }
 }

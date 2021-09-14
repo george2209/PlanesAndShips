@@ -11,6 +11,10 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
 
+import androidx.annotation.NonNull;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
@@ -31,6 +35,10 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 
     private final Context iContext;
 
+
+
+
+
     //put here some object for test:
     //private GameTerrain iGamePlane = null;
 
@@ -38,7 +46,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
     //private XYZAxis iWorldAxis = null;
     //private Line iMovingLine = null;
     //private Square iSquare = null;
-    private BlenderObjCavan iAirPlane = null;
+    //private BlenderObjCavan iAirPlane = null;
 
 //    private StaticCube staticBlenderCube = null;
 //    MovingCube movingCube = null;
@@ -58,19 +66,15 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         this.iContext = context;
         this.iWorld = new WorldScene(this.iCamera);
         this.iTouchProcessor.addTouchScreenListener(this);
-
-//        try {
-//            new MaterialParser().parseFile(context, "plane.mtl");
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
 
-    public void addCanvan(final AbstractGameCavan entity){
+    public void addEntityInGame(@NonNull final AbstractGameCavan entity){
+        entity.onRestore();
         this.iWorld.add(entity);
     }
 
-    private void addDrawObjects() {
+
+//    private void addDrawObjects() {
 
         //this.iGameTerrain = new GameTerrain(50,50, this.iContext);
         //this.iWorld.add(this.iGameTerrain);
@@ -126,22 +130,21 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 //        this.iWorld.add(this.iMovingLine);
 //
 //
-    }
+//    }
 
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        final TextureUtils textureUtils = TextureUtils.getInstance();
-        boolean isRestoreNeeded = textureUtils.onDestroy();
-        isRestoreNeeded |= OpenGLProgramFactory.getInstance().onDestroy();
-        //textureUtils.loadTextures(this.iContext);
-        if(isRestoreNeeded && this.iWorld.count() > 0){
-            System.out.println("A restore of the world is needed***");
-            this.iWorld.onRestoreWorld();
-        } else {
-            this.addDrawObjects();
-        }
-        textureUtils.releaseTextures();
+
+//        final TextureUtils textureUtils = TextureUtils.getInstance();
+//        boolean isRestoreNeeded = textureUtils.onDestroy();
+//        isRestoreNeeded |= OpenGLProgramFactory.getInstance().onDestroy();
+//        //textureUtils.loadTextures(this.iContext);
+//        if(isRestoreNeeded && this.iWorld.count() > 0){
+//            System.out.println("A restore of the world is needed***");
+//            this.iWorld.onRestoreWorld();
+//        }
+//        textureUtils.releaseTextures();
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.8f);
     }
 

@@ -17,7 +17,7 @@ public class XYZPoint extends AbstractGameCavan {
 
     public XYZPoint(XYZVertex coordinate){
         iCoordinate = coordinate;
-        super.build(new XYZVertex[]{this.iCoordinate}, new short[]{0});
+        super.build(new XYZVertex[]{this.iCoordinate}, new short[]{0}, null);
     }
 
     @Override
@@ -27,6 +27,6 @@ public class XYZPoint extends AbstractGameCavan {
 
     @Override
     public void onRestore() {
-        super.build(new XYZVertex[]{this.iCoordinate}, new short[]{0});
+        super.build(new XYZVertex[]{this.iCoordinate}, new short[]{0}, null);
     }
 }

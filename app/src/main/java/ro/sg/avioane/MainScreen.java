@@ -10,8 +10,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 
 import java.io.BufferedInputStream;
@@ -19,6 +22,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import ro.sg.avioane.cavans.blender.BlenderObjCavan;
 import ro.sg.avioane.cavans.blender.ObjParser;
 import ro.sg.avioane.util.BackgroundTask;
 import ro.sg.avioane.util.OpenGLProgramFactory;
@@ -29,6 +33,7 @@ public class MainScreen extends AppCompatActivity {
 
     private MainGameSurface iGameSurface;
     private final AtomicBoolean iActivityAlive = new AtomicBoolean(true);
+    private BackgroundTask iOBJLoaderProcessor = null;
 
     //private static boolean isTexturesLoaded = false;
 
@@ -40,50 +45,29 @@ public class MainScreen extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.iActivityAlive.set(true);
 
         System.out.println("onCreate");
+        this.iActivityAlive.set(true);
 
-        this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        //remove the status and battery.
-        this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-
-        //Remove title bar
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        try {
-            Objects.requireNonNull(this.getSupportActionBar()).hide();
-        }catch (NullPointerException npe){
-            System.out.println("Warning: null ActionBar detected. App will run with ActionBar not " +
-                    "hidden. Stacktrace:");
-            npe.printStackTrace();
+        if(this.iGameSurface == null) {
+            this.iGameSurface = new MainGameSurface(getApplication());
+            setContentView(this.iGameSurface);
+        } else {
+            //TODO:
+            if(BuildConfig.DEBUG)
+                throw new AssertionError("missing code: failed to load the Blender objects. Important later when we handle the downloading of the objects from a server.)");
         }
 
         final ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         if (OpenGLUtils.isOpenGL2Supported(activityManager))
         {
-            boolean isLoading = true;
+            this.setScreenProperties();
             try {
                 loadCavans();
             } catch (IOException e) {
                 e.printStackTrace();
-                isLoading = false;
+
             }
-            if(isLoading && this.iGameSurface == null) {
-                this.iGameSurface = new MainGameSurface(getApplication());
-                setContentView(this.iGameSurface);
-            } else {
-                //TODO:
-            }
-
-
-            // Render the view only when there is a change in the drawing data
-
-
-            //////////////////////////////////////////this.loadTextures();
-
-
-
         } else {
             //TODO: make a layout frame where you display the non-supported message.
             //TBD if this part is really needed as the App shall be not installed from the
@@ -93,8 +77,33 @@ public class MainScreen extends AppCompatActivity {
         }
     }
 
+    /**
+     * loads the game surface and render. Basically this is the entry point for the game as well as
+     * all the OpenGL objects.
+     * @param blenderOBJArr the array of the loaded OBJs from memory.
+     */
+    private void loadGameSurface(final BlenderObjCavan[] blenderOBJArr){
+        if(BuildConfig.DEBUG && this.iGameSurface == null)
+            throw new AssertionError("null game surface");
+
+        this.iGameSurface.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                iGameSurface.loadBlenderObjects(blenderOBJArr);
+            }
+        });
+    }
+
+    /**
+     * this method is handling the load of the Blender objects
+     * @throws IOException
+     */
     private void loadCavans() throws IOException {
-        final BackgroundTask task = new BackgroundTask(this) {
+        if(BuildConfig.DEBUG && this.iOBJLoaderProcessor != null){
+            throw new AssertionError("thread alive exception!");
+        }
+
+        this.iOBJLoaderProcessor = new BackgroundTask(this) {
             private final String arrObj[] = {"cube_output.bin"};
             private int index = 0;
             private BufferedInputStream inputStream = null;
@@ -123,20 +132,44 @@ public class MainScreen extends AppCompatActivity {
 
             @Override
             public boolean runInBackground() {
-                return iParser.processStream(this.inputStream);
+                if(iParser.processStream(this.inputStream)){
+                    if(iParser.getStateEngine() == ObjParser.PARSE_DONE){
+                        if(index < arrObj.length) {
+                            preloadData();
+                        } else {
+                            //work done!
+                            return false;
+                        }
+                    }
+                    return true;
+                } else {
+                    this.stop();
+                    return false;
+                }
             }
 
             @Override
             public void notifyThreadFinished() {
-                try {
-                    inputStream.close();
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
+                if(inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
                 }
+                if(!this.isInterrupted()) {
+                    loadGameSurface(iParser.getParsedObjects());
+                }
+                else {
+                    if(BuildConfig.DEBUG)
+                        throw new AssertionError("Interrupted thread detected!");
+                    //else TODO: ...
+                }
+                iOBJLoaderProcessor = null;
             }
         };
 
-        task.start();
+        iOBJLoaderProcessor.start();
     }
 
 //    @Override
@@ -172,6 +205,10 @@ public class MainScreen extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         System.out.println("onDestroy!!!");
+        if(this.iOBJLoaderProcessor != null &&
+                this.iOBJLoaderProcessor.isRunning()) {
+            this.iOBJLoaderProcessor.stop();
+        }
         OpenGLProgramFactory.killInstance();
         TextureUtils.killInstance();
         this.iGameSurface = null;
@@ -195,4 +232,31 @@ public class MainScreen extends AppCompatActivity {
                     new Texture(myAppContext.getDrawable(R.drawable.plane_diff)));
         }
     }*/
+
+
+
+    /***
+     * set the screen properties such us hiding the clock and battery and keep the display ON
+     */
+    private void setScreenProperties() {
+        //keep screen ON.
+        this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        //remove the status and battery.
+        final WindowInsetsController insetsController = getWindow().getInsetsController();
+        if (insetsController != null) {
+            insetsController.hide(WindowInsets.Type.statusBars());
+        }
+
+
+        //Remove title bar
+//        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+//        try {
+//            Objects.requireNonNull(this.getSupportActionBar()).hide();
+//        }catch (NullPointerException npe){
+//            System.out.println("Warning: null ActionBar detected. App will run with ActionBar not " +
+//                    "hidden. Stacktrace:");
+//            npe.printStackTrace();
+//        }
+    }
 }

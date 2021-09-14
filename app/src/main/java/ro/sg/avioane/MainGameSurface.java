@@ -10,7 +10,7 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
 
-import ro.sg.avioane.cavans.AbstractGameCavan;
+import ro.sg.avioane.cavans.blender.BlenderObjCavan;
 
 public class MainGameSurface extends GLSurfaceView {
 
@@ -44,11 +44,15 @@ public class MainGameSurface extends GLSurfaceView {
 
     }
 
-    public void addCanvan(final AbstractGameCavan entity){
-        this.iGameRenderer.addCanvan(entity);
+    /**
+     * this method must be called from the GUI thread!
+     * @param blenderOBJArray
+     */
+    public void loadBlenderObjects(final BlenderObjCavan[] blenderOBJArray){
+        for (BlenderObjCavan gameEntity:blenderOBJArray) {
+            this.iGameRenderer.addEntityInGame(gameEntity);
+        }
     }
-
-
 
 
     @Override

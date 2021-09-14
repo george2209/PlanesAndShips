@@ -15,7 +15,7 @@ import ro.sg.avioane.geometry.XYZVertex;
 public class XYZAxis extends AbstractGameCavan {
 
     public XYZAxis(){
-        super.build(this.buildCoordinates(), this.buildIndexes());
+        super.build(this.buildCoordinates(), this.buildIndexes(), null);
     }
 
     /**
@@ -61,6 +61,6 @@ public class XYZAxis extends AbstractGameCavan {
     @Override
     public void onRestore() {
         //no persistence in this case is needed.
-        super.build(this.buildCoordinates(), this.buildIndexes());
+        super.build(this.buildCoordinates(), this.buildIndexes(), null);
     }
 }

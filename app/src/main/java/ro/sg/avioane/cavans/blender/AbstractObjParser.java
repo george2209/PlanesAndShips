@@ -15,6 +15,12 @@ import ro.sg.avioane.BuildConfig;
 
 public class AbstractObjParser {
 
+    protected int getByteArrayAsInt(final byte[] data){
+        final ByteBuffer bb = ByteBuffer.wrap(data);
+        bb.order(ByteOrder.LITTLE_ENDIAN);
+        return bb.getInt();
+    }
+
     protected short getByteArrayAsShort(final byte[] data){
         final ByteBuffer bb = ByteBuffer.wrap(data);
         bb.order(ByteOrder.LITTLE_ENDIAN);

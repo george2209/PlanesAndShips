@@ -10,15 +10,18 @@ import android.opengl.GLES20;
 
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_NORMALS;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_OWN_COLOR;
-import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_TEXTURE;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_UV_TEXTURE;
 
 public class OpenGLProgram {
 
-    public int iProgramHandle = -1;
-    public int iVerticesHandle = -1;
-    public int iColorHandle = -1;
-    public int iAmbientColorHandle = -1;
-    public int iTextureHandle = -1;
+    public int iProgramHandle;
+    public int iVerticesHandle;
+    public int iUVTextureHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;//linked against SHADER_VARIABLE_aUVTexture
+    public int iColorHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    public int iAmbientColorHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    public int iAmbientKaHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_ambientKAConstant
+    public int iAmbientKaTexture = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_ambientKaTexture
+    //public int iTextureHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_aTexture
     public int iTextureBitmapSamplers[] = null;
     public int iNormalHandle = -1;
 
@@ -69,9 +72,9 @@ public class OpenGLProgram {
             GLES20.glBindAttribLocation(iProgramHandle, iColorHandle, OpenGLProgramFactory.SHADER_VARIABLE_aColor);
         }
 
-        if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
-            this.iTextureHandle = attributeIndex++;
-            GLES20.glBindAttribLocation(iProgramHandle, this.iTextureHandle, OpenGLProgramFactory.SHADER_VARIABLE_aTexture);
+        if((shaderType & SHADER_VERTICES_WITH_UV_TEXTURE) != 0){
+            this.iUVTextureHandle = attributeIndex++;
+            GLES20.glBindAttribLocation(iProgramHandle, this.iUVTextureHandle, OpenGLProgramFactory.SHADER_VARIABLE_aUVTexture);
         }
 
         if((shaderType & SHADER_VERTICES_WITH_NORMALS) != 0){

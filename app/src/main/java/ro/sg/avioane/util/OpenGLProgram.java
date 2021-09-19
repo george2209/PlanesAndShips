@@ -22,7 +22,7 @@ public class OpenGLProgram {
     public int iAmbientKaHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_ambientKAConstant
     public int iAmbientKaTexture = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_ambientKaTexture
     //public int iTextureHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_aTexture
-    public int iTextureBitmapSamplers[] = null;
+    //public int[] iTextureBitmapSamplers = null;
     public int iNormalHandle = -1;
 
 

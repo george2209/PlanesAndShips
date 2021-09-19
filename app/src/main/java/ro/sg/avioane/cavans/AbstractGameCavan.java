@@ -19,7 +19,6 @@ import java.nio.ShortBuffer;
 import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.cavans.features.CavanMovements;
 import ro.sg.avioane.geometry.XYZColor;
-import ro.sg.avioane.geometry.XYZCoordinate;
 import ro.sg.avioane.geometry.XYZMaterial;
 import ro.sg.avioane.geometry.XYZVertex;
 import ro.sg.avioane.lighting.AmbientLight;
@@ -27,12 +26,10 @@ import ro.sg.avioane.util.DebugUtils;
 import ro.sg.avioane.util.OpenGLBufferArray3;
 import ro.sg.avioane.util.OpenGLProgram;
 import ro.sg.avioane.util.OpenGLProgramFactory;
-import ro.sg.avioane.util.OpenGLUtils;
 import ro.sg.avioane.util.TextureUtils;
 
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_ONLY_VERTICES;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_UNDEFINED;
-import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VARIABLE_ambientKAConstant;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_KA_CONSTANT;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_NORMALS;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_OWN_COLOR;
@@ -408,7 +405,7 @@ public abstract class AbstractGameCavan extends CavanMovements {
 
             if((this.iShaderType & SHADER_VERTICES_WITH_KA_CONSTANT) != 0) {
                 //3.1 set ambient reflectivity
-                this.iProgram.iAmbientKaHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_ambientKAConstant);
+                this.iProgram.iAmbientKaHandle = GLES20.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_ambientKaConstant);
                 DebugUtils.checkPrintGLError();
                 GLES20.glUniform3fv(this.iProgram.iAmbientKaHandle, 1, this.iMaterial.materialKA.asArray(), 0);
                 DebugUtils.checkPrintGLError();

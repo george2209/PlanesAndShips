@@ -37,9 +37,10 @@ public class MaterialParser extends AbstractObjParser{
     public final static int PARSE_MATERIAL_MAP_KA_FILE_NAME = 11;
     public final static int PARSE_MATERIAL_MAP_KD_FILE_NAME = 12;
     public final static int PARSE_MATERIAL_MAP_KS_FILE_NAME = 13;
-    public final static int PARSE_MATERIAL_MAP_NS_FILE_NAME = 14;
-    public final static int PARSE_MATERIAL_MAP_D_FILE_NAME = 15;
-    public final static int PARSE_MATERIAL_END = 16;
+    public final static int PARSE_MATERIAL_MAP_KE_FILE_NAME = 14;
+    public final static int PARSE_MATERIAL_MAP_NS_FILE_NAME = 15;
+    public final static int PARSE_MATERIAL_MAP_D_FILE_NAME = 16;
+    public final static int PARSE_MATERIAL_END = 17;
 
     private XYZMaterial[] iArrMaterials = null;
     private int iParsingID = -1;
@@ -78,6 +79,7 @@ public class MaterialParser extends AbstractObjParser{
                 case PARSE_MATERIAL_MAP_KS_FILE_NAME:
                 case PARSE_MATERIAL_MAP_NS_FILE_NAME:
                 case PARSE_MATERIAL_MAP_D_FILE_NAME:
+                case PARSE_MATERIAL_MAP_KE_FILE_NAME:
                 case PARSE_MATERIAL_NAME: {
                     byte tmpArr[] = new byte[2];
                     inputStream.read(tmpArr, 0, 2);
@@ -201,6 +203,10 @@ public class MaterialParser extends AbstractObjParser{
             case PARSE_MATERIAL_MAP_KS_FILE_NAME:
             {
                 iArrMaterials[iParsingID].mapKS_FileNameID = TextureUtils.getInstance().addTextureFromAssets(this.iContext, new String(data, StandardCharsets.US_ASCII));
+            } break;
+            case PARSE_MATERIAL_MAP_KE_FILE_NAME:
+            {
+                iArrMaterials[iParsingID].mapKE_FileNameID = TextureUtils.getInstance().addTextureFromAssets(this.iContext, new String(data, StandardCharsets.US_ASCII));
             } break;
             case PARSE_MATERIAL_MAP_NS_FILE_NAME:
             {

@@ -21,6 +21,7 @@ public class XYZMaterial {
     public int mapKA_FileNameID = OpenGLUtils.INVALID_UNSIGNED_VALUE;
     public int mapKD_FileNameID = OpenGLUtils.INVALID_UNSIGNED_VALUE;
     public int mapKS_FileNameID = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    public int mapKE_FileNameID = OpenGLUtils.INVALID_UNSIGNED_VALUE;
     public int mapNS_FileNameID = OpenGLUtils.INVALID_UNSIGNED_VALUE;
     public int mapD_FileNameID = OpenGLUtils.INVALID_UNSIGNED_VALUE;
 }

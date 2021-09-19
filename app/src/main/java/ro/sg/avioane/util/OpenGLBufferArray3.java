@@ -20,7 +20,6 @@ public class OpenGLBufferArray3 {
     private int VAO = -1;
     private int VBO = -1;
     private int iVertexOrderBuffer = -1;
-    ////////////////////////private int iTextureDataBuffers[] = null;
 
     public OpenGLBufferArray3(){
     }
@@ -48,7 +47,7 @@ public class OpenGLBufferArray3 {
                                                 int dataType, boolean isNormalized,
                                                 int shaderStride,
                                                 int offset){
-        //create VertexArrayObject
+        //create VertexArrayObject (vertex attribute locations)
         final int buffers[] = new int[1];
         if(this.VAO == -1) {
             GLES30.glGenVertexArrays(1, buffers, 0);
@@ -219,9 +218,9 @@ public class OpenGLBufferArray3 {
         return this.VAO;
     }
 
-    public int VBO(){
-        return this.VBO;
-    }
+//    public int VBO(){
+//        return this.VBO;
+//    }
 
     public int getVertexOrderBuffer(){
         return this.iVertexOrderBuffer;

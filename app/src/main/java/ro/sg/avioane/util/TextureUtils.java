@@ -28,17 +28,8 @@ public class TextureUtils {
     }
 
     private static TextureUtils _instance = null;
-
-    //public static final short MAX_TEXTURES_SUPPORTED_PER_OBJ = 3;
-
     private static int TOTAL_TEXTURES = 0;
 
-    //TODO: merge the two hash maps into one single hash map
-    /**
-     * keep the matching {<texture ID>, <shader handler>}
-     * to make sure that the same texture is only once loaded into memory
-     */
-    //private HashMap<Integer, Integer> iTextureHandlers = new HashMap<Integer, Integer>();
 
     /**
      * keep the matching {<texture ID>, <texture binary, shader handler>}
@@ -49,7 +40,7 @@ public class TextureUtils {
     /**
      * keep the matching {<texture file name>, <texture ID>}
      */
-    private HashMap<String, Integer> iTextureNames = new HashMap<String, Integer>();
+    //private HashMap<String, Integer> iTextureNames = new HashMap<String, Integer>(); //needed this match?
 
 
     private TextureUtils(){
@@ -88,34 +79,9 @@ public class TextureUtils {
         textureSharerInfo.bitmap = BitmapFactory.decodeStream(inputStream);
         TOTAL_TEXTURES++;
         iTextureData.put(textureID, textureSharerInfo);
-        iTextureNames.put(fileName, textureID);
+        //iTextureNames.put(fileName, textureID);
         inputStream.close();
         return textureID;
-    }
-
-    /**
-     * once all textures are loaded into the OpenGL memory call this to destroy them from the
-     * main memory.
-     */
-    public void releaseTextures(){
-        this.iTextureData.clear();
-    }
-
-    /**
-     * make sure that a call on this method is made in between the calls:
-     * <Code>
-     *     loadTextures(context);
-     *     ....
-     *     Bitmap b = getTextureBitmap(..);
-     *     ....
-     *     releaseTextures();
-     * </Code>
-     * @param textureID a value from TEXTURE_GAME_WATER, TEXTURE_GAME_GRASS.....
-     * @return a bitmap object containing the texture or null in case such texture is not loaded.
-     */
-    @Deprecated
-    public Bitmap getTextureBitmap(final int textureID){
-        return this.iTextureData.get(textureID).bitmap;
     }
 
     /**
@@ -191,14 +157,4 @@ public class TextureUtils {
 
         return isContextDirty;
     }
-
-
-//    public static Bitmap loadTextureData(final Context context, final String textureName){
-//        Bitmap bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.me);
-//        if(bm == null) {
-//            throw new AssertionError("null bitmap detected");
-//        }
-//
-//        return bm;
-//    }
 }

@@ -19,8 +19,12 @@ public class OpenGLProgramFactory {
     public static final int SHADER_ONLY_VERTICES = 1;
     public static final int SHADER_VERTICES_WITH_OWN_COLOR = SHADER_ONLY_VERTICES<<1;
     public static final int SHADER_VERTICES_WITH_UV_TEXTURE = SHADER_VERTICES_WITH_OWN_COLOR <<1;
-    public static final int SHADER_VERTICES_WITH_KA_CONSTANT = SHADER_VERTICES_WITH_UV_TEXTURE <<1;
-    public static final int SHADER_VERTICES_WITH_NORMALS = SHADER_VERTICES_WITH_KA_CONSTANT <<1;
+    public static final int SHADER_VERTICES_WITH_NORMALS = SHADER_VERTICES_WITH_UV_TEXTURE <<1;
+    public static final int SHADER_VERTICES_WITH_KA_CONSTANT = SHADER_VERTICES_WITH_NORMALS <<1;
+    public static final int SHADER_VERTICES_WITH_KD_CONSTANT = SHADER_VERTICES_WITH_KA_CONSTANT <<1;
+    public static final int SHADER_VERTICES_WITH_KS_CONSTANT = SHADER_VERTICES_WITH_KD_CONSTANT <<1;
+    public static final int SHADER_VERTICES_WITH_KE_CONSTANT = SHADER_VERTICES_WITH_KS_CONSTANT <<1;
+
 
     private static final short SHADER_VERSION = 300;
     public static final String SHADER_VARIABLE_aPosition = "aPosition";
@@ -31,12 +35,17 @@ public class OpenGLProgramFactory {
     public static final String SHADER_VARIABLE_theViewMatrix = "theViewMatrix";
     public static final String SHADER_VARIABLE_theProjectionMatrix = "theProjectionMatrix";
     public static final String SHADER_VARIABLE_ambientLightColor = "ambientLightColor";
-    public static final String SHADER_VARIABLE_ambientKAConstant = "lightKA";
+    public static final String SHADER_VARIABLE_ambientKaConstant = "kaConstant";
     public static final String SHADER_VARIABLE_ambientKaTexture = "kaTexture";
-    //public static final String SHADER_VARIABLE_textureShader = "textureShader";
+    public static final String SHADER_VARIABLE_ambientKdConstant = "kdConstant";
+    public static final String SHADER_VARIABLE_ambientKdTexture = "kdTexture";
+    public static final String SHADER_VARIABLE_ambientKsConstant = "ksConstant";
+    public static final String SHADER_VARIABLE_ambientKsTexture = "ksTexture";
+    public static final String SHADER_VARIABLE_ambientKeConstant = "keConstant";
+    public static final String SHADER_VARIABLE_ambientKeTexture = "keTexture";
 
 
-    private HashMap<Integer, OpenGLProgram> iProgramMap = new HashMap<Integer, OpenGLProgram>();
+    private final HashMap<Integer, OpenGLProgram> iProgramMap = new HashMap<>();
 
     private static OpenGLProgramFactory _instance = null;
 
@@ -65,7 +74,7 @@ public class OpenGLProgramFactory {
 
     /**
      * This is the central point for building and retrieving a program for a specific shader type.
-     * @param shaderType
+     * @param shaderType see the constant bitwise values inside AbstractGameCavan (i.e. SHADER_ONLY_VERTICES)
      * @return the existing to be reused or a new program
      */
     public OpenGLProgram getProgramForShader(final int shaderType){
@@ -105,8 +114,7 @@ public class OpenGLProgramFactory {
      *                   - SHADER_ONLY_VERTICES
      *                   - SHADER_VERTICES_WITH_OWN_COLOR
      *                   - SHADER_VERTICES_WITH_TEXTURE
-     * @param shaderType
-     * @return
+     * @return the string representation of the shader code
      */
     private String getBuildShader(final int shaderType){
         StringBuilder sb = new StringBuilder();
@@ -173,7 +181,7 @@ public class OpenGLProgramFactory {
      *                   - SHADER_ONLY_VERTICES
      *                   - SHADER_VERTICES_WITH_OWN_COLOR
      *                   - SHADER_VERTICES_WITH_TEXTURE
-     * @return
+     * @return the string representation of the fragment code
      */
     private String getBuildFragmentShader(final int shaderType){
         StringBuilder sb = new StringBuilder();
@@ -198,26 +206,16 @@ public class OpenGLProgramFactory {
         if((shaderType & SHADER_VERTICES_WITH_UV_TEXTURE) != 0){
             sb.append("in vec2 uvTexture;\n");
             if((shaderType & SHADER_VERTICES_WITH_KA_CONSTANT) != 0){
-                sb.append("uniform vec3 ").append(SHADER_VARIABLE_ambientKAConstant).append(";\n");
+                sb.append("uniform vec3 ").append(SHADER_VARIABLE_ambientKaConstant).append(";\n");
             }
         }
 
         sb.append("uniform vec4 ").append(SHADER_VARIABLE_ambientLightColor).append(";\n");
         sb.append("uniform sampler2D ").append(SHADER_VARIABLE_ambientKaTexture).append(";\n");
 
-//        if((shaderType & SHADER_VERTICES_WITH_TEXTURE) != 0){
-//            sb.append("in vec2 uvTexture;\n");
-//            sb.append("flat in int iUseTextureID;\n");
-//            for (int i = 0; i < noOfTextureSamplers; i++) {
-//                sb.append("uniform sampler2D ")
-//                        .append(SHADER_VARIABLE_textureShader)
-//                        .append("" + i)
-//                        .append(";\n");
-//            }
-//        }
-
         sb.append("out vec4 fragColor;\n");
         sb.append("void main() {\n");
+
 
         //vec3 objectColor = texture(uTexture, mobileTextureCoordinate).xyz;
         //vec3 phong = (ambient + diffuse) * objectColor + specular;
@@ -308,6 +306,9 @@ public class OpenGLProgramFactory {
      * @return true is there was anything to be destroyed
      */
     public boolean onDestroy(){
+
+        //TODO: TBD if we need anymore this.
+
 
         //not needed. It is executed once the GL Context is deleted automatically.
         //otherwise it will generate

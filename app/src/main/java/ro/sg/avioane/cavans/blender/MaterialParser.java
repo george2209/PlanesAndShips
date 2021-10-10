@@ -9,15 +9,9 @@ package ro.sg.avioane.cavans.blender;
 import android.content.Context;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.LinkedList;
 
-import ro.sg.avioane.BuildConfig;
-import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
 import ro.sg.avioane.geometry.XYZMaterial;
 import ro.sg.avioane.util.OpenGLUtils;
@@ -40,7 +34,8 @@ public class MaterialParser extends AbstractObjParser{
     public final static int PARSE_MATERIAL_MAP_KE_FILE_NAME = 14;
     public final static int PARSE_MATERIAL_MAP_NS_FILE_NAME = 15;
     public final static int PARSE_MATERIAL_MAP_D_FILE_NAME = 16;
-    public final static int PARSE_MATERIAL_END = 17;
+    public final static int PARSE_MATERIAL_MAP_BUMP_FILE_NAME = 17;
+    public final static int PARSE_MATERIAL_END = 18;
 
     private XYZMaterial[] iArrMaterials = null;
     private int iParsingID = -1;
@@ -80,14 +75,24 @@ public class MaterialParser extends AbstractObjParser{
                 case PARSE_MATERIAL_MAP_NS_FILE_NAME:
                 case PARSE_MATERIAL_MAP_D_FILE_NAME:
                 case PARSE_MATERIAL_MAP_KE_FILE_NAME:
+                case PARSE_MATERIAL_MAP_BUMP_FILE_NAME:
                 case PARSE_MATERIAL_NAME: {
-                    byte tmpArr[] = new byte[2];
-                    inputStream.read(tmpArr, 0, 2);
+                    byte[] tmpArr = new byte[Short.BYTES];
+                    inputStream.read(tmpArr, 0, Short.BYTES);
                     final short noOfCharacters = this.getByteArrayAsShort(tmpArr);
                     if(noOfCharacters > 0) {
                         tmpArr = new byte[noOfCharacters];
                         inputStream.read(tmpArr, 0, noOfCharacters);
                         this.parseData(tmpArr, stateEngine);
+
+                        //process parameters that are the end of the line
+                        if(stateEngine==PARSE_MATERIAL_MAP_BUMP_FILE_NAME){
+                            //parse parameter -bm
+                            tmpArr = new byte[Float.BYTES];
+                            inputStream.read(tmpArr, 0, Float.BYTES);
+                            iArrMaterials[iParsingID].map_Bump_BM_Param = this.getByteArrayAsShort(tmpArr);
+                        }
+
                     }
                 } break;
                 case PARSE_MATERIAL_KA:
@@ -124,7 +129,7 @@ public class MaterialParser extends AbstractObjParser{
                 }
             }
 
-            if(stateEngine == PARSE_MATERIAL_MAP_D_FILE_NAME &&
+            if(stateEngine == PARSE_MATERIAL_MAP_BUMP_FILE_NAME &&
                     (iParsingID + 1 < iArrMaterials.length)){
                 iParsingID++;
                 stateEngine = PARSE_MATERIAL_NAME;
@@ -162,19 +167,19 @@ public class MaterialParser extends AbstractObjParser{
             }break;
             case PARSE_MATERIAL_KA:
             {
-                iArrMaterials[iParsingID].materialKA = XYZCoordinate.fromByteArray(data);
+                iArrMaterials[iParsingID].constantKA = XYZCoordinate.fromByteArray(data);
             }break;
             case PARSE_MATERIAL_KD:
             {
-                iArrMaterials[iParsingID].materialKD = XYZCoordinate.fromByteArray(data);
+                iArrMaterials[iParsingID].constantKD = XYZCoordinate.fromByteArray(data);
             }break;
             case PARSE_MATERIAL_KS:
             {
-                iArrMaterials[iParsingID].materialKS = XYZCoordinate.fromByteArray(data);
+                iArrMaterials[iParsingID].constantKS = XYZCoordinate.fromByteArray(data);
             }break;
             case PARSE_MATERIAL_KE:
             {
-                iArrMaterials[iParsingID].materialKE = XYZCoordinate.fromByteArray(data);
+                iArrMaterials[iParsingID].constantKE = XYZCoordinate.fromByteArray(data);
             }break;
             case PARSE_MATERIAL_NS:
             {
@@ -215,6 +220,10 @@ public class MaterialParser extends AbstractObjParser{
             case PARSE_MATERIAL_MAP_D_FILE_NAME:
             {
                 iArrMaterials[iParsingID].mapD_FileNameID = TextureUtils.getInstance().addTextureFromAssets(this.iContext, new String(data, StandardCharsets.US_ASCII));
+            } break;
+            case PARSE_MATERIAL_MAP_BUMP_FILE_NAME:
+            {
+                iArrMaterials[iParsingID].map_Bump_FileNameID = TextureUtils.getInstance().addTextureFromAssets(this.iContext, new String(data, StandardCharsets.US_ASCII));
             } break;
             default:
                 throw new AssertionError("unknown state engine=" + stateEngine);

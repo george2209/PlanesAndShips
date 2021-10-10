@@ -10,8 +10,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import ro.sg.avioane.cavans.blender.BlenderObjCavan;
 import ro.sg.avioane.cavans.blender.ObjParser;
+import ro.sg.avioane.cavans.primitives.XYZAxis;
 import ro.sg.avioane.util.BackgroundTask;
 import ro.sg.avioane.util.OpenGLProgramFactory;
 import ro.sg.avioane.util.OpenGLUtils;
@@ -37,6 +38,12 @@ public class MainScreen extends AppCompatActivity {
 
     //private static boolean isTexturesLoaded = false;
 
+    public MainScreen() {
+        super();
+        if (BuildConfig.DEBUG)
+            StrictMode.enableDefaults();
+    }
+
     /***
      *
      * @param savedInstanceState the Bundle that may receive data from other Activity
@@ -49,8 +56,11 @@ public class MainScreen extends AppCompatActivity {
         System.out.println("onCreate");
         this.iActivityAlive.set(true);
 
+        //Remove title bar
+        removeWindowTitleBar();
+
         if(this.iGameSurface == null) {
-            this.iGameSurface = new MainGameSurface(getApplication());
+            this.iGameSurface = new MainGameSurface(getBaseContext());
             setContentView(this.iGameSurface);
         } else {
             //TODO:
@@ -78,11 +88,25 @@ public class MainScreen extends AppCompatActivity {
     }
 
     /**
+     * remove the title bar if possible.
+     */
+    private void removeWindowTitleBar() {
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        try {
+            Objects.requireNonNull(this.getSupportActionBar()).hide();
+        }catch (NullPointerException npe){
+            System.out.println("Warning: null ActionBar detected. App will run with ActionBar not " +
+                    "hidden. Stacktrace:");
+            npe.printStackTrace();
+        }
+    }
+
+    /**
      * loads the game surface and render. Basically this is the entry point for the game as well as
      * all the OpenGL objects.
      * @param blenderOBJArr the array of the loaded OBJs from memory.
      */
-    private void loadGameSurface(final BlenderObjCavan[] blenderOBJArr){
+    private void addGameObjects(final BlenderObjCavan[] blenderOBJArr){
         if(BuildConfig.DEBUG && this.iGameSurface == null)
             throw new AssertionError("null game surface");
 
@@ -90,6 +114,9 @@ public class MainScreen extends AppCompatActivity {
             @Override
             public void run() {
                 iGameSurface.loadBlenderObjects(blenderOBJArr);
+                //load here non-Blender objects too
+                iGameSurface.loadNonBlenderObject(new XYZAxis());
+
             }
         });
     }
@@ -158,7 +185,7 @@ public class MainScreen extends AppCompatActivity {
                     }
                 }
                 if(!this.isInterrupted()) {
-                    loadGameSurface(iParser.getParsedObjects());
+                    addGameObjects(iParser.getParsedObjects());
                 }
                 else {
                     if(BuildConfig.DEBUG)
@@ -247,16 +274,5 @@ public class MainScreen extends AppCompatActivity {
         if (insetsController != null) {
             insetsController.hide(WindowInsets.Type.statusBars());
         }
-
-
-        //Remove title bar
-//        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-//        try {
-//            Objects.requireNonNull(this.getSupportActionBar()).hide();
-//        }catch (NullPointerException npe){
-//            System.out.println("Warning: null ActionBar detected. App will run with ActionBar not " +
-//                    "hidden. Stacktrace:");
-//            npe.printStackTrace();
-//        }
     }
 }

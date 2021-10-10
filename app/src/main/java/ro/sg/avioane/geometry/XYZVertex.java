@@ -11,12 +11,28 @@ package ro.sg.avioane.geometry;
  */
 public class XYZVertex {
 
-    public XYZCoordinate coordinate = null;
+    /**
+     * the vertex coordinate as X,Y,Z
+     */
+    public final XYZCoordinate coordinate;
+
+    /**
+     * optional U,V texture coordinate.
+     */
     public XYZTextureUV uvTexture = null;
+
+    /**
+     * optional X,Y,Z normal coordinate
+     */
     public XYZCoordinate normal = null;
 
-    //opens the possibility to set the color per vertex instead of having a material defined.
-    //not sure if it will be used...
+    /**
+     * opens the possibility to set the color per vertex instead of
+     * using the global color defined inside
+     * or using a material texture.
+     * **Please note**
+     * If there is a texture defined for the respective object then this variable will be ignored!
+     */
     public XYZColor backgroundColor = null;
 
 

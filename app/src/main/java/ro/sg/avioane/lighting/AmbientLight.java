@@ -17,8 +17,8 @@ import ro.sg.avioane.util.MathGLUtils;
  * speed penalties.
  */
 public class AmbientLight {
-    private XYZColor iAmbientColor = new XYZColor(1.00f,1.00f,1.00f, XYZColor.OPAQUE);
-    private float iAmbientColorStrength = 0.9f;
+    private XYZColor iAmbientColor = new XYZColor(0.50f,0.80f,0.10f, XYZColor.OPAQUE);
+    //private float iAmbientColorStrength = 0.9f; //replaced by Ka of material
 
     private static final AmbientLight iStaticInstance = new AmbientLight();
 
@@ -39,31 +39,31 @@ public class AmbientLight {
      * @return the complete (AmbientColor *  AmbientColorStrength) result as a new
      * XYZColor instance
      */
-    public XYZColor getAmbientColorCalculated() {
-        //keep the alpha not changed
-        final float tmp = this.iAmbientColor.asFloatArray()[3];
-        final float[] arr = MathGLUtils.Vector.multiplyByValue(
-                this.iAmbientColor.asFloatArray(),
-                this.iAmbientColorStrength);
-        arr[3] = tmp;
-        return new XYZColor(arr);
-    }
+//    public XYZColor getAmbientColorCalculated() {
+//        //keep the alpha not changed
+//        final float tmp = this.iAmbientColor.asFloatArray()[3];
+//        final float[] arr = MathGLUtils.Vector.multiplyByValue(
+//                this.iAmbientColor.asFloatArray(),
+//                this.iAmbientColorStrength);
+//        arr[3] = tmp;
+//        return new XYZColor(arr);
+//    }
 
     public XYZColor getAmbientColor() {
         return iAmbientColor;
     }
 
     public void setAmbientColor(XYZColor ambientColor) {
-        this.iAmbientColor = ambientColor;
+        this.iAmbientColor = ambientColor; //TODO: to see if synchronization is required.
     }
 
-    public float getAmbientColorStrength() {
-        return iAmbientColorStrength;
-    }
-
-    public void setAmbientColorStrength(float ambientColorStrength) {
-        this.iAmbientColorStrength = ambientColorStrength;
-    }
+//    public float getAmbientColorStrength() {
+//        return iAmbientColorStrength;
+//    }
+//
+//    public void setAmbientColorStrength(float ambientColorStrength) {
+//        this.iAmbientColorStrength = ambientColorStrength;
+//    }
 
 
 

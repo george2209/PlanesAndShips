@@ -10,16 +10,10 @@ import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
-
 import androidx.annotation.NonNull;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
-
 import ro.sg.avioane.cavans.AbstractGameCavan;
-import ro.sg.avioane.cavans.blender.BlenderObjCavan;
 import ro.sg.avioane.game.TouchScreenListener;
 import ro.sg.avioane.game.TouchScreenProcessor;
 import ro.sg.avioane.game.WorldCamera;
@@ -28,8 +22,6 @@ import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
 import ro.sg.avioane.geometry.XYZVertex;
 import ro.sg.avioane.util.MathGLUtils;
-import ro.sg.avioane.util.OpenGLProgramFactory;
-import ro.sg.avioane.util.TextureUtils;
 
 public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenListener {
 
@@ -69,7 +61,6 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
     }
 
     public void addEntityInGame(@NonNull final AbstractGameCavan entity){
-        entity.onRestore();
         this.iWorld.add(entity);
     }
 

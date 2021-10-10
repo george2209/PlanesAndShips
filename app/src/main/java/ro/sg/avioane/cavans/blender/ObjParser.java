@@ -60,7 +60,7 @@ public class ObjParser extends AbstractObjParser {
      */
     public boolean processStream(final BufferedInputStream inputStream){
         boolean retValue = false;
-        if(this.iStateEngine <= MaterialParser.PARSE_MATERIAL_MAP_D_FILE_NAME){
+        if(this.iStateEngine < MaterialParser.PARSE_MATERIAL_END){
             this.iStateEngine = iMaterialParser.processStream(inputStream, this.iStateEngine);
             retValue =  this.iStateEngine != OpenGLUtils.INVALID_UNSIGNED_VALUE;
         } else {
@@ -88,9 +88,6 @@ public class ObjParser extends AbstractObjParser {
                         byte[] tmpArr = new byte[2];
                         inputStream.read(tmpArr, 0, 2);
                         iMaterialID = this.getByteArrayAsShort(tmpArr);
-//                        if (iMaterialID >= 0) {
-//                            iOBJArray[iParsingID].iOBJMaterial = ;
-//                        }
                     }
                     break;
                     case PARSE_OBJ_VERTICES: {

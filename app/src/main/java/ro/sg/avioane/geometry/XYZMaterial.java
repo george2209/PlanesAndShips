@@ -16,7 +16,7 @@ public class XYZMaterial {
      * there is a "color per vertex" inside VBO defined.
      * See project documentation "background color" for more information
      */
-    public XYZColor globalBackgroundColor = new XYZColor(0.9f, 0.2f, 0.1f, XYZColor.OPAQUE);
+    public XYZColor globalBackgroundColor = null; //new XYZColor(0.9f, 0.2f, 0.1f, XYZColor.OPAQUE);
 
     public String materialName = null;
 

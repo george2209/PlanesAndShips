@@ -18,7 +18,7 @@ import ro.sg.avioane.util.MathGLUtils;
  */
 public class AmbientLight {
     private XYZColor iAmbientColor = new XYZColor(0.50f,0.80f,0.10f, XYZColor.OPAQUE);
-    //private float iAmbientColorStrength = 0.9f; //replaced by Ka of material
+    //private float iAmbientColorStrength = 1.0f; //from 0 to 1. //replaced by Ka of each material
 
     private static final AmbientLight iStaticInstance = new AmbientLight();
 
@@ -33,12 +33,13 @@ public class AmbientLight {
         return iStaticInstance;
     }
 
-    /**
-     * TODO: to the computation only once when the either AmbientColor or AmbientColorStrength is
-     * updated.
-     * @return the complete (AmbientColor *  AmbientColorStrength) result as a new
-     * XYZColor instance
-     */
+    //moved inside the Fragment Shader
+//    /**
+//     * TODO: to the computation only once when the either AmbientColor or AmbientColorStrength is
+//     * updated.
+//     * @return the complete (AmbientColor *  AmbientColorStrength) result as a new
+//     * XYZColor instance
+//     */
 //    public XYZColor getAmbientColorCalculated() {
 //        //keep the alpha not changed
 //        final float tmp = this.iAmbientColor.asFloatArray()[3];

@@ -131,7 +131,7 @@ public class MainScreen extends AppCompatActivity {
         }
 
         this.iOBJLoaderProcessor = new BackgroundTask(this) {
-            private final String arrObj[] = {"cube_output.bin"};
+            private final String arrObj[] = {"game_plane.bin"};
             private int index = 0;
             private BufferedInputStream inputStream = null;
             final ObjParser iParser = new ObjParser(getApplicationContext());

@@ -33,6 +33,8 @@ import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_ONLY_VERTICES;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_UNDEFINED;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_KA_CONSTANT;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_KA_TEXTURE;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_KD_CONSTANT;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_KD_TEXTURE;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_NORMALS;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_OWN_COLOR;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_UV_TEXTURE;
@@ -121,6 +123,8 @@ public abstract class AbstractGameCavan extends CavanMovements {
         DebugUtils.checkPrintGLError();
         this.iProgram.iAmbientColorHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_ambientLightColor);
         DebugUtils.checkPrintGLError();
+        //this.iProgram.iAmbientStrengthHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_ambientLightStrength);
+        //DebugUtils.checkPrintGLError();
 
         //texture or color
         if((this.iShaderType & SHADER_VERTICES_WITH_UV_TEXTURE) != 0){
@@ -133,14 +137,14 @@ public abstract class AbstractGameCavan extends CavanMovements {
                     this.iProgram.iAmbientKaTexture = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_ambientKaTexture);
                     DebugUtils.checkPrintGLError();
                 } else if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR) == 0) {
-                    this.iProgram.iColorHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_aColor);
+                    this.iProgram.iColorHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_diffuseColor);
                     DebugUtils.checkPrintGLError();
                 }
             }
         } else {
             //color only
             if( (this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR) == 0) {
-                this.iProgram.iColorHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_aColor);
+                this.iProgram.iColorHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_diffuseColor);
                 DebugUtils.checkPrintGLError();
             }
 
@@ -340,6 +344,13 @@ public abstract class AbstractGameCavan extends CavanMovements {
                     this.iShaderType |= SHADER_VERTICES_WITH_KA_TEXTURE;
                 }
             }
+            //Kd
+            if(this.iMaterial.constantKD != null){
+                this.iShaderType |= SHADER_VERTICES_WITH_KD_CONSTANT;
+                if(this.iMaterial.mapKD_FileNameID != OpenGLUtils.INVALID_UNSIGNED_VALUE){
+                    this.iShaderType |= SHADER_VERTICES_WITH_KD_TEXTURE;
+                }
+            }
         }
 
         if(vertex.normal != null ){
@@ -395,6 +406,8 @@ public abstract class AbstractGameCavan extends CavanMovements {
         //GLES30.glUniform4fv(this.iProgram.iAmbientColorHandle, 1, this.iAmbientLight.getAmbientColorCalculated().asFloatArray(), 0);
         GLES30.glUniform4fv(this.iProgram.iAmbientColorHandle, 1, this.iAmbientLight.getAmbientColor().asFloatArray(), 0);
         DebugUtils.checkPrintGLError();
+//        GLES30.glUniform1f(this.iProgram.iAmbientStrengthHandle, this.iAmbientLight.getAmbientColorStrength());
+//        DebugUtils.checkPrintGLError();
 
         //decide if used will be texture or background color
         if((this.iShaderType & SHADER_VERTICES_WITH_UV_TEXTURE) != 0){

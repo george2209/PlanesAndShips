@@ -19,19 +19,19 @@ public class OpenGLProgram {
     public int iUVTextureHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;//linked against SHADER_VARIABLE_aUVTexture
     public int iColorHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
     public int iAmbientColorHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    //public int iAmbientStrengthHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    //Texture handles
     public int iAmbientKaHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_ambientKAConstant
     public int iAmbientKaTexture = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_ambientKaTexture
-    //public int iTextureHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_aTexture
-    //public int[] iTextureBitmapSamplers = null;
-    public int iNormalHandle = -1;
+    public int iDiffuseKdHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_diffuseKdConstant
+    public int iDiffuseKaTexture = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_DiffuseKaTexture
 
-
-    public int iProjectionMatrixHandle = -1;
-    public int iViewMatrixHandle = -1;
-    public int iModelMatrixHandle = -1;
-
-    public int iVertexShader = -1;
-    public int iFragmentShader = -1;
+    public int iNormalHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    public int iProjectionMatrixHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    public int iViewMatrixHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    public int iModelMatrixHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    public int iVertexShader = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    public int iFragmentShader = OpenGLUtils.INVALID_UNSIGNED_VALUE;
 
 
     public OpenGLProgram(final String vertexShaderCode,
@@ -69,7 +69,7 @@ public class OpenGLProgram {
 
         if((shaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0) {
             iColorHandle = attributeIndex++;
-            GLES20.glBindAttribLocation(iProgramHandle, iColorHandle, OpenGLProgramFactory.SHADER_VARIABLE_aColor);
+            GLES20.glBindAttribLocation(iProgramHandle, iColorHandle, OpenGLProgramFactory.SHADER_VARIABLE_diffuseColor);
         }
 
         if((shaderType & SHADER_VERTICES_WITH_UV_TEXTURE) != 0){

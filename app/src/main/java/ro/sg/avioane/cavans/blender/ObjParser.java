@@ -103,9 +103,9 @@ public class ObjParser extends AbstractObjParser {
                         tmpArr = new byte[SIZE];
                         for (short i = 0; i < noOfVertices; i++) {
                             //vertex X,Y,Z
+
                             inputStream.read(tmpArr, 0, SIZE);
                             final XYZCoordinate vertexCoordinate = XYZCoordinate.fromByteArray(tmpArr);
-                            verticesArr[i] = new XYZVertex(vertexCoordinate);
                             for (short doa=0; doa<3; doa++) {
                                 drawOrderArr[drawOrderCounter + doa] = (short)(drawOrderCounter + doa);
                             }
@@ -114,20 +114,23 @@ public class ObjParser extends AbstractObjParser {
 
                             //U,V
                             inputStream.read(tmpArr, 0, 1);
+                            XYZTextureUV textureUV = null;
                             if (tmpArr[0] == 1) {
                                 //tmpArr = new byte[Float.BYTES];
                                 inputStream.read(tmpArr, 0, Float.BYTES);
                                 final float u = super.getByteArrayAsFloat(tmpArr);
                                 inputStream.read(tmpArr, 0, Float.BYTES);
                                 final float v = super.getByteArrayAsFloat(tmpArr);
-                                verticesArr[i].uvTexture = new XYZTextureUV(u, v);
+                                textureUV = new XYZTextureUV(u, v);
                             }
                             //Normal
                             inputStream.read(tmpArr, 0, 1);
+                            XYZCoordinate normal = null;
                             if (tmpArr[0] == 1) {
                                 inputStream.read(tmpArr, 0, SIZE);
-                                verticesArr[i].normal = XYZCoordinate.fromByteArray(tmpArr);
+                                normal = XYZCoordinate.fromByteArray(tmpArr);
                             }
+                            verticesArr[i] = new XYZVertex(vertexCoordinate, normal, textureUV);
                         }
 
                         XYZMaterial material = null;

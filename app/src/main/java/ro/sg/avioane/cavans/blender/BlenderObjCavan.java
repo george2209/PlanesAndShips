@@ -6,6 +6,8 @@
 
 package ro.sg.avioane.cavans.blender;
 
+import java.util.Optional;
+
 import javax.microedition.khronos.opengles.GL10;
 
 import ro.sg.avioane.cavans.AbstractGameCavan;
@@ -22,12 +24,12 @@ public class BlenderObjCavan extends AbstractGameCavan {
     private final String iOBJName;
 
 
-        public BlenderObjCavan(final String oBJName, final XYZVertex[] arr, short[] indexDrawOrder, final XYZMaterial material){
-            this.iOBJName = oBJName;
-            this.iVerticesArray = arr;
-            this.iIndexDrawOrder = indexDrawOrder;
-            this.iOBJMaterial = material;
-        }
+    public BlenderObjCavan(final String oBJName, final XYZVertex[] arr, short[] indexDrawOrder, final XYZMaterial material) {
+        this.iOBJName = oBJName;
+        this.iVerticesArray = arr;
+        this.iIndexDrawOrder = indexDrawOrder;
+        this.iOBJMaterial = material;
+    }
 
 
     @Override
@@ -37,7 +39,7 @@ public class BlenderObjCavan extends AbstractGameCavan {
 
     @Override
     public void onRestore() {
-        super.build(this.iVerticesArray, this.iIndexDrawOrder, this.iOBJMaterial);
+        super.build(this.iVerticesArray, this.iIndexDrawOrder, Optional.ofNullable(this.iOBJMaterial));
     }
 
 }

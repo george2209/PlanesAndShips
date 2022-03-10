@@ -14,19 +14,47 @@ public class XYZColor {
     public final static float OPAQUE = 1.0f;
     public final static float TRANSPARENT = 0.0f;
 
-    public float red = 0.0f;
-    public float green = 0.0f;
-    public float blue = 0.0f;
-    public float alpha = 0.0f;
-
-    public XYZColor(){
-
-    }
+    private float red = 0.0f;
+    private float green = 0.0f;
+    private float blue = 0.0f;
+    private float alpha = 0.0f;
 
     public XYZColor(final float red, final float green, final float blue, final float alpha){
         this.red = red;
         this.green = green;
         this.blue = blue;
+        this.alpha = alpha;
+    }
+
+    public float red(){
+        return this.red;
+    }
+
+    public float green(){
+        return this.green;
+    }
+
+    public float blue(){
+        return this.blue;
+    }
+
+    public float alpha(){
+        return this.alpha;
+    }
+
+    public void setRed(final float red){
+        this.red = red;
+    }
+
+    public void setGreen(final float green){
+        this.green = green;
+    }
+
+    public void setBlue(final float blue){
+        this.blue = blue;
+    }
+
+    public void setAlpha(final float alpha){
         this.alpha = alpha;
     }
 

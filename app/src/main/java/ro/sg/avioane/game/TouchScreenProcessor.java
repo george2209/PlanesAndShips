@@ -11,8 +11,9 @@ import android.view.MotionEvent;
 
 import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.geometry.XYZCoordinate;
-import ro.sg.avioane.geometry.XYZVertex;
-import ro.sg.avioane.util.MathGLUtils;
+import ro.sg.avioane.util.MathGL.Matrix;
+import ro.sg.avioane.util.MathGL.Vector;
+import ro.sg.avioane.util.MathGL.MathGLUtils;
 
 /**
  * The class is processing the touch events and movements as well as making sure
@@ -299,8 +300,8 @@ public class TouchScreenProcessor {
 
         final float[] resultNear = getUnProjectMatrix(x, y, 0.0f, viewport, viewMatrix, projectionMatrix);
         final float[] resultFar = getUnProjectMatrix(x, y, 1.0f, viewport, viewMatrix, projectionMatrix);
-        final float[] result = MathGLUtils.matrixDifference(resultFar, resultNear); //calculate the direction
-        MathGLUtils.Vector.normalize(result);
+        final float[] result = Matrix.matrixDifference(resultFar, resultNear); //calculate the direction
+        Vector.normalize(result);
         return result;
     }
 

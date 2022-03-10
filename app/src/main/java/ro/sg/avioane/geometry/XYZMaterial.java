@@ -6,6 +6,8 @@
 
 package ro.sg.avioane.geometry;
 
+import java.util.Optional;
+
 import ro.sg.avioane.util.OpenGLUtils;
 
 public class XYZMaterial {
@@ -19,16 +21,6 @@ public class XYZMaterial {
     public XYZColor globalBackgroundColor = null; //new XYZColor(0.9f, 0.2f, 0.1f, XYZColor.OPAQUE);
 
     public String materialName = null;
-
-    /**
-     * Ambient reflection coefficient
-     */
-    public XYZCoordinate constantKA = null;
-
-    /**
-     *  Diffuse reflection coefficient (* default)
-     */
-    public XYZCoordinate constantKD = null;
 
     /**
      * Specular reflection coefficient
@@ -59,4 +51,37 @@ public class XYZMaterial {
 
     public int map_Bump_FileNameID = OpenGLUtils.INVALID_UNSIGNED_VALUE;
     public float map_Bump_BM_Param = 1.0f;
+
+
+    /////////////////////////////AMBIENT LIGHT//////////////////////////////////
+    /////////////////////////////constant KA////////////////////////////////////
+
+    /**
+     * Ambient reflection coefficient of the material
+     */
+    private XYZCoordinate constantKA = null;
+
+    public Optional<XYZCoordinate> getConstantKA(){
+        return Optional.ofNullable(this.constantKA);
+    }
+
+    public void setConstantKA(final XYZCoordinate o){
+        this.constantKA = o;
+    }
+
+    /////////////////////////////DIFFUSE PROPERTIES/////////////////////////////
+    /////////////////////////////constant KD////////////////////////////////////
+
+    /**
+     *  Diffuse reflection coefficient (* default)
+     */
+    private XYZCoordinate constantKD = null;
+
+    public Optional<XYZCoordinate> getConstantKD(){
+        return Optional.ofNullable(this.constantKD);
+    }
+
+    public void setConstantKD(final XYZCoordinate o){
+        this.constantKD = o;
+    }
 }

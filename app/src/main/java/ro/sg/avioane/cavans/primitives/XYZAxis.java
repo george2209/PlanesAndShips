@@ -6,6 +6,8 @@
 
 package ro.sg.avioane.cavans.primitives;
 
+import java.util.Optional;
+
 import javax.microedition.khronos.opengles.GL10;
 
 import ro.sg.avioane.cavans.AbstractGameCavan;
@@ -13,13 +15,20 @@ import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
 import ro.sg.avioane.geometry.XYZMaterial;
 import ro.sg.avioane.geometry.XYZVertex;
+import ro.sg.avioane.util.MathGL.MathGLUtils;
+import ro.sg.avioane.util.MathGL.Vector;
 
 public class XYZAxis extends AbstractGameCavan {
-    private final XYZMaterial iMaterial = new XYZMaterial();
+
 
     public XYZAxis(){
-        iMaterial.constantKA = new XYZCoordinate(1.0f, 0.5f, 0.5f);
-        super.build(this.buildCoordinates(), this.buildIndexes(), iMaterial);
+        super.build(this.buildCoordinates(), this.buildIndexes(), this.getMaterial());
+    }
+
+    private Optional<XYZMaterial> getMaterial(){
+        final XYZMaterial material = new XYZMaterial();
+        material.setConstantKA(new XYZCoordinate(1.0f, 1.0f, 1.0f));
+        return Optional.of(material);
     }
 
     /**
@@ -27,25 +36,35 @@ public class XYZAxis extends AbstractGameCavan {
      * @return the coordinates array.
      */
     private XYZVertex[] buildCoordinates(){
-        final XYZVertex[] arrCoordinates = new XYZVertex[4];
-        //Origin
-        arrCoordinates[0] = new XYZVertex(new XYZCoordinate(0.0f, 0.0f, 0.0f));
-        //arrCoordinates[0].backgroundColor = new XYZColor(0.8f, 0.8f, 0.8f, 1.0f);
-        //arrCoordinates[0].normal = new XYZCoordinate(1.0f, 1.0f, 1.0f);
-        //X
-        arrCoordinates[1] = new XYZVertex(new XYZCoordinate(10.0f, 0.0f, 0.0f));
-        //arrCoordinates[1].backgroundColor = new XYZColor(0.9f, 0.1f, 0.0f, 1.0f);
-        //arrCoordinates[1].normal = new XYZCoordinate(0.0f, 1.0f, 0.0f);
-        //Y
-        arrCoordinates[2] = new XYZVertex(new XYZCoordinate(0.0f, 10.0f, 0.0f));
-        //arrCoordinates[2].backgroundColor = new XYZColor(0.0f, 0.9f, 0.1f, 1.0f);
-        //arrCoordinates[2].normal = new XYZCoordinate(0.0f, 0.0f, 1.0f);
-        //Z
-        arrCoordinates[3] = new XYZVertex(new XYZCoordinate(0.0f, 0.0f, 10.0f));
-        //arrCoordinates[3].backgroundColor = new XYZColor(0.1f, 0.1f, 0.9f, 1.0f);
-        //arrCoordinates[3].normal = new XYZCoordinate(1.0f, 0.0f, 0.0f);
+        final XYZVertex[] arrVertices = new XYZVertex[4];
+        final XYZCoordinate originCoordinate = new XYZCoordinate(0.0f, 0.0f, 0.0f);
+        final XYZCoordinate xCoordinate = new XYZCoordinate(10.0f, 0.0f, 0.0f);
+        final XYZCoordinate yCoordinate = new XYZCoordinate(0.0f, 10.0f, 0.0f);
+        final XYZCoordinate zCoordinate = new XYZCoordinate(0.0f, 0.0f, 10.0f);
 
-        return  arrCoordinates;
+        final XYZCoordinate oxNormal = MathGLUtils.getEdgeNormal(originCoordinate, xCoordinate);
+        final XYZCoordinate oyNormal = MathGLUtils.getEdgeNormal(originCoordinate, xCoordinate);
+        final XYZCoordinate ozNormal = MathGLUtils.getEdgeNormal(originCoordinate, xCoordinate);
+        final XYZCoordinate oNormal = new XYZCoordinate(oxNormal.asArray()).add(oyNormal).add(ozNormal);
+
+        //Origin
+        arrVertices[0] = new XYZVertex(originCoordinate, oNormal);
+        arrVertices[0].backgroundColor = new XYZColor(1.0f, 0.0f, 0.0f, XYZColor.OPAQUE);
+        //arrVertices[0].normal = new XYZCoordinate(Vector.normalize(MathGLUtils.crossProduct(edge1, edge2).asArray()));
+        //X
+        arrVertices[1] = new XYZVertex(xCoordinate, oxNormal);
+        arrVertices[1].backgroundColor = new XYZColor(0.0f, 1.0f, 0.0f, XYZColor.OPAQUE);
+        //arrVertices[1].normal = new XYZCoordinate(0.0f, 1.0f, 0.0f);
+        //Y
+        arrVertices[2] = new XYZVertex(yCoordinate, oyNormal);
+        arrVertices[2].backgroundColor = new XYZColor(0.0f, 0.0f, 1.0f, XYZColor.OPAQUE);
+        //arrVertices[2].normal = new XYZCoordinate(0.0f, 1.0f, 0.0f);
+        //Z
+        arrVertices[3] = new XYZVertex(zCoordinate, ozNormal);
+        arrVertices[3].backgroundColor = new XYZColor(0.1f, 0.1f, 0.9f, 1.0f);
+        //arrVertices[3].normal = new XYZCoordinate(1.0f, 1.0f, 0.0f);
+
+        return  arrVertices;
     }
 
     /**
@@ -64,6 +83,6 @@ public class XYZAxis extends AbstractGameCavan {
 
     @Override
     public void onRestore() {
-        super.build(this.buildCoordinates(), this.buildIndexes(), iMaterial);
+        super.build(this.buildCoordinates(), this.buildIndexes(), this.getMaterial());
     }
 }

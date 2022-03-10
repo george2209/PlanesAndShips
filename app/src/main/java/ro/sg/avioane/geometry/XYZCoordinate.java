@@ -46,16 +46,19 @@ public class XYZCoordinate {
         this.iCoordinateArray[2] = z;
     }
 
-    public void setX(final float x){
+    public XYZCoordinate setX(final float x){
         this.iCoordinateArray[0] = x;
+        return this;
     }
 
-    public void setY(final float y){
+    public XYZCoordinate setY(final float y){
         this.iCoordinateArray[1] = y;
+        return this;
     }
 
-    public void setZ(final float z){
+    public XYZCoordinate setZ(final float z){
         this.iCoordinateArray[2] = z;
+        return this;
     }
 
     public float x(){
@@ -74,6 +77,20 @@ public class XYZCoordinate {
      */
     public float[] asArray(){
         return this.iCoordinateArray;
+    }
+
+    public XYZCoordinate subtract(final XYZCoordinate otherCoordinate){
+        this.iCoordinateArray[0] -= otherCoordinate.x();
+        this.iCoordinateArray[1] -= otherCoordinate.y();
+        this.iCoordinateArray[2] -= otherCoordinate.z();
+        return this;
+    }
+
+    public XYZCoordinate add(final XYZCoordinate otherCoordinate){
+        this.iCoordinateArray[0] += otherCoordinate.x();
+        this.iCoordinateArray[1] += otherCoordinate.y();
+        this.iCoordinateArray[2] += otherCoordinate.z();
+        return this;
     }
 
 }

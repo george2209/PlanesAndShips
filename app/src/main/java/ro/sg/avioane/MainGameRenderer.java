@@ -21,7 +21,7 @@ import ro.sg.avioane.game.WorldScene;
 import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
 import ro.sg.avioane.geometry.XYZVertex;
-import ro.sg.avioane.util.MathGLUtils;
+import ro.sg.avioane.util.MathGL.MathGLUtils;
 
 public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenListener {
 
@@ -136,7 +136,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 //            this.iWorld.onRestoreWorld();
 //        }
 //        textureUtils.releaseTextures();
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.8f);
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
     }
 
     @Override
@@ -197,13 +197,13 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 
     @Override
     public void fireTouchClick(final float[] clickVector) {
-        final float[] p1 = this.iCamera.getCameraPosition().asArray();
-        final float[] p2 = MathGLUtils.getPointOnVector(clickVector, p1, 50.0f);
-
-        final XYZVertex p1Line = new XYZVertex(new XYZCoordinate(p1));
-        final XYZVertex p2Line = new XYZVertex(new XYZCoordinate(p2));
-        p1Line.backgroundColor = new XYZColor(1.0f, 0 , 0.0f, 1);
-        p2Line.backgroundColor = new XYZColor(1.0f, 0 , 0.0f, 1);
+//        final float[] p1 = this.iCamera.getCameraPosition().asArray();
+//        final float[] p2 = MathGLUtils.getPointOnVector(clickVector, p1, 50.0f);
+//
+//        final XYZVertex p1Line = new XYZVertex(new XYZCoordinate(p1));
+//        final XYZVertex p2Line = new XYZVertex(new XYZCoordinate(p2));
+//        p1Line.backgroundColor = new XYZColor(1.0f, 0 , 0.0f, 1);
+//        p2Line.backgroundColor = new XYZColor(1.0f, 0 , 0.0f, 1);
 
 //        this.iMovingLine.updateCoordinates(
 //                    p1Line,

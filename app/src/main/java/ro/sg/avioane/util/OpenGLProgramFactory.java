@@ -12,6 +12,9 @@ import android.opengl.GLES30;
 import java.util.HashMap;
 
 import ro.sg.avioane.BuildConfig;
+import ro.sg.avioane.util.shaders.AbstractShaderBuilder;
+import ro.sg.avioane.util.shaders.FragmentShaderBuilder;
+import ro.sg.avioane.util.shaders.MainShaderBuilder;
 
 public class OpenGLProgramFactory {
 
@@ -19,10 +22,10 @@ public class OpenGLProgramFactory {
     public static final int SHADER_ONLY_VERTICES = 1;
     public static final int SHADER_VERTICES_WITH_OWN_COLOR = SHADER_ONLY_VERTICES<<1;
     public static final int SHADER_VERTICES_WITH_GLOBAL_COLOR = SHADER_VERTICES_WITH_OWN_COLOR<<1;
-    public static final int SHADER_VERTICES_WITH_UV_TEXTURE = SHADER_VERTICES_WITH_GLOBAL_COLOR <<1; ///needed???///////////////////
-    public static final int SHADER_VERTICES_WITH_NORMALS = SHADER_VERTICES_WITH_UV_TEXTURE <<1;
+    public static final int SHADER_VERTICES_WITH_UV_DATA_MATERIAL = SHADER_VERTICES_WITH_GLOBAL_COLOR <<1; ///needed???///////////////////
+    //public static final int SHADER_VERTICES_WITH_NORMALS = SHADER_VERTICES_WITH_UV_DATA_MATERIAL <<1;
     //illumination/material constants
-    public static final int SHADER_VERTICES_WITH_KA_CONSTANT = SHADER_VERTICES_WITH_NORMALS <<1;
+    public static final int SHADER_VERTICES_WITH_KA_CONSTANT = SHADER_VERTICES_WITH_UV_DATA_MATERIAL <<1;
     public static final int SHADER_VERTICES_WITH_KD_CONSTANT = SHADER_VERTICES_WITH_KA_CONSTANT <<1;
     public static final int SHADER_VERTICES_WITH_KS_CONSTANT = SHADER_VERTICES_WITH_KD_CONSTANT <<1;
     public static final int SHADER_VERTICES_WITH_KE_CONSTANT = SHADER_VERTICES_WITH_KS_CONSTANT <<1;
@@ -32,21 +35,32 @@ public class OpenGLProgramFactory {
 
 
     public static final short SHADER_VERSION = 300;
+    //per vertex variables
     public static final String SHADER_VARIABLE_aPosition = "aPosition";
     public static final String SHADER_VARIABLE_aNormal = "aNormal";
     public static final String SHADER_VARIABLE_aVertexColor = "aVertexColor";
-    public static final String SHADER_VARIABLE_aGlobalColor = "aGlobalColor";
+    //pass to the fragment shader
+    public static final String SHADER_VARIABLE_FR_aVectorNormal = "aVectorNormal";
+    public static final String SHADER_VARIABLE_FR_aUVTexture = "aFRUvTexture";
+
+    //public static final String SHADER_VARIABLE_aGlobalColor = "aGlobalColor";
     //public static final String SHADER_VARIABLE_aColor = "aColor"; //replaced by SHADER_VARIABLE_diffuseColor
+
+    //constants / uniforms
     public static final String SHADER_VARIABLE_aUVTexture = "aUvTexture";
     public static final String SHADER_VARIABLE_theModelMatrix = "theModelMatrix";
+    public static final String SHADER_VARIABLE_theModelTransInvMatrix = "theModelTrInvMatrix";
     public static final String SHADER_VARIABLE_theViewMatrix = "theViewMatrix";
     public static final String SHADER_VARIABLE_theProjectionMatrix = "theProjectionMatrix";
     //lights
-    public static final String SHADER_VARIABLE_ambientLightColor = "ambientColor";
+    public static final String SHADER_VARIABLE_ambientLightColor = "ambientLight.color"; //vec4
+    public static final String SHADER_VARIABLE_ambientLightStrength = "ambientLight.strength"; //float
+    public static final String SHADER_VARIABLE_diffuseLightColor = "diffuseLight.color"; //vec4
+    public static final String SHADER_VARIABLE_diffuseLightDirection = "diffuseLight.direction"; //vec3
     //materials
     public static final String SHADER_VARIABLE_ambientKaConstant = "kaConstant"; //apply to ambient light
     public static final String SHADER_VARIABLE_ambientKaTexture = "kaTexture";
-    public static final String SHADER_VARIABLE_diffuseColor = "diffuseColor";
+    public static final String SHADER_VARIABLE_diffuseMaterialColor = "aDiffuseColor";
     public static final String SHADER_VARIABLE_diffuseKdConstant = "kdConstant";
     public static final String SHADER_VARIABLE_diffuseKdTexture = "kdTexture";
     public static final String SHADER_VARIABLE_specularKsConstant = "ksConstant";
@@ -90,9 +104,9 @@ public class OpenGLProgramFactory {
     public OpenGLProgram getProgramForShader(final int shaderType){
         if (BuildConfig.DEBUG &&
                 (
-                        (shaderType & SHADER_ONLY_VERTICES) + (shaderType & SHADER_VERTICES_WITH_NORMALS) +
+                        (shaderType & SHADER_ONLY_VERTICES) +
                                 (shaderType & SHADER_VERTICES_WITH_OWN_COLOR) +
-                                (shaderType & SHADER_VERTICES_WITH_UV_TEXTURE)
+                                (shaderType & OpenGLProgramFactory.SHADER_VERTICES_WITH_UV_DATA_MATERIAL)
                 ) == 0) {
             throw new AssertionError("unknown shader type=" + shaderType);
         }
@@ -127,52 +141,10 @@ public class OpenGLProgramFactory {
      * @return the string representation of the shader code
      */
     private String getBuildShader(final int shaderType){
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n#version ").append(SHADER_VERSION).append(" es\n");
-        sb.append("uniform mat4 ").append(SHADER_VARIABLE_theModelMatrix).append(";\n");
-        sb.append("uniform mat4 ").append(SHADER_VARIABLE_theViewMatrix).append(";\n");
-        sb.append("uniform mat4 ").append(SHADER_VARIABLE_theProjectionMatrix).append(";\n");
-        sb.append("in vec3 ").append(SHADER_VARIABLE_aPosition).append(";\n");
-
-        if( (shaderType & SHADER_VERTICES_WITH_NORMALS) != 0) {
-            sb.append("in vec3 ").append(SHADER_VARIABLE_aNormal).append(";\n");
-        }
-
-        if( (shaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0) {
-            sb.append("in vec4 ").append(SHADER_VARIABLE_diffuseColor).append(";\n"); //vertex color
-            sb.append("out vec4 ").append(SHADER_VARIABLE_aVertexColor).append(";\n"); // to be passed into the fragment shader.
-        }
-
-        if((shaderType & SHADER_VERTICES_WITH_UV_TEXTURE) != 0){
-            sb.append("in vec2 ").append(SHADER_VARIABLE_aUVTexture).append(";\n");
-            sb.append("out vec2 uvTexture;\n");
-        }
-
-        ////shader main function////
-        sb.append("void main() {\n");
-        if( (shaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0) {
-            sb.append(SHADER_VARIABLE_aVertexColor).append(" = ").append(SHADER_VARIABLE_diffuseColor).append(";\n");
-        }
-
-        if((shaderType & SHADER_VERTICES_WITH_UV_TEXTURE) != 0){
-            sb.append("  uvTexture = ").append(SHADER_VARIABLE_aUVTexture).append(";\n");
-            //sb.append("  iUseTextureID = int(").append(SHADER_VARIABLE_aTexture).append(".z);\n");
-        }
-        //Calculus: gl_Position = Projection * View * Model * position;
-        sb.append("  gl_Position = ").append(SHADER_VARIABLE_theProjectionMatrix).append(" * ")
-                .append(SHADER_VARIABLE_theViewMatrix).append(" * ")
-                .append(SHADER_VARIABLE_theModelMatrix).append(" * vec4(")
-                .append(SHADER_VARIABLE_aPosition).append(", 1.0);\n");
-
-//        if (BuildConfig.DEBUG)
-//            sb.append("  gl_PointSize = 10.0;");
-        sb.append("}");
-
-
-        //System.out.println("PROGRAM SHADER=\n\n" + sb.toString() + "\n\n");
-
-
-        return sb.toString();
+        final AbstractShaderBuilder mainShader = new MainShaderBuilder().withBackground(shaderType);
+        if(BuildConfig.DEBUG)
+            System.out.println(mainShader.asString());
+        return mainShader.asString();
     }
 
 
@@ -200,92 +172,13 @@ public class OpenGLProgramFactory {
      * @return the string representation of the fragment code
      */
     private String getBuildFragmentShader(final int shaderType){
-        StringBuilder sbDeclaration = new StringBuilder();
-        StringBuilder sbBody = new StringBuilder();
+        final FragmentShaderBuilder fragmentShaderBuilder = new FragmentShaderBuilder();
+        fragmentShaderBuilder.withBackground(shaderType);
 
-        sbDeclaration.append("\n#version ").append(SHADER_VERSION).append(" es\n");
-        sbDeclaration.append("uniform vec4 ").append(SHADER_VARIABLE_ambientLightColor).append(";\n");
-        sbDeclaration.append("out vec4 fragColor;\n");
+        if(BuildConfig.DEBUG)
+            System.out.println(fragmentShaderBuilder.asString());
 
-        sbBody.append("void main() {\n");
-        sbBody.append("  fragColor = ").append(SHADER_VARIABLE_ambientLightColor).append(";\n");
-
-        //set GPU to medium precision
-        // (highp is not by all devices supported)
-        //alternatively can be set to lowp for tests or low performance devices.
-        //remove this in case of a Desktop App!!!
-        //sb.append("precision mediump float;");
-
-        if((shaderType & SHADER_VERTICES_WITH_UV_TEXTURE) != 0){
-            //texture instead of color
-
-            //KA texture: Issue #7 implementation
-            //implementation of the Issue #7
-            sbDeclaration.append("in vec2 uvTexture;\n");
-            if((shaderType & SHADER_VERTICES_WITH_KA_CONSTANT) != 0) {
-                sbDeclaration.append("uniform vec3 ").append(SHADER_VARIABLE_ambientKaConstant).append(";\n");
-                sbBody.append("  fragColor = vec4(").append(SHADER_VARIABLE_ambientKaConstant).append(", 1.0) * fragColor").append(";\n");
-                if((shaderType & SHADER_VERTICES_WITH_KA_TEXTURE) != 0) {
-                    sbDeclaration.append("uniform sampler2D ").append(SHADER_VARIABLE_ambientKaTexture).append(";\n");
-                    //Issue #7 test item 2:
-                    sbBody.append("fragColor = fragColor * texture(")
-                            .append(SHADER_VARIABLE_ambientKaTexture)
-                            .append(", uvTexture);\n");
-                    System.out.println("TO be tested 7.2");
-
-                } else if((shaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0) {
-                    sbDeclaration.append("in vec4 vColor;\n");
-                    //Issue #7 test item 1: Ka constant with own color per vertex
-                    sbBody.append("fragColor = fragColor * vColor").append(";\n");
-                    System.out.println("TO be tested 7.1 uv vColor");
-                } else {
-                    sbDeclaration.append("uniform vec4 ").append(SHADER_VARIABLE_diffuseColor).append(";\n");
-                    //Issue #7 test item 1: Ka constant with global color
-                    // TESTED OK
-                    sbBody.append("  fragColor = fragColor * ").append(SHADER_VARIABLE_diffuseColor).append(";\n");
-                }
-            } else if(BuildConfig.DEBUG) {
-                // will be ignored however
-                //this will be the Issue #7 test item 3: no Ka nor mapKa. To be tested
-                System.out.println("TO be tested 7.3");
-            }
-        } else {
-            //color only
-            if( (shaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0) {
-                sbDeclaration.append("in vec4 vColor;\n");
-                sbBody.append("  fragColor = fragColor * vColor;\n");
-            } else {
-                sbDeclaration.append("uniform vec4 ").append(SHADER_VARIABLE_diffuseColor).append(";\n");
-                sbBody.append("  fragColor = fragColor * ").append(SHADER_VARIABLE_diffuseColor).append(";\n");
-            }
-
-            if((shaderType & SHADER_VERTICES_WITH_KA_CONSTANT) != 0) {
-                sbDeclaration.append("uniform vec3 ").append(SHADER_VARIABLE_ambientKaConstant).append(";\n");
-                //tested OK Issue #7 with color per vertex / global color
-                sbBody.append("  fragColor = vec4(").append(SHADER_VARIABLE_ambientKaConstant).append(", 1.0) * fragColor").append(";\n");
-            } //else {
-            //Issue #7 test item 3: only color is defined (probably no material)
-            //tested 7.3 OK
-            //}
-        }
-
-
-
-
-
-
-
-        //vec3 objectColor = texture(uTexture, mobileTextureCoordinate).xyz;
-        //vec3 phong = (ambient + diffuse) * objectColor + specular;
-        //finalColor = vec4(phong, 1.0f); //Send lighting results to GPU
-
-        sbBody.append("}");
-        final String fragmentShaderStr = sbDeclaration.toString().concat(sbBody.toString());
-
-        System.out.println("FRAGMENT SHADER=\n\n" + fragmentShaderStr + "\n\n");
-
-
-        return fragmentShaderStr;
+        return fragmentShaderBuilder.asString();
     }
 
 
@@ -343,6 +236,8 @@ public class OpenGLProgramFactory {
         //not needed. It is executed once the GL Context is deleted automatically.
         //otherwise it will generate
         // "E/libEGL: call to OpenGL ES API with no current context (logged once per thread)"
+        //--> it was generated because was called outside the OPENGL context as there is no
+        //destroy method within the respective context.
 
         boolean isContextDirty = false;
 

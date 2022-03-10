@@ -167,11 +167,11 @@ public class MaterialParser extends AbstractObjParser{
             }break;
             case PARSE_MATERIAL_KA:
             {
-                iArrMaterials[iParsingID].constantKA = XYZCoordinate.fromByteArray(data);
+                iArrMaterials[iParsingID].setConstantKA(XYZCoordinate.fromByteArray(data));
             }break;
             case PARSE_MATERIAL_KD:
             {
-                iArrMaterials[iParsingID].constantKD = XYZCoordinate.fromByteArray(data);
+                iArrMaterials[iParsingID].setConstantKD(XYZCoordinate.fromByteArray(data));
             }break;
             case PARSE_MATERIAL_KS:
             {

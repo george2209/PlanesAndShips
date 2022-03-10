@@ -21,6 +21,7 @@ import java.util.HashSet;
 
 import ro.sg.avioane.R;
 
+//TODO: this class needs a serious re-factorisation to optimize it at runtime
 public class TextureUtils {
     public static class TextureSharerInfo {
         public Bitmap bitmap = null;

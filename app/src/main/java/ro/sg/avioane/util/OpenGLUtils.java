@@ -24,4 +24,6 @@ public class OpenGLUtils {
         System.out.println("configurationInfo.reqGlEsVersion=" + configurationInfo.reqGlEsVersion);
         return configurationInfo.reqGlEsVersion >= 0x00030000;
     }
+
+
 }

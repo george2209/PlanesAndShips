@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import ro.sg.avioane.cavans.blender.BlenderObjCavan;
 import ro.sg.avioane.cavans.blender.ObjParser;
+import ro.sg.avioane.cavans.primitives.Triangle;
 import ro.sg.avioane.cavans.primitives.XYZAxis;
 import ro.sg.avioane.util.BackgroundTask;
 import ro.sg.avioane.util.OpenGLProgramFactory;
@@ -113,9 +114,9 @@ public class MainScreen extends AppCompatActivity {
         this.iGameSurface.queueEvent(new Runnable() {
             @Override
             public void run() {
-                iGameSurface.loadBlenderObjects(blenderOBJArr);
+                ///////////////////////////////////////////////////////////////////iGameSurface.loadBlenderObjects(blenderOBJArr);
                 //load here non-Blender objects too
-                iGameSurface.loadNonBlenderObject(new XYZAxis());
+                iGameSurface.loadNonBlenderObject(new Triangle());
 
             }
         });

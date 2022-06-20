@@ -84,7 +84,7 @@ public class TouchScreenProcessor {
     }
 
     public void onTouch(MotionEvent e, final float[] viewMatrix, final float[] projectionMatrix){
-        //System.out.println("MotionEvent=" + MotionEvent.actionToString(e.getActionMasked()));
+        System.out.println("MotionEvent=" + MotionEvent.actionToString(e.getActionMasked()));
         switch(e.getActionMasked()){
             case MotionEvent.ACTION_DOWN: {
                 if (BuildConfig.DEBUG &&
@@ -99,7 +99,7 @@ public class TouchScreenProcessor {
             }
             case MotionEvent.ACTION_MOVE: {
                 if(this.iStateEngine == TOUCH_STATE_ENGINE.E_CLICK_DOWN){
-                    this.iStartX[0] = e.getX();
+                    this.iStartX[0] = e.getX();/////////////////////////////////////////////////////////////////////
                     this.iStartY[0] = e.getY();
                     this.iStateEngine = TOUCH_STATE_ENGINE.E_MOVING;
                 } else if(this.iStateEngine == TOUCH_STATE_ENGINE.E_ZOOMING){
@@ -203,6 +203,10 @@ public class TouchScreenProcessor {
                 this.iStateEngine = TOUCH_STATE_ENGINE.E_NONE;
                 break;
             }
+            case MotionEvent.ACTION_CANCEL:
+            {
+                this.iStateEngine = TOUCH_STATE_ENGINE.E_NONE;
+            } break;
             default:
                 System.out.println("WARNING! un-catch mouse event:" + e.getActionMasked());
         }
@@ -247,6 +251,8 @@ public class TouchScreenProcessor {
     private void fireMovementEvent(final float currentX, final float currentY) {
         final float deltaX = currentX - this.iStartX[0];
         final float deltaY = currentY - this.iStartY[0];
+
+        System.out.println("fireMovementEvent deltaX=" + deltaX + " deltaY=" + deltaY);
 
         if(this.iEventsListener!=null){
             this.iEventsListener.fireMovement(deltaX/this.iScreenWidth * 100.0f, deltaY/this.iScreenHeight * 100.0f);

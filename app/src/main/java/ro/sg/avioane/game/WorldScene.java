@@ -8,24 +8,20 @@ package ro.sg.avioane.game;
 
 import android.opengl.Matrix;
 import android.view.MotionEvent;
-import java.util.ArrayList;
+
+import androidx.annotation.NonNull;
+
+import java.util.LinkedList;
 import java.util.List;
-import ro.sg.avioane.cavans.AbstractGameCavan;
+
+import ro.sg.avioane.cavans.GameObject;
 
 public class WorldScene {
-    //TODO: update this number once the game is ready to be released!!!!!
-    private static final int MAX_NO_SUPPORTED_CAVANS = 100;
-
     private static final float NEAR_CAMERA_FIELD = 1.0f;
     private static final float FAR_CAMERA_FIELD = 300.0f;
-
-
-
-
     private final float[] iProjectionMatrix = new float[16];
-
     private final WorldCamera iCamera;
-    private final List<AbstractGameCavan> iGameEntities = new ArrayList<>(MAX_NO_SUPPORTED_CAVANS);
+    private final List<GameObject> iGameEntities = new LinkedList<GameObject>();
 
     public WorldScene(final WorldCamera camera){
         this.iCamera = camera;
@@ -38,7 +34,7 @@ public class WorldScene {
      * game and not when the game is already started and running.
      * @param entity the 3D object that will be added to this world
      */
-    public void add(final AbstractGameCavan entity){
+    public void add(@NonNull final GameObject entity){
         this.iGameEntities.add(entity);
     }
 
@@ -50,7 +46,7 @@ public class WorldScene {
 //    }
 
     public void onRestoreWorld(){
-        for(AbstractGameCavan cavan: this.iGameEntities){
+        for(GameObject cavan: this.iGameEntities){
             cavan.destroy();
             cavan.onRestore();
         }
@@ -75,7 +71,8 @@ public class WorldScene {
 
         this.iCamera.doRecalibration(screenWidth, screenHeight);
 
-        final float ratio = (float) screenWidth / (float) screenHeight; //calculate the aspect ration on the far clip
+        final float ratio = ((float) screenWidth) / ((float) screenHeight); //calculate the aspect ration on the far clip
+
         Matrix.setIdentityM(iProjectionMatrix, 0);
         Matrix.frustumM(iProjectionMatrix, 0, -ratio, ratio, -1.0f, 1.0f, NEAR_CAMERA_FIELD, FAR_CAMERA_FIELD);
     }
@@ -85,23 +82,13 @@ public class WorldScene {
      * TODO: draw only when something was changed. Implement a "dirty" semaphore or notification
      */
     public void onDraw(){
-        //Matrix.setIdentityM(this.iModelMatrix,0);
-
-        //now you can apply transforms to the model matrix before you send it to the
-        //be draw
-        //ex:
-        // Do a complete rotation every 10 seconds.
-        //long time = SystemClock.uptimeMillis() % 10000L;
-        //float angleInDegrees = (360.0f / 10000.0f) * ((int) time);
-        // Matrix.rotateM(iModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f);
-
         //call this to have the view matrix build depending on the camera movement
         //we can choose to call this only if the camera was moved
         //TODO: draw only when camera was moved this!
         this.iCamera.onDraw();
 
         //draw all entities of the map on the projection clip
-        for (final AbstractGameCavan entity: this.iGameEntities) {
+        for (final GameObject entity: this.iGameEntities) {
             entity.draw(this.iCamera.getViewMatrix(), this.iProjectionMatrix);
         }
     }
@@ -116,8 +103,8 @@ public class WorldScene {
      * send the resulting notification on the OpenGL thread (GUI).
      * This method is called usually from inside the extended class of
      * GLSurfaceView.onTouchEvent(..) method.
-     * @param e
-     * @param touchProcessor
+     * @param e the mouse event object
+     * @param touchProcessor the processing event processor
      */
     public void onTouch(MotionEvent e, final TouchScreenProcessor touchProcessor){
         touchProcessor.onTouch(e, this.iCamera.getViewMatrix(), this.iProjectionMatrix);

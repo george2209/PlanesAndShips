@@ -13,6 +13,7 @@ import android.view.MotionEvent;
 import androidx.annotation.NonNull;
 
 import ro.sg.avioane.cavans.AbstractGameCavan;
+import ro.sg.avioane.cavans.GameObject;
 import ro.sg.avioane.cavans.blender.BlenderObjCavan;
 
 public class MainGameSurface extends GLSurfaceView {
@@ -51,8 +52,8 @@ public class MainGameSurface extends GLSurfaceView {
      * this method must be called from the GUI thread!
      * @param blenderOBJArray
      */
-    public void loadBlenderObjects(@NonNull final BlenderObjCavan[] blenderOBJArray){
-        for (BlenderObjCavan gameEntity:blenderOBJArray) {
+    public void loadBlenderObjects(@NonNull final GameObject[] blenderOBJArray){
+        for (GameObject gameEntity:blenderOBJArray) {
             gameEntity.onRestore();
             this.iGameRenderer.addEntityInGame(gameEntity);
         }
@@ -62,7 +63,7 @@ public class MainGameSurface extends GLSurfaceView {
      *
      * @param gameEntity a non null instance of AbstractGameCavan that will be added into the "world"
      */
-    public void loadNonBlenderObject(@NonNull final AbstractGameCavan gameEntity){
+    public void loadNonBlenderObject(@NonNull final GameObject gameEntity){
         this.iGameRenderer.addEntityInGame(gameEntity);
     }
 

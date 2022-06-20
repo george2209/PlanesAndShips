@@ -19,25 +19,45 @@ public abstract class BackgroundTask {
         this.iParentActivity = activity;
     }
 
-    public void start(){
-        this.preloadData();
-        this.isRunning.set(true);
-        new Thread(() -> {
-            while(!isInterrupted.get() && isRunning.get()){
-                isRunning.set(isRunning.get() == true && runInBackground() == true);
-                try {
-                    Thread.sleep(5);
-                }catch(InterruptedException iex){
-                    iex.printStackTrace();
+    /**
+     * start the thread.
+     * @return true if successful
+     */
+    public boolean start(){
+        if(this.preloadData()) {
+            this.isRunning.set(true);
+            new Thread(() -> {
+                while (!isInterrupted.get() && isRunning.get()) {
+                    isRunning.set(isRunning.get() == true && runInBackground() == true);
+                    try {
+                        Thread.sleep(5);
+                    } catch (InterruptedException iex) {
+                        iex.printStackTrace();
+                    }
                 }
-            }
-            iParentActivity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    notifyThreadFinished();
-                }
-            });
-        }).start();
+                if(!isInterrupted.get())
+                    notifyThreadFinished(); //success
+//                    iParentActivity.runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                        notifyThreadFinished(); //success
+//                    }
+//                    });
+                else
+                    notifyThreadInterrupted(); //failure
+//                {
+//                    iParentActivity.runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            notifyThreadInterrupted(); //failure
+//                        }
+//                    });
+//                }
+            }).start();
+        } else {
+            this.isRunning.set(false);
+        }
+        return this.isRunning.get();
     }
 
     public void stop(){
@@ -56,7 +76,7 @@ public abstract class BackgroundTask {
     /**
      * here you will load all data BEFORE calling <code>my.BackgroundThread.start()</code> method
      */
-    public abstract void preloadData();
+    public abstract boolean preloadData();
 
     /**
      * This method is called inside the thread loop as long as you will return true.
@@ -68,4 +88,6 @@ public abstract class BackgroundTask {
      * the method is signaling on the GUI Thread that the work was finished.
      */
     public abstract void notifyThreadFinished();
+
+    public abstract void notifyThreadInterrupted();
 }

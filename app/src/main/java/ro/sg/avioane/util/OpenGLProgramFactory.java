@@ -21,52 +21,49 @@ public class OpenGLProgramFactory {
     public static final int SHADER_UNDEFINED = 0;
     public static final int SHADER_ONLY_VERTICES = 1;
     public static final int SHADER_VERTICES_WITH_OWN_COLOR = SHADER_ONLY_VERTICES<<1;
-    public static final int SHADER_VERTICES_WITH_GLOBAL_COLOR = SHADER_VERTICES_WITH_OWN_COLOR<<1;
-    public static final int SHADER_VERTICES_WITH_UV_DATA_MATERIAL = SHADER_VERTICES_WITH_GLOBAL_COLOR <<1; ///needed???///////////////////
-    //public static final int SHADER_VERTICES_WITH_NORMALS = SHADER_VERTICES_WITH_UV_DATA_MATERIAL <<1;
+    public static final int SHADER_VERTICES_WITH_GLOBAL_DIFFUSE_COLOR = SHADER_VERTICES_WITH_OWN_COLOR<<1;
+    public static final int SHADER_VERTICES_WITH_UV_DATA_MATERIAL = SHADER_VERTICES_WITH_GLOBAL_DIFFUSE_COLOR <<1;
+    public static final int SHADER_VERTICES_WITH_NORMALS = SHADER_VERTICES_WITH_UV_DATA_MATERIAL <<1;
     //illumination/material constants
-    public static final int SHADER_VERTICES_WITH_KA_CONSTANT = SHADER_VERTICES_WITH_UV_DATA_MATERIAL <<1;
-    public static final int SHADER_VERTICES_WITH_KD_CONSTANT = SHADER_VERTICES_WITH_KA_CONSTANT <<1;
-    public static final int SHADER_VERTICES_WITH_KS_CONSTANT = SHADER_VERTICES_WITH_KD_CONSTANT <<1;
-    public static final int SHADER_VERTICES_WITH_KE_CONSTANT = SHADER_VERTICES_WITH_KS_CONSTANT <<1;
+    //public static final int SHADER_VERTICES_WITH_MATERIAL_AMBIENT_STRENGTH = SHADER_VERTICES_WITH_UV_DATA_MATERIAL <<1;
+    //public static final int SHADER_VERTICES_WITH_KD_CONSTANT = SHADER_VERTICES_WITH_MATERIAL_AMBIENT_STRENGTH <<1;
+    //public static final int SHADER_VERTICES_WITH_KS_CONSTANT = SHADER_VERTICES_WITH_KD_CONSTANT <<1;
+    //public static final int SHADER_VERTICES_WITH_KE_CONSTANT = SHADER_VERTICES_WITH_KS_CONSTANT <<1;
     //texture materials
-    public static final int SHADER_VERTICES_WITH_KA_TEXTURE = SHADER_VERTICES_WITH_KE_CONSTANT <<1;
-    public static final int SHADER_VERTICES_WITH_KD_TEXTURE = SHADER_VERTICES_WITH_KA_TEXTURE <<1;
+    public static final int SHADER_VERTICES_WITH_AMBIENT_TEXTURE = SHADER_VERTICES_WITH_NORMALS <<1;
+    public static final int SHADER_VERTICES_WITH_DIFFUSE_TEXTURE = SHADER_VERTICES_WITH_AMBIENT_TEXTURE <<1;
 
 
     public static final short SHADER_VERSION = 300;
     //per vertex variables
-    public static final String SHADER_VARIABLE_aPosition = "aPosition";
-    public static final String SHADER_VARIABLE_aNormal = "aNormal";
-    public static final String SHADER_VARIABLE_aVertexColor = "aVertexColor";
-    //pass to the fragment shader
-    public static final String SHADER_VARIABLE_FR_aVectorNormal = "aVectorNormal";
-    public static final String SHADER_VARIABLE_FR_aUVTexture = "aFRUvTexture";
-
-    //public static final String SHADER_VARIABLE_aGlobalColor = "aGlobalColor";
-    //public static final String SHADER_VARIABLE_aColor = "aColor"; //replaced by SHADER_VARIABLE_diffuseColor
-
+    public static final String SHADER_VARIABLE_aPosition = "iPosition";
+    public static final String SHADER_VARIABLE_aNormal = "iNormal";
+    public static final String SHADER_VARIABLE_aVertexColor = "iVertexColor";
+    public static final String SHADER_VARIABLE_aUVTexture = "iVectorUV";
+    //Output from main shader to be sent to the fragment shader
+    public static final String SHADER_VARIABLE_FR_aVectorNormal = "iVectorNormal";
+    public static final String SHADER_VARIABLE_FR_aUVTexture = "iFRUvTexture";
     //constants / uniforms
-    public static final String SHADER_VARIABLE_aUVTexture = "aUvTexture";
-    public static final String SHADER_VARIABLE_theModelMatrix = "theModelMatrix";
-    public static final String SHADER_VARIABLE_theModelTransInvMatrix = "theModelTrInvMatrix";
-    public static final String SHADER_VARIABLE_theViewMatrix = "theViewMatrix";
-    public static final String SHADER_VARIABLE_theProjectionMatrix = "theProjectionMatrix";
+    public static final String SHADER_VARIABLE_theModelMatrix = "iTheModelMatrix";
+    public static final String SHADER_VARIABLE_theModelTransInvMatrix = "iTheModelTrInvMatrix";
+    public static final String SHADER_VARIABLE_theViewMatrix = "iTheViewMatrix";
+    public static final String SHADER_VARIABLE_theProjectionMatrix = "iTheProjectionMatrix";
+    //colors
+    public static final String SHADER_VARIABLE_diffuseMaterialColor = "iDiffuseColor";
     //lights
     public static final String SHADER_VARIABLE_ambientLightColor = "ambientLight.color"; //vec4
     public static final String SHADER_VARIABLE_ambientLightStrength = "ambientLight.strength"; //float
     public static final String SHADER_VARIABLE_diffuseLightColor = "diffuseLight.color"; //vec4
     public static final String SHADER_VARIABLE_diffuseLightDirection = "diffuseLight.direction"; //vec3
     //materials
-    public static final String SHADER_VARIABLE_ambientKaConstant = "kaConstant"; //apply to ambient light
-    public static final String SHADER_VARIABLE_ambientKaTexture = "kaTexture";
-    public static final String SHADER_VARIABLE_diffuseMaterialColor = "aDiffuseColor";
-    public static final String SHADER_VARIABLE_diffuseKdConstant = "kdConstant";
-    public static final String SHADER_VARIABLE_diffuseKdTexture = "kdTexture";
-    public static final String SHADER_VARIABLE_specularKsConstant = "ksConstant";
-    public static final String SHADER_VARIABLE_specularKsTexture = "ksTexture";
-    public static final String SHADER_VARIABLE_emissiveKeConstant = "keConstant";
-    public static final String SHADER_VARIABLE_emissiveKeTexture = "keTexture";
+    public static final String SHADER_VARIABLE_ambientTexture = "iAmbientTexture";
+    public static final String SHADER_VARIABLE_diffuseTexture = "iDiffuseTexture";
+
+//    public static final String SHADER_VARIABLE_diffuseKdConstant = "kdConstant";
+//    public static final String SHADER_VARIABLE_specularKsConstant = "ksConstant";
+//    public static final String SHADER_VARIABLE_specularKsTexture = "ksTexture";
+//    public static final String SHADER_VARIABLE_emissiveKeConstant = "keConstant";
+//    public static final String SHADER_VARIABLE_emissiveKeTexture = "keTexture";
 
 
     private final HashMap<Integer, OpenGLProgram> iProgramMap = new HashMap<>();
@@ -141,7 +138,7 @@ public class OpenGLProgramFactory {
      * @return the string representation of the shader code
      */
     private String getBuildShader(final int shaderType){
-        final AbstractShaderBuilder mainShader = new MainShaderBuilder().withBackground(shaderType);
+        final AbstractShaderBuilder mainShader = new MainShaderBuilder().build(shaderType);
         if(BuildConfig.DEBUG)
             System.out.println(mainShader.asString());
         return mainShader.asString();
@@ -172,8 +169,8 @@ public class OpenGLProgramFactory {
      * @return the string representation of the fragment code
      */
     private String getBuildFragmentShader(final int shaderType){
-        final FragmentShaderBuilder fragmentShaderBuilder = new FragmentShaderBuilder();
-        fragmentShaderBuilder.withBackground(shaderType);
+        final FragmentShaderBuilder fragmentShaderBuilder = new FragmentShaderBuilder().build(shaderType);
+        //fragmentShaderBuilder.withBackground(shaderType);
 
         if(BuildConfig.DEBUG)
             System.out.println(fragmentShaderBuilder.asString());
@@ -242,7 +239,7 @@ public class OpenGLProgramFactory {
         boolean isContextDirty = false;
 
         for (OpenGLProgram program:this.iProgramMap.values()) {
-            isContextDirty = !GLES30.glIsProgram(program.iProgramHandle);
+            isContextDirty = !GLES30.glIsProgram(program.iProgramHandlePtr);
             if(isContextDirty)
                 break;
             //GLES20.glDeleteProgram(program.iProgramHandle);

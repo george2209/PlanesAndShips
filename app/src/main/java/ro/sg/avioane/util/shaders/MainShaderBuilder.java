@@ -16,35 +16,44 @@ public class MainShaderBuilder extends AbstractShaderBuilder{
     public MainShaderBuilder(){
         iStrShaderDeclarations.append("#version ").append(SHADER_VERSION).append(" es\n");
         iStrShaderDeclarations.append("uniform mat4 ").append(SHADER_VARIABLE_theModelMatrix).append(";\n");
-        iStrShaderDeclarations.append("uniform mat4 ").append(SHADER_VARIABLE_theModelTransInvMatrix).append(";\n");
         iStrShaderDeclarations.append("uniform mat4 ").append(SHADER_VARIABLE_theViewMatrix).append(";\n");
         iStrShaderDeclarations.append("uniform mat4 ").append(SHADER_VARIABLE_theProjectionMatrix).append(";\n");
         iStrShaderDeclarations.append("in vec3 ").append(SHADER_VARIABLE_aPosition).append(";\n");
-        iStrShaderDeclarations.append("in vec3 ").append(SHADER_VARIABLE_aNormal).append(";\n");
-        iStrShaderDeclarations.append("out vec3 ").append(SHADER_VARIABLE_FR_aVectorNormal).append(";\n");
+
+
 
         iStrShaderBody.append("\t\t gl_Position = ").append(SHADER_VARIABLE_theProjectionMatrix).append(" * ")
                 .append(SHADER_VARIABLE_theViewMatrix).append(" * ")
                 .append(SHADER_VARIABLE_theModelMatrix).append(" * vec4(")
                 .append(SHADER_VARIABLE_aPosition).append(", 1.0);\n");
 
-        iStrShaderBody.append("\t\t ").append(SHADER_VARIABLE_FR_aVectorNormal).append(" = ").
-                append("mat3(").append(SHADER_VARIABLE_theModelTransInvMatrix).append(") * ")
-                .append(SHADER_VARIABLE_aNormal).append(";\n");
+
     }
 
     /**
      * @param shaderType
      */
     @Override
-    public MainShaderBuilder withBackground(final int shaderType) {
+    public MainShaderBuilder build(final int shaderType) {
         if(BuildConfig.DEBUG){
             if(!isStreamEditable) {
                 throw new AssertionError("isStreamEditable=" + (isStreamEditable));
             }
         }
+        final boolean isNormalPerVertex = (shaderType & SHADER_VERTICES_WITH_NORMALS) > 0;
         final boolean isColorPerVertex = (shaderType & SHADER_VERTICES_WITH_OWN_COLOR) > 0;
         //final boolean isColorGlobal = (shaderType & SHADER_VERTICES_WITH_GLOBAL_COLOR) > 0;
+
+        if(isNormalPerVertex){
+            iStrShaderDeclarations.append("uniform mat4 ").append(SHADER_VARIABLE_theModelTransInvMatrix).append(";\n");
+            iStrShaderDeclarations.append("in vec3 ").append(SHADER_VARIABLE_aNormal).append(";\n");
+            iStrShaderDeclarations.append("out vec3 ").append(SHADER_VARIABLE_FR_aVectorNormal).append(";\n");
+
+            iStrShaderBody.append("\t\t ").append(SHADER_VARIABLE_FR_aVectorNormal).append(" = ").
+                    append("mat3(").append(SHADER_VARIABLE_theModelTransInvMatrix).append(") * ")
+                    .append(SHADER_VARIABLE_aNormal).append(";\n");
+        }
+
         if(isColorPerVertex){
             //color per vertex
             iStrShaderDeclarations.append("in vec4 ").append(SHADER_VARIABLE_aVertexColor).append(";\n");

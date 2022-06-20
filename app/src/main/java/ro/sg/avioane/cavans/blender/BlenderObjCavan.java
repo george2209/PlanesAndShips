@@ -6,40 +6,15 @@
 
 package ro.sg.avioane.cavans.blender;
 
-import java.util.Optional;
+import ro.sg.avioane.cavans.GameObject;
 
-import javax.microedition.khronos.opengles.GL10;
-
-import ro.sg.avioane.cavans.AbstractGameCavan;
-import ro.sg.avioane.geometry.XYZMaterial;
-import ro.sg.avioane.geometry.XYZVertex;
-
-public class BlenderObjCavan extends AbstractGameCavan {
-
-    private final XYZVertex[] iVerticesArray;
-    private final short[] iIndexDrawOrder;
+public class BlenderObjCavan extends GameObject {
 
 
-    private final XYZMaterial iOBJMaterial;
-    private final String iOBJName;
-
-
-    public BlenderObjCavan(final String oBJName, final XYZVertex[] arr, short[] indexDrawOrder, final XYZMaterial material) {
-        this.iOBJName = oBJName;
-        this.iVerticesArray = arr;
-        this.iIndexDrawOrder = indexDrawOrder;
-        this.iOBJMaterial = material;
+    /**
+     * @param objName the name of this object. Not sure if it has any practicability in production
+     */
+    public BlenderObjCavan(String objName) {
+        super(objName);
     }
-
-
-    @Override
-    public void draw(float[] viewMatrix, float[] projectionMatrix) {
-        super.doDraw(viewMatrix, projectionMatrix, GL10.GL_TRIANGLES);
-    }
-
-    @Override
-    public void onRestore() {
-        super.build(this.iVerticesArray, this.iIndexDrawOrder, Optional.ofNullable(this.iOBJMaterial));
-    }
-
 }

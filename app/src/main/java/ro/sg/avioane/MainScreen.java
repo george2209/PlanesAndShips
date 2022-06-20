@@ -22,20 +22,22 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import ro.sg.avioane.cavans.GameObject;
 import ro.sg.avioane.cavans.blender.BlenderObjCavan;
-import ro.sg.avioane.cavans.blender.ObjParser;
+import ro.sg.avioane.cavans.blender.ColladaParser;
+import ro.sg.avioane.cavans.blender.collada.ColladaFileObjectDescriptor;
+import ro.sg.avioane.cavans.blender.collada.ColladaParserListener;
 import ro.sg.avioane.cavans.primitives.Triangle;
 import ro.sg.avioane.cavans.primitives.XYZAxis;
-import ro.sg.avioane.util.BackgroundTask;
 import ro.sg.avioane.util.OpenGLProgramFactory;
 import ro.sg.avioane.util.OpenGLUtils;
 import ro.sg.avioane.util.TextureUtils;
 
-public class MainScreen extends AppCompatActivity {
+public class MainScreen extends AppCompatActivity implements ColladaParserListener {
 
     private MainGameSurface iGameSurface;
-    private final AtomicBoolean iActivityAlive = new AtomicBoolean(true);
-    private BackgroundTask iOBJLoaderProcessor = null;
+    //private final AtomicBoolean iActivityAlive = new AtomicBoolean(true);
+    private ColladaParser iColladaParser = null;
 
     //private static boolean isTexturesLoaded = false;
 
@@ -55,7 +57,7 @@ public class MainScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         System.out.println("onCreate");
-        this.iActivityAlive.set(true);
+        //this.iActivityAlive.set(true);
 
         //Remove title bar
         removeWindowTitleBar();
@@ -73,12 +75,17 @@ public class MainScreen extends AppCompatActivity {
         if (OpenGLUtils.isOpenGL2Supported(activityManager))
         {
             this.setScreenProperties();
-            try {
-                loadCavans();
-            } catch (IOException e) {
-                e.printStackTrace();
 
-            }
+            //here you load the game`s spirits : trees, houses, airplanes, etc..
+            //as example let`s load some exported Blender files. Use in Blender: Export->Collada (.dae)
+            //and then generate the (.bin) files by using the "ColladaAssimpConverter" (easy to use!)
+            final ColladaFileObjectDescriptor[] colladaFiles = new ColladaFileObjectDescriptor[1];
+            colladaFiles[0] = new ColladaFileObjectDescriptor();
+            colladaFiles[0].objectName = "floor";
+            colladaFiles[0].fileName = "floor_earth.bin";
+//            colladaFiles[0].objectName = "tank";
+//            colladaFiles[0].fileName = "tank.bin";
+            loadCavans(colladaFiles);
         } else {
             //TODO: make a layout frame where you display the non-supported message.
             //TBD if this part is really needed as the App shall be not installed from the
@@ -103,101 +110,17 @@ public class MainScreen extends AppCompatActivity {
     }
 
     /**
-     * loads the game surface and render. Basically this is the entry point for the game as well as
-     * all the OpenGL objects.
-     * @param blenderOBJArr the array of the loaded OBJs from memory.
-     */
-    private void addGameObjects(final BlenderObjCavan[] blenderOBJArr){
-        if(BuildConfig.DEBUG && this.iGameSurface == null)
-            throw new AssertionError("null game surface");
-
-        this.iGameSurface.queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                ///////////////////////////////////////////////////////////////////iGameSurface.loadBlenderObjects(blenderOBJArr);
-                //load here non-Blender objects too
-                iGameSurface.loadNonBlenderObject(new Triangle());
-
-            }
-        });
-    }
-
-    /**
      * this method is handling the load of the Blender objects
      * @throws IOException
      */
-    private void loadCavans() throws IOException {
-        if(BuildConfig.DEBUG && this.iOBJLoaderProcessor != null){
+    private void loadCavans(final ColladaFileObjectDescriptor[] colladaFiles) /*throws IOException*/ {
+        if(BuildConfig.DEBUG && this.iColladaParser != null){
             throw new AssertionError("thread alive exception!");
         }
 
-        this.iOBJLoaderProcessor = new BackgroundTask(this) {
-            private final String arrObj[] = {"game_plane.bin"};
-            private int index = 0;
-            private BufferedInputStream inputStream = null;
-            final ObjParser iParser = new ObjParser(getApplicationContext());
-
-            @Override
-            public void preloadData() {
-                try {
-                    if(inputStream != null) {
-                        inputStream.close();
-                        inputStream = null;
-                    }
-                    inputStream = new BufferedInputStream(getApplicationContext().getAssets().open("obj/" + arrObj[index++]));
-                } catch (IOException e) {
-                    if(inputStream != null) {
-                        try {
-                            inputStream.close();
-                        } catch (IOException ioException) {
-                            ioException.printStackTrace();
-                        }
-                    }
-                    inputStream = null;
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public boolean runInBackground() {
-                if(iParser.processStream(this.inputStream)){
-                    if(iParser.getStateEngine() == ObjParser.PARSE_DONE){
-                        if(index < arrObj.length) {
-                            preloadData();
-                        } else {
-                            //work done!
-                            return false;
-                        }
-                    }
-                    return true;
-                } else {
-                    this.stop();
-                    return false;
-                }
-            }
-
-            @Override
-            public void notifyThreadFinished() {
-                if(inputStream != null) {
-                    try {
-                        inputStream.close();
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                    }
-                }
-                if(!this.isInterrupted()) {
-                    addGameObjects(iParser.getParsedObjects());
-                }
-                else {
-                    if(BuildConfig.DEBUG)
-                        throw new AssertionError("Interrupted thread detected!");
-                    //else TODO: ...
-                }
-                iOBJLoaderProcessor = null;
-            }
-        };
-
-        iOBJLoaderProcessor.start();
+        this.iColladaParser = new ColladaParser(this.getApplicationContext());
+        this.iColladaParser.addColladaParserListener(this);
+        this.iColladaParser.startParsing(colladaFiles, this);
     }
 
 //    @Override
@@ -233,9 +156,8 @@ public class MainScreen extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         System.out.println("onDestroy!!!");
-        if(this.iOBJLoaderProcessor != null &&
-                this.iOBJLoaderProcessor.isRunning()) {
-            this.iOBJLoaderProcessor.stop();
+        if(this.iColladaParser != null ){
+            this.iColladaParser.stopParsing();
         }
         OpenGLProgramFactory.killInstance();
         TextureUtils.killInstance();
@@ -275,5 +197,33 @@ public class MainScreen extends AppCompatActivity {
         if (insetsController != null) {
             insetsController.hide(WindowInsets.Type.statusBars());
         }
+    }
+
+    /**
+     * From <code>ColladaParserListener</code>
+     * @param gameObjects the parsed game object.
+     */
+    @Override
+    public void notifyParseFinished(GameObject[] gameObjects) {
+        this.iGameSurface.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                iGameSurface.loadBlenderObjects(gameObjects);
+                iColladaParser = null;
+            }
+        });
+    }
+
+    /**
+     * From <code>ColladaParserListener</code>
+     */
+    @Override
+    public void notifyParseFailed() {
+        this.runOnUiThread(() -> {
+            this.iColladaParser = null;
+        });
+
+        //TODO: decide what to show the user here in case of failure.
+        throw new UnsupportedOperationException("FATAL ERROR!");
     }
 }

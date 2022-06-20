@@ -14,8 +14,7 @@ import androidx.annotation.CallSuper;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
-import java.util.Optional;
+import java.nio.IntBuffer;
 
 import ro.sg.avioane.BuildConfig;
 import ro.sg.avioane.cavans.features.CavanMovements;
@@ -31,11 +30,10 @@ import ro.sg.avioane.util.TextureUtils;
 
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_ONLY_VERTICES;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_UNDEFINED;
-import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_GLOBAL_COLOR;
-import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_KA_CONSTANT;
-import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_KA_TEXTURE;
-import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_KD_CONSTANT;
-import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_KD_TEXTURE;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_DIFFUSE_TEXTURE;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_GLOBAL_DIFFUSE_COLOR;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_AMBIENT_TEXTURE;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_NORMALS;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_OWN_COLOR;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_UV_DATA_MATERIAL;
 
@@ -63,8 +61,6 @@ import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_UV_DA
  */
 public abstract class AbstractGameCavan extends CavanMovements {
 
-    private final static short BYTES_PER_FLOAT = 4;
-    private final static short BYTES_PER_SHORT = 2;
     private static final byte NO_OF_COORDINATES_PER_VERTEX = 3; //use X,Y,Z
     private static final byte NO_OF_COLORS_PER_VERTEX = 4; //use R,G,B,A
     private static final byte NO_OF_TEXTURES_PER_VERTEX = 2; //use U,V
@@ -77,11 +73,16 @@ public abstract class AbstractGameCavan extends CavanMovements {
     private OpenGLProgram iProgram = null;
     private OpenGLBufferArray3 iOpenGL3Buffers = null;
 
+    /**
+     * the material that is associated with this MESH
+     */
+    private XYZMaterial iMaterial = null;
+
     //Light part
     private TheSun iTheSun = TheSun.getStaticInstance();
 
     //Textures part
-    private Optional<XYZMaterial> iMaterial = Optional.empty();
+
     private int iShaderType = SHADER_UNDEFINED;
     private int iIndexOrderLength = 0;
     private int iShaderStride = 0;
@@ -93,9 +94,11 @@ public abstract class AbstractGameCavan extends CavanMovements {
      * do the compilation & build of the GLSL code
      * @param arrVertices the vertices array
      * @param drawOrderArr the order of drawing the vertices
-     * @param material it can be null if there is no U,V defined inside the XYZVertex element
      */
-    protected void build(final XYZVertex[] arrVertices, final short[] drawOrderArr, final Optional<XYZMaterial> material){
+    protected void build(final XYZVertex[] arrVertices, final int[] drawOrderArr, final XYZMaterial material){
+        if(BuildConfig.DEBUG && material == null){
+            throw new AssertionError("cannot call build with NULL material. Make sure a material is set!");
+        }
         this.iMaterial = material;
         this.calculateShaderType(arrVertices[0]);
         this.iProgram = OpenGLProgramFactory.getInstance().getProgramForShader(this.iShaderType);
@@ -108,48 +111,36 @@ public abstract class AbstractGameCavan extends CavanMovements {
      * initialize the uniforms
      */
     private void buildUniforms(){
-        this.iProgram.iModelMatrixHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_theModelMatrix);
+        this.iProgram.iModelMatrixHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandlePtr, OpenGLProgramFactory.SHADER_VARIABLE_theModelMatrix);
         DebugUtils.checkPrintGLError();
-        this.iProgram.iModelTransInvHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_theModelTransInvMatrix);
+        this.iProgram.iModelTransInvHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandlePtr, OpenGLProgramFactory.SHADER_VARIABLE_theModelTransInvMatrix);
         DebugUtils.checkPrintGLError();
-        this.iProgram.iViewMatrixHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_theViewMatrix);
+        this.iProgram.iViewMatrixHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandlePtr, OpenGLProgramFactory.SHADER_VARIABLE_theViewMatrix);
         DebugUtils.checkPrintGLError();
-        this.iProgram.iProjectionMatrixHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_theProjectionMatrix);
+        this.iProgram.iProjectionMatrixHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandlePtr, OpenGLProgramFactory.SHADER_VARIABLE_theProjectionMatrix);
         DebugUtils.checkPrintGLError();
 
 
         //the lightning
-        this.iProgram.iAmbientStrengthHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_ambientLightStrength);
+        this.iProgram.iAmbientLightStrengtPtr = GLES30.glGetUniformLocation(this.iProgram.iProgramHandlePtr, OpenGLProgramFactory.SHADER_VARIABLE_ambientLightStrength);
         DebugUtils.checkPrintGLError();
-        this.iProgram.iAmbientColorHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_ambientLightColor);
+        this.iProgram.iAmbientLightColorPtr = GLES30.glGetUniformLocation(this.iProgram.iProgramHandlePtr, OpenGLProgramFactory.SHADER_VARIABLE_ambientLightColor);
         DebugUtils.checkPrintGLError();
-        this.iProgram.iDiffuseLightColorHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_diffuseLightColor);
+        this.iProgram.iDiffuseLightColorPtr = GLES30.glGetUniformLocation(this.iProgram.iProgramHandlePtr, OpenGLProgramFactory.SHADER_VARIABLE_diffuseLightColor);
         DebugUtils.checkPrintGLError();
-        this.iProgram.iDiffuseDirectionHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_diffuseLightDirection);
+        this.iProgram.iDiffuseDirectionPtr = GLES30.glGetUniformLocation(this.iProgram.iProgramHandlePtr, OpenGLProgramFactory.SHADER_VARIABLE_diffuseLightDirection);
         DebugUtils.checkPrintGLError();
-
-        //check color and illumination constants
-        if((this.iShaderType & SHADER_VERTICES_WITH_KA_CONSTANT) != 0) {
-            //Ka constant
-            this.iProgram.iAmbientKaConstantHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_ambientKaConstant);
-            DebugUtils.checkPrintGLError();
-        }
-
-        if((this.iShaderType & SHADER_VERTICES_WITH_KD_CONSTANT) != 0) {
-            this.iProgram.iDiffuseKdConstantHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_diffuseKdConstant);
-            DebugUtils.checkPrintGLError();
-        }
 
         //texture or background color
-        if((this.iShaderType & SHADER_VERTICES_WITH_UV_DATA_MATERIAL) != 0){
-            this.iProgram.iAmbientKaTexture = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_ambientKaTexture);
+        if((this.iShaderType & SHADER_VERTICES_WITH_AMBIENT_TEXTURE) != 0){
+            this.iProgram.iAmbientTexturePtr = GLES30.glGetUniformLocation(this.iProgram.iProgramHandlePtr, OpenGLProgramFactory.SHADER_VARIABLE_ambientTexture);
             DebugUtils.checkPrintGLError();
         } else {
             final boolean isColorPerVertex = (this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR) > 0;
-            final boolean isColorGlobal = (this.iShaderType & SHADER_VERTICES_WITH_GLOBAL_COLOR) > 0;
+            final boolean isColorGlobal = (this.iShaderType & SHADER_VERTICES_WITH_GLOBAL_DIFFUSE_COLOR) > 0;
 
             if(isColorGlobal) {
-                this.iProgram.iColorHandle = GLES30.glGetUniformLocation(this.iProgram.iProgramHandle, OpenGLProgramFactory.SHADER_VARIABLE_diffuseMaterialColor);
+                this.iProgram.iDiffuseColorPtr = GLES30.glGetUniformLocation(this.iProgram.iProgramHandlePtr, OpenGLProgramFactory.SHADER_VARIABLE_diffuseMaterialColor);
                 DebugUtils.checkPrintGLError();
             } else if(!isColorPerVertex && BuildConfig.DEBUG)
                 throw new AssertionError("unknown color setting! No color??");
@@ -188,7 +179,7 @@ public abstract class AbstractGameCavan extends CavanMovements {
      *
      * @param drawOrder
      */
-    protected void buildDrawOrderBuffer(final short[] drawOrder){
+    protected void buildDrawOrderBuffer(final int[] drawOrder){
         if(BuildConfig.DEBUG &&
                 this.iShaderType == SHADER_UNDEFINED)
             throw new AssertionError("SHADER_UNDEFINED ERROR!");
@@ -196,10 +187,10 @@ public abstract class AbstractGameCavan extends CavanMovements {
         this.iIndexOrderLength = drawOrder.length;
         // initialize byte buffer for the draw list
         final ByteBuffer bb = ByteBuffer.allocateDirect(
-                // (# of coordinate values * 2 bytes per short)
-                drawOrder.length * 2);
+                // (# of coordinate values * 4 bytes per int)
+                drawOrder.length * Integer.BYTES);
         bb.order(ByteOrder.nativeOrder());
-        final ShortBuffer drawOrderBuffer = bb.asShortBuffer();
+        final IntBuffer drawOrderBuffer = bb.asIntBuffer();
         drawOrderBuffer.put(drawOrder);
         drawOrderBuffer.position(0);
 
@@ -212,7 +203,7 @@ public abstract class AbstractGameCavan extends CavanMovements {
         }
 
         this.iOpenGL3Buffers.rebuildVertexDrawOrder(
-                drawOrderBuffer.capacity() * BYTES_PER_SHORT,
+                drawOrderBuffer.capacity() * Integer.BYTES,
                 drawOrderBuffer, GLES30.GL_STATIC_DRAW);
 
         //release main memory
@@ -237,7 +228,7 @@ public abstract class AbstractGameCavan extends CavanMovements {
                 this.iShaderType == SHADER_UNDEFINED)
             throw new AssertionError("SHADER_UNDEFINED ERROR!");
 
-        final int vertexStride = this.iShaderStride/BYTES_PER_FLOAT; //getVertexStride(arrVertices[0]);
+        final int vertexStride = this.iShaderStride/(Float.BYTES); //getVertexStride(arrVertices[0]);
         final int coordinatesLength = arrVertices.length * vertexStride;
 
         // initialize vertex byte buffer for shape arrVertices
@@ -259,13 +250,13 @@ public abstract class AbstractGameCavan extends CavanMovements {
             arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].coordinate.y(); dynamicStride++;
             arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].coordinate.z(); dynamicStride++;
             if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0){
-                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].backgroundColor.red();
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].vertexColor.red();
                 dynamicStride++;
-                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].backgroundColor.green();
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].vertexColor.green();
                 dynamicStride++;
-                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].backgroundColor.blue();
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].vertexColor.blue();
                 dynamicStride++;
-                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].backgroundColor.alpha();
+                arrBufferVertices[vertexStride*i + dynamicStride] = arrVertices[i].vertexColor.alpha();
                 dynamicStride++;
             }
             if((this.iShaderType & SHADER_VERTICES_WITH_UV_DATA_MATERIAL) != 0){
@@ -276,11 +267,15 @@ public abstract class AbstractGameCavan extends CavanMovements {
             }
 
             //add the normals
-            arrBufferVertices[vertexStride * i + dynamicStride] = arrVertices[i].getNormal().x();
+            if(BuildConfig.DEBUG && !arrVertices[i].getNormal().isPresent()){
+                throw new UnsupportedOperationException("normals must be present!");
+                //TODO: remove the needs for normals and make them into the shaders also optional
+            }
+            arrBufferVertices[vertexStride * i + dynamicStride] = arrVertices[i].getNormal().get().x();
             dynamicStride++;
-            arrBufferVertices[vertexStride * i + dynamicStride] = arrVertices[i].getNormal().y();
+            arrBufferVertices[vertexStride * i + dynamicStride] = arrVertices[i].getNormal().get().y();
             dynamicStride++;
-            arrBufferVertices[vertexStride * i + dynamicStride] = arrVertices[i].getNormal().z();
+            arrBufferVertices[vertexStride * i + dynamicStride] = arrVertices[i].getNormal().get().z();
             //dynamicStride++;
         }
         vertexBuffer.put(arrBufferVertices);
@@ -296,13 +291,13 @@ public abstract class AbstractGameCavan extends CavanMovements {
         }
 
         this.iOpenGL3Buffers.startBuildBuffers(
-                vertexBuffer.capacity() * BYTES_PER_FLOAT, vertexBuffer,
+                vertexBuffer.capacity() * (Float.BYTES), vertexBuffer,
                 GLES30.GL_STATIC_DRAW, this.iProgram.iVerticesHandle,
                 AbstractGameCavan.NO_OF_COORDINATES_PER_VERTEX,
                 GLES30.GL_FLOAT, false,this.iShaderStride, VERTICES_OFFSET);
 
         if((this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0){
-            this.iOpenGL3Buffers.addBuildVDOBuffer(this.iProgram.iColorHandle,
+            this.iOpenGL3Buffers.addBuildVDOBuffer(this.iProgram.iDiffuseColorPtr,
                     AbstractGameCavan.NO_OF_COLORS_PER_VERTEX, this.iShaderStride,
                     COLOR_OFFSET);
         }
@@ -337,80 +332,87 @@ public abstract class AbstractGameCavan extends CavanMovements {
      */
     private void calculateShaderType(XYZVertex vertex) {
         int vertexStride = NO_OF_COORDINATES_PER_VERTEX; // X, Y, Z, --> 0, 1, 2
-        int offset = BYTES_PER_FLOAT * NO_OF_COORDINATES_PER_VERTEX;
+        int offset = (Float.BYTES) * NO_OF_COORDINATES_PER_VERTEX;
         this.iShaderType = SHADER_ONLY_VERTICES;
 
-        if (vertex.backgroundColor != null) {
+        //RGBA color
+        if (vertex.vertexColor != null) {
             this.iShaderType |= SHADER_VERTICES_WITH_OWN_COLOR;
-            // X, Y, Z, --> 0, 1, 2,
             // R, G, B, A --> 3, 4, 5, 6
             vertexStride += NO_OF_COLORS_PER_VERTEX;
             COLOR_OFFSET = offset;
-            offset += BYTES_PER_FLOAT * NO_OF_COLORS_PER_VERTEX;
+            offset += (Float.BYTES) * NO_OF_COLORS_PER_VERTEX;
 
-        } else if (this.iMaterial.map(m -> m.globalBackgroundColor).isPresent()) {
-            this.iShaderType |= SHADER_VERTICES_WITH_GLOBAL_COLOR;
+        } else if (this.iMaterial.iDiffuseMaterialColor != null) {
+            this.iShaderType |= SHADER_VERTICES_WITH_GLOBAL_DIFFUSE_COLOR;
         }
 
         //U,V
         if(vertex.getUvTexture().isPresent()){
-            if(BuildConfig.DEBUG && this.iMaterial.isPresent() == false){
-                throw new AssertionError("material cannot be null once you have uv texture info");
-            }
-
+            // U, V --> 7,8
             this.iShaderType |= SHADER_VERTICES_WITH_UV_DATA_MATERIAL;
             //U,V
             vertexStride += NO_OF_TEXTURES_PER_VERTEX;
             TEXTURE_OFFSET = offset;
-            offset += BYTES_PER_FLOAT * NO_OF_TEXTURES_PER_VERTEX;
+            offset += (Float.BYTES) * NO_OF_TEXTURES_PER_VERTEX;
         }
 
         //Normal
         //Xn,Yn,Zn
-        vertexStride += NO_OF_NORMAL_COORDINATES_PER_VERTEX;
-        NORMAL_OFFSET = offset;
-        offset += BYTES_PER_FLOAT * NO_OF_NORMAL_COORDINATES_PER_VERTEX;
+        //Xn,Yn,Zn --> 9,10,11
+        if(vertex.getNormal().isPresent()) {
+            this.iShaderType |= SHADER_VERTICES_WITH_NORMALS;
+            vertexStride += NO_OF_NORMAL_COORDINATES_PER_VERTEX;
+            NORMAL_OFFSET = offset;
+            offset += (Float.BYTES) * NO_OF_NORMAL_COORDINATES_PER_VERTEX;
+        }
 
 
         //material properties
-        if(this.iMaterial.isPresent()) {
-            //Ka
-            if (this.iMaterial.get().getConstantKA().isPresent()) {
-                this.iShaderType |= SHADER_VERTICES_WITH_KA_CONSTANT;
+        {
+            //Ambient texture
+            if(this.iMaterial.iAmbientFileNameID != OpenGLUtils.INVALID_UNSIGNED_VALUE){
+                this.iShaderType |= SHADER_VERTICES_WITH_AMBIENT_TEXTURE;
             }
-            //Ka texture
-            if(this.iMaterial.get().mapKA_FileNameID != OpenGLUtils.INVALID_UNSIGNED_VALUE){
-                this.iShaderType |= SHADER_VERTICES_WITH_KA_TEXTURE;
+            //Diffuse texture
+            if(this.iMaterial.iDiffuseFileNameID != OpenGLUtils.INVALID_UNSIGNED_VALUE){
+                this.iShaderType |= SHADER_VERTICES_WITH_DIFFUSE_TEXTURE;
             }
-            //Kd
-            if(this.iMaterial.get().getConstantKD().isPresent()){
-                this.iShaderType |= SHADER_VERTICES_WITH_KD_CONSTANT;
+
+            if(BuildConfig.DEBUG){
+                final boolean isCheckOK = (
+                        (this.iShaderType & SHADER_VERTICES_WITH_AMBIENT_TEXTURE) +
+                        (this.iShaderType & SHADER_VERTICES_WITH_DIFFUSE_TEXTURE)
+                ) > 0;
+                if(!isCheckOK && (this.iShaderType & SHADER_VERTICES_WITH_UV_DATA_MATERIAL) != 0){
+                    //throw new AssertionError("fatal error: U,V data is defined but there is no material to be applied on!");
+                    System.out.println("fatal error: U,V data is defined but there is no material to be applied on!");
+                }
             }
-            //Kd texture
-            if(this.iMaterial.get().mapKD_FileNameID != OpenGLUtils.INVALID_UNSIGNED_VALUE){
-                this.iShaderType |= SHADER_VERTICES_WITH_KD_TEXTURE;
-            }
-        } else if(BuildConfig.DEBUG &&
-                (this.iShaderType & SHADER_VERTICES_WITH_UV_DATA_MATERIAL) != 0){
-            throw new AssertionError("fatal error: U,V data is defined but there is no material to be applied on!");
         }
 
-        this.iShaderStride =  vertexStride * BYTES_PER_FLOAT;
+        this.iShaderStride =  vertexStride * (Float.BYTES);
     }
 
 
-
+    /**
+     *
+     * @return this object material instance
+     */
+    public XYZMaterial getOBJMaterial() {
+        return this.iMaterial;
+    }
 
     /**
      * process the main draw having in mind that all the matrices are already set into OpenGl memory.
-     * TODO: to be updated for checking
-     *      *      TransformedVector = TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector;
+     *     used for the main shader:
+     *     TransformedVector = TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector;
      * @param viewMatrix
      * @param projectionMatrix
      * @param FORM_TYPE
      */
     @CallSuper
-    public void doDraw(final float[] viewMatrix, final float[] projectionMatrix,
+    protected void doDraw(final float[] viewMatrix, final float[] projectionMatrix,
                        final int FORM_TYPE){
         int textureCounter = 0;
         // counterclockwise orientation of the ordered vertices
@@ -419,11 +421,12 @@ public abstract class AbstractGameCavan extends CavanMovements {
         // Enable face culling.
         GLES30.glEnable(GLES30.GL_CULL_FACE); //--> make sure is disabled at clean up!
         // What faces to remove with the face culling.
-        GLES30.glCullFace(GLES30.GL_BACK); //GL_FRONT
-        //GLES30.glDisable(GLES30.GL_DEPTH_TEST);
+        GLES30.glCullFace(GLES30.GL_BACK);
+        GLES30.glEnable(GLES30.GL_DEPTH_TEST);
+
 
         //1. used program
-        GLES30.glUseProgram(this.iProgram.iProgramHandle);
+        GLES30.glUseProgram(this.iProgram.iProgramHandlePtr);
         DebugUtils.checkPrintGLError();
 
         //set data via VAO
@@ -440,31 +443,19 @@ public abstract class AbstractGameCavan extends CavanMovements {
         DebugUtils.checkPrintGLError();
 
         //set ambient color
-        GLES30.glUniform4fv(this.iProgram.iAmbientColorHandle, 1, this.iTheSun.getAmbientLight().getAmbientColor().asFloatArray(), 0);
+        GLES30.glUniform4fv(this.iProgram.iAmbientLightColorPtr, 1, this.iTheSun.getAmbientLight().getAmbientColor().asFloatArray(), 0);
         DebugUtils.checkPrintGLError();
-        GLES30.glUniform1f(this.iProgram.iAmbientStrengthHandle, this.iTheSun.getAmbientLight().getAmbientColorStrength());
+        GLES30.glUniform1f(this.iProgram.iAmbientLightStrengtPtr, this.iTheSun.getAmbientLight().getAmbientColorStrength());
         DebugUtils.checkPrintGLError();
         //set diffuse color
-        GLES30.glUniform4fv(this.iProgram.iDiffuseLightColorHandle, 1, this.iTheSun.getDiffuseLight().getDiffuseColor().asFloatArray(), 0);
+        GLES30.glUniform4fv(this.iProgram.iDiffuseLightColorPtr, 1, this.iTheSun.getDiffuseLight().getDiffuseColor().asFloatArray(), 0);
         DebugUtils.checkPrintGLError();
-        GLES30.glUniform3fv(this.iProgram.iDiffuseDirectionHandle, 1, this.iTheSun.getSunLightDirection().asArray(), 0);
+        GLES30.glUniform3fv(this.iProgram.iDiffuseDirectionPtr, 1, this.iTheSun.getSunLightDirection().asArray(), 0);
         DebugUtils.checkPrintGLError();
-
-        //Ambient light constant
-        if((this.iShaderType & SHADER_VERTICES_WITH_KA_CONSTANT) != 0) {
-            GLES30.glUniform3fv(this.iProgram.iAmbientKaConstantHandle, 1, this.iMaterial.get().getConstantKA().get().asArray(), 0);
-            DebugUtils.checkPrintGLError();
-        }
-
-        //diffuse constant
-        if((this.iShaderType & SHADER_VERTICES_WITH_KD_CONSTANT) != 0) {
-            GLES30.glUniform3fv(this.iProgram.iDiffuseKdConstantHandle, 1, this.iMaterial.get().getConstantKD().get().asArray(), 0);
-            DebugUtils.checkPrintGLError();
-        }
 
         //texture or background color
         final boolean isColorPerVertex = (this.iShaderType & SHADER_VERTICES_WITH_OWN_COLOR) > 0;
-        final boolean isColorGlobal = (this.iShaderType & SHADER_VERTICES_WITH_GLOBAL_COLOR) > 0;
+        final boolean isColorGlobal = (this.iShaderType & SHADER_VERTICES_WITH_GLOBAL_DIFFUSE_COLOR) > 0;
 
         if((this.iShaderType & SHADER_VERTICES_WITH_UV_DATA_MATERIAL) != 0){
             GLES30.glEnable(GLES20.GL_TEXTURE_2D);
@@ -472,21 +463,21 @@ public abstract class AbstractGameCavan extends CavanMovements {
             GLES30.glEnableVertexAttribArray(this.iProgram.iUVTextureHandle);
             DebugUtils.checkPrintGLError();
             //texture for ambient light
-            if((this.iShaderType & SHADER_VERTICES_WITH_KA_TEXTURE) != 0) {
+            if((this.iShaderType & SHADER_VERTICES_WITH_AMBIENT_TEXTURE) != 0) {
                 final int tmp = GLES30.GL_TEXTURE0 + (textureCounter++);
                 GLES30.glActiveTexture(tmp);
                 DebugUtils.checkPrintGLError();
-                GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, TextureUtils.getInstance().getTextureDataBuffer(this.iMaterial.get().mapKA_FileNameID));
+                GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, TextureUtils.getInstance().getTextureDataBuffer(this.iMaterial.iAmbientFileNameID));
                 DebugUtils.checkPrintGLError();
-                GLES30.glUniform1i(this.iProgram.iAmbientKaTexture, tmp);
+                GLES30.glUniform1i(this.iProgram.iAmbientTexturePtr, tmp);
                 DebugUtils.checkPrintGLError();
             }
         } else {
             if(isColorPerVertex){
-                GLES30.glEnableVertexAttribArray(this.iProgram.iColorHandle);
+                GLES30.glEnableVertexAttribArray(this.iProgram.iDiffuseColorPtr);
                 DebugUtils.checkPrintGLError();
             } else if(isColorGlobal){
-                GLES30.glUniform4fv(this.iProgram.iColorHandle, 1, this.iMaterial.get().globalBackgroundColor.asFloatArray(), 0);
+                GLES30.glUniform4fv(this.iProgram.iDiffuseColorPtr, 1, this.iMaterial.iDiffuseMaterialColor.asFloatArray(), 0);
                 DebugUtils.checkPrintGLError();
             } else if(BuildConfig.DEBUG){
                 throw new AssertionError("missing background color");
@@ -537,9 +528,11 @@ public abstract class AbstractGameCavan extends CavanMovements {
 
 
         //set normals
-        //set Xn, Yn, Zn
-        GLES30.glEnableVertexAttribArray(this.iProgram.iNormalHandle);
-        DebugUtils.checkPrintGLError();
+        if((this.iShaderType & SHADER_VERTICES_WITH_NORMALS) > 0) {
+            //set Xn, Yn, Zn
+            GLES30.glEnableVertexAttribArray(this.iProgram.iNormalHandle);
+            DebugUtils.checkPrintGLError();
+        }
 
 
         //bind the drawing order
@@ -548,43 +541,48 @@ public abstract class AbstractGameCavan extends CavanMovements {
 
         //6. Draw the form
         if(GLES30.GL_LINES == FORM_TYPE) {
-            GLES30.glDrawElements(GLES30.GL_LINES, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+            GLES30.glDrawElements(GLES30.GL_LINES, this.iIndexOrderLength, GLES30.GL_UNSIGNED_INT, 0/*this.iDrawOrderBuffer*/);
         } else if(GLES30.GL_TRIANGLE_STRIP == FORM_TYPE) {
-            GLES30.glDrawElements(GLES30.GL_TRIANGLE_STRIP, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+            GLES30.glDrawElements(GLES30.GL_TRIANGLE_STRIP, this.iIndexOrderLength, GLES30.GL_UNSIGNED_INT, 0/*this.iDrawOrderBuffer*/);
         } else if(GLES30.GL_TRIANGLES == FORM_TYPE) {
-            GLES30.glDrawElements(GLES30.GL_TRIANGLES, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+            GLES30.glDrawElements(GLES30.GL_TRIANGLES, this.iIndexOrderLength, GLES30.GL_UNSIGNED_INT, 0/*this.iDrawOrderBuffer*/);
         }else if(GLES30.GL_POINTS == FORM_TYPE) {
-            GLES30.glDrawElements(GLES30.GL_POINTS, this.iIndexOrderLength, GLES30.GL_UNSIGNED_SHORT, 0/*this.iDrawOrderBuffer*/);
+            GLES30.glDrawElements(GLES30.GL_POINTS, this.iIndexOrderLength, GLES30.GL_UNSIGNED_INT, 0/*this.iDrawOrderBuffer*/);
         } else {
             throw new RuntimeException("FATAL ERROR !!! unknown FORM_TYPE=" + FORM_TYPE);
         }
         DebugUtils.checkPrintGLError();
 
         //7 cleanup
-        GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, 0);
+        GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, 0); //C1
 
         //normals
-        GLES30.glDisableVertexAttribArray(this.iProgram.iNormalHandle);
-        DebugUtils.checkPrintGLError();
-
-
-        textureCounter = 0;
-        if((this.iShaderType & SHADER_VERTICES_WITH_UV_DATA_MATERIAL) != 0) {
-            //clean U,V
-            GLES30.glDisableVertexAttribArray(this.iProgram.iUVTextureHandle);
+        if((this.iShaderType & SHADER_VERTICES_WITH_NORMALS) > 0) {
+            GLES30.glDisableVertexAttribArray(this.iProgram.iNormalHandle); //C2
             DebugUtils.checkPrintGLError();
-            GLES30.glDisable(GLES20.GL_TEXTURE_2D);
+        }
+
+
+        if((this.iShaderType & SHADER_VERTICES_WITH_UV_DATA_MATERIAL) != 0) {
+            if((this.iShaderType & SHADER_VERTICES_WITH_AMBIENT_TEXTURE) != 0) // || (add here with OR all textures!)
+            {
+                GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, 0); //with one call unbind all them all //C3
+            }
+            //clean U,V
+            GLES30.glDisableVertexAttribArray(this.iProgram.iUVTextureHandle); //C4
+            DebugUtils.checkPrintGLError();
+            GLES30.glDisable(GLES20.GL_TEXTURE_2D); //C5
             DebugUtils.checkPrintGLError();
         } else {
             if(isColorPerVertex) {
-                GLES30.glDisableVertexAttribArray(this.iProgram.iColorHandle);
+                GLES30.glDisableVertexAttribArray(this.iProgram.iDiffuseColorPtr); //C3
                 DebugUtils.checkPrintGLError();
             }
         }
         GLES30.glBindVertexArray(0);
         DebugUtils.checkPrintGLError();
+        GLES30.glDisable(GLES30.GL_DEPTH_TEST);
         GLES30.glDisable(GLES30.GL_CULL_FACE);
-        GLES30.glBindVertexArray(0);
     }
 
     @CallSuper

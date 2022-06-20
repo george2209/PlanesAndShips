@@ -8,20 +8,19 @@ package ro.sg.avioane;
 
 import android.content.Context;
 import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
 import androidx.annotation.NonNull;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
-import ro.sg.avioane.cavans.AbstractGameCavan;
+
+import ro.sg.avioane.cavans.GameObject;
 import ro.sg.avioane.game.TouchScreenListener;
 import ro.sg.avioane.game.TouchScreenProcessor;
 import ro.sg.avioane.game.WorldCamera;
 import ro.sg.avioane.game.WorldScene;
-import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
-import ro.sg.avioane.geometry.XYZVertex;
-import ro.sg.avioane.util.MathGL.MathGLUtils;
 
 public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenListener {
 
@@ -60,7 +59,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         this.iTouchProcessor.addTouchScreenListener(this);
     }
 
-    public void addEntityInGame(@NonNull final AbstractGameCavan entity){
+    public void addEntityInGame(@NonNull final GameObject entity){
         this.iWorld.add(entity);
     }
 
@@ -136,14 +135,15 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 //            this.iWorld.onRestoreWorld();
 //        }
 //        textureUtils.releaseTextures();
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
+        GLES30.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+        GLES30.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
     }
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         this.iScreenWidth = width;
         this.iScreenHeight = height;
-        GLES20.glViewport(0, 0, width, height);
+        GLES30.glViewport(0, 0, width, height);
         this.iTouchProcessor.doRecalibration(this.iScreenWidth, this.iScreenHeight);
         iWorld.doRecalibration(width, height);
 

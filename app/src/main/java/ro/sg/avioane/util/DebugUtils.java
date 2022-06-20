@@ -7,6 +7,7 @@
 package ro.sg.avioane.util;
 
 import android.opengl.GLES20;
+import android.opengl.GLES30;
 
 import ro.sg.avioane.BuildConfig;
 
@@ -46,7 +47,7 @@ public class DebugUtils {
 
     public static void checkPrintGLError(){
         if(BuildConfig.DEBUG){
-            int err = GLES20.glGetError();
+            int err = GLES30.glGetError();
             String error = "";
             while(err != GLES20.GL_NO_ERROR){
                 switch (err){

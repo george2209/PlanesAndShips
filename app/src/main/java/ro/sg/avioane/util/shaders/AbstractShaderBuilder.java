@@ -6,8 +6,7 @@
 
 package ro.sg.avioane.util.shaders;
 
-import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_GLOBAL_COLOR;
-import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_KD_CONSTANT;
+import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_GLOBAL_DIFFUSE_COLOR;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_OWN_COLOR;
 
 import androidx.annotation.CallSuper;
@@ -39,26 +38,10 @@ public abstract class AbstractShaderBuilder {
         return this.iStrShaderDeclarations.toString().concat(iStrShaderBody.toString());
     }
 
-    /**
-     * Helper method that shall be used outside production. Normally in "production" stage this method
-     * shall always return true thus shall make no sense to be used in production.
-     * check if all conditions are meet based on the Project_Documentation.pptx
-     * @param shaderType
-     * @return
-     */
-    public static boolean checkConditions(final int shaderType){
-        //check color or texture presence
-        if( (shaderType & SHADER_VERTICES_WITH_OWN_COLOR) == 0 &&
-                (shaderType & SHADER_VERTICES_WITH_KD_CONSTANT) == 0 &&
-                (shaderType & SHADER_VERTICES_WITH_GLOBAL_COLOR) == 0) {
-            return false;
-        } else {
-            return true;
-        }
-    }
+    // /**
+    // * @param shaderType
+    // */
+    //public abstract AbstractShaderBuilder withBackground(final int shaderType);
 
-    /**
-     * @param shaderType
-     */
-    public abstract AbstractShaderBuilder withBackground(final int shaderType);
+    public abstract AbstractShaderBuilder build(final int shaderType);
 }

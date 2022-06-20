@@ -7,28 +7,25 @@
 package ro.sg.avioane.util;
 
 import android.opengl.GLES20;
-
-import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_KA_CONSTANT;
-import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_KD_CONSTANT;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_OWN_COLOR;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_UV_DATA_MATERIAL;
 
 public class OpenGLProgram {
 
-    public int iProgramHandle;
+    public int iProgramHandlePtr;
     public int iVerticesHandle;
     public int iUVTextureHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;//linked against SHADER_VARIABLE_aUVTexture
-    public int iColorHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
-    public int iAmbientColorHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
-    public int iAmbientStrengthHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
-    public int iDiffuseLightColorHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
-    public int iDiffuseDirectionHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    public int iDiffuseColorPtr = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    public int iAmbientLightColorPtr = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    public int iAmbientLightStrengtPtr = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    public int iDiffuseLightColorPtr = OpenGLUtils.INVALID_UNSIGNED_VALUE;
+    public int iDiffuseDirectionPtr = OpenGLUtils.INVALID_UNSIGNED_VALUE;
 
     //Texture handles
-    public int iAmbientKaConstantHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_ambientKAConstant
-    public int iAmbientKaTexture = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_ambientKaTexture
-    public int iDiffuseKdConstantHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_diffuseKdConstant
-    public int iDiffuseKaTexture = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_DiffuseKaTexture
+    //public int iAmbientKaConstantHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_ambientKAConstant
+    public int iAmbientTexturePtr = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_ambientTexture
+    //public int iDiffuseKdConstantHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_diffuseKdConstant
+    public int iDiffuseKaTexture = OpenGLUtils.INVALID_UNSIGNED_VALUE; //linked against SHADER_VARIABLE_diffuseTexture
 
     public int iNormalHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
     public int iProjectionMatrixHandle = OpenGLUtils.INVALID_UNSIGNED_VALUE;
@@ -48,14 +45,14 @@ public class OpenGLProgram {
                 fragmentShaderCode);
 
         // create empty OpenGL ES Program
-        iProgramHandle = GLES20.glCreateProgram();
+        iProgramHandlePtr = GLES20.glCreateProgram();
 
         // add the vertex shader to program
-        GLES20.glAttachShader(iProgramHandle, iVertexShader);
+        GLES20.glAttachShader(iProgramHandlePtr, iVertexShader);
         DebugUtils.checkPrintGLError();
 
         // add the fragment shader to program
-        GLES20.glAttachShader(iProgramHandle, iFragmentShader);
+        GLES20.glAttachShader(iProgramHandlePtr, iFragmentShader);
         DebugUtils.checkPrintGLError();
 
         // Bind attributes
@@ -63,63 +60,53 @@ public class OpenGLProgram {
 
         //MAIN SHADER ATTRIBUTES///////////////
         iModelMatrixHandle = attributeIndex++;
-        GLES20.glBindAttribLocation(iProgramHandle, iModelMatrixHandle, OpenGLProgramFactory.SHADER_VARIABLE_theModelMatrix);
+        GLES20.glBindAttribLocation(iProgramHandlePtr, iModelMatrixHandle, OpenGLProgramFactory.SHADER_VARIABLE_theModelMatrix);
         iModelTransInvHandle = attributeIndex++;
-        GLES20.glBindAttribLocation(iProgramHandle, iModelTransInvHandle, OpenGLProgramFactory.SHADER_VARIABLE_theModelTransInvMatrix);
+        GLES20.glBindAttribLocation(iProgramHandlePtr, iModelTransInvHandle, OpenGLProgramFactory.SHADER_VARIABLE_theModelTransInvMatrix);
         iViewMatrixHandle = attributeIndex++;
-        GLES20.glBindAttribLocation(iProgramHandle, iViewMatrixHandle, OpenGLProgramFactory.SHADER_VARIABLE_theViewMatrix);
+        GLES20.glBindAttribLocation(iProgramHandlePtr, iViewMatrixHandle, OpenGLProgramFactory.SHADER_VARIABLE_theViewMatrix);
         iProjectionMatrixHandle = attributeIndex++;
-        GLES20.glBindAttribLocation(iProgramHandle, iProjectionMatrixHandle, OpenGLProgramFactory.SHADER_VARIABLE_theProjectionMatrix);
+        GLES20.glBindAttribLocation(iProgramHandlePtr, iProjectionMatrixHandle, OpenGLProgramFactory.SHADER_VARIABLE_theProjectionMatrix);
         iVerticesHandle = attributeIndex++;
-        GLES20.glBindAttribLocation(iProgramHandle, iVerticesHandle, OpenGLProgramFactory.SHADER_VARIABLE_aPosition);
+        GLES20.glBindAttribLocation(iProgramHandlePtr, iVerticesHandle, OpenGLProgramFactory.SHADER_VARIABLE_aPosition);
 
         if((shaderType & SHADER_VERTICES_WITH_OWN_COLOR) != 0) {
-            iColorHandle = attributeIndex++;
-            GLES20.glBindAttribLocation(iProgramHandle, iColorHandle, OpenGLProgramFactory.SHADER_VARIABLE_aVertexColor);
+            iDiffuseColorPtr = attributeIndex++;
+            GLES20.glBindAttribLocation(iProgramHandlePtr, iDiffuseColorPtr, OpenGLProgramFactory.SHADER_VARIABLE_aVertexColor);
         }
 
         //set the normals
         iNormalHandle = attributeIndex++;
-        GLES20.glBindAttribLocation(iProgramHandle, iNormalHandle, OpenGLProgramFactory.SHADER_VARIABLE_aNormal);
+        GLES20.glBindAttribLocation(iProgramHandlePtr, iNormalHandle, OpenGLProgramFactory.SHADER_VARIABLE_aNormal);
 
 
         //FRAGMENT SHADER ATTRIBUTES///////////////
-        iAmbientColorHandle = attributeIndex++;
-        GLES20.glBindAttribLocation(iProgramHandle, iAmbientColorHandle, OpenGLProgramFactory.SHADER_VARIABLE_ambientLightColor);
-        iAmbientStrengthHandle = attributeIndex++;
-        GLES20.glBindAttribLocation(iProgramHandle, iAmbientStrengthHandle, OpenGLProgramFactory.SHADER_VARIABLE_ambientLightStrength);
-        iDiffuseLightColorHandle = attributeIndex++;
-        GLES20.glBindAttribLocation(iProgramHandle, iDiffuseLightColorHandle, OpenGLProgramFactory.SHADER_VARIABLE_diffuseLightColor);
-        iDiffuseDirectionHandle = attributeIndex++;
-        GLES20.glBindAttribLocation(iProgramHandle, iDiffuseDirectionHandle, OpenGLProgramFactory.SHADER_VARIABLE_diffuseLightDirection);
-
-
-        if((shaderType & SHADER_VERTICES_WITH_KA_CONSTANT) != 0) {
-            iAmbientKaConstantHandle = attributeIndex++;
-            GLES20.glBindAttribLocation(iProgramHandle, iAmbientKaConstantHandle, OpenGLProgramFactory.SHADER_VARIABLE_ambientKaConstant);
-        }
-        if((shaderType & SHADER_VERTICES_WITH_KD_CONSTANT) != 0) {
-            iDiffuseKdConstantHandle = attributeIndex++;
-            GLES20.glBindAttribLocation(iProgramHandle, iDiffuseKdConstantHandle, OpenGLProgramFactory.SHADER_VARIABLE_diffuseKdConstant);
-        }
+        iAmbientLightColorPtr = attributeIndex++;
+        GLES20.glBindAttribLocation(iProgramHandlePtr, iAmbientLightColorPtr, OpenGLProgramFactory.SHADER_VARIABLE_ambientLightColor);
+        iAmbientLightStrengtPtr = attributeIndex++;
+        GLES20.glBindAttribLocation(iProgramHandlePtr, iAmbientLightStrengtPtr, OpenGLProgramFactory.SHADER_VARIABLE_ambientLightStrength);
+        iDiffuseLightColorPtr = attributeIndex++;
+        GLES20.glBindAttribLocation(iProgramHandlePtr, iDiffuseLightColorPtr, OpenGLProgramFactory.SHADER_VARIABLE_diffuseLightColor);
+        iDiffuseDirectionPtr = attributeIndex++;
+        GLES20.glBindAttribLocation(iProgramHandlePtr, iDiffuseDirectionPtr, OpenGLProgramFactory.SHADER_VARIABLE_diffuseLightDirection);
 
         if((shaderType & SHADER_VERTICES_WITH_UV_DATA_MATERIAL) != 0){
             this.iUVTextureHandle = attributeIndex++;
-            GLES20.glBindAttribLocation(iProgramHandle, this.iUVTextureHandle, OpenGLProgramFactory.SHADER_VARIABLE_aUVTexture);
+            GLES20.glBindAttribLocation(iProgramHandlePtr, this.iUVTextureHandle, OpenGLProgramFactory.SHADER_VARIABLE_aUVTexture);
         }
 
         // creates OpenGL ES program executables
-        GLES20.glLinkProgram(iProgramHandle);
+        GLES20.glLinkProgram(iProgramHandlePtr);
 
         // Get the link status.
         final int[] linkStatus = new int[1];
-        GLES20.glGetProgramiv(iProgramHandle, GLES20.GL_LINK_STATUS, linkStatus, 0);
+        GLES20.glGetProgramiv(iProgramHandlePtr, GLES20.GL_LINK_STATUS, linkStatus, 0);
 
         // If the link failed, delete the program.
         if (linkStatus[0] == 0)
         {
-            final String errStr = GLES20.glGetProgramInfoLog(iProgramHandle);
-            GLES20.glDeleteProgram(iProgramHandle);
+            final String errStr = GLES20.glGetProgramInfoLog(iProgramHandlePtr);
+            GLES20.glDeleteProgram(iProgramHandlePtr);
             throw new RuntimeException("FATAL ERROR !!! Program link failed with link status = " + linkStatus[0] + " \n\n " + errStr + " \n\n ");
         }
 
@@ -129,9 +116,9 @@ public class OpenGLProgram {
     }
 
     public void destroy(){
-        if(this.iProgramHandle != -1) {
-            GLES20.glDeleteProgram(this.iProgramHandle);
-            this.iProgramHandle = -1;
+        if(this.iProgramHandlePtr != -1) {
+            GLES20.glDeleteProgram(this.iProgramHandlePtr);
+            this.iProgramHandlePtr = -1;
         }
     }
 }

@@ -33,12 +33,11 @@ public class TheSun {
     private final DiffuseLight iDiffuseLight = DiffuseLight.getStaticInstance();
     private final AmbientLight iAmbientLight = AmbientLight.getStaticInstance();
     private final XYZColor iSunColor = new XYZColor(0.97f, 0.95f, 0.90f, 1.0f);
-    private final XYZCoordinate iSunPosition = new XYZCoordinate(0.0f,0.0f, 50.0f);
+    private final XYZCoordinate iSunPosition = new XYZCoordinate(0.0f,10.0f, -1.0f);
 
 
 
     private TheSun(){
-        //a se seta parametrii
         iAmbientLight.setAmbientLightColor(this.iSunColor);
         iAmbientLight.setAmbientColorStrength(1.0f);
         iDiffuseLight.setDiffuseLightColor(this.iSunColor);

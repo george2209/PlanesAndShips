@@ -37,8 +37,11 @@ public class XYZVertex {
      * **Please note**
      * If there is a texture defined for the respective object then this variable will be ignored!
      */
-    public XYZColor backgroundColor = null;
+    public XYZColor vertexColor = null;
 
+    public XYZVertex(final XYZCoordinate coordinate){
+        this.coordinate = coordinate;
+    }
 
     public XYZVertex(final XYZCoordinate coordinate, final XYZCoordinate normal){
         this.coordinate = coordinate;
@@ -51,14 +54,28 @@ public class XYZVertex {
         this.uvTexture = uvTexture;
     }
 
+    public XYZVertex(final XYZCoordinate coordinate, final XYZCoordinate normal, final XYZTextureUV uvTexture, final XYZColor vertexColor){
+        this.coordinate = coordinate;
+        this.normal = normal;
+        this.uvTexture = uvTexture;
+        this.vertexColor = vertexColor;
+    }
+
+    /**
+     *
+     * @param n an instance of XYZCoordinate or null if you want to disable normals for this object
+     */
+//    public void setNormal(final XYZCoordinate n){
+//        this.normal = n;
+//    }
+
     /**
      * @return the "normal" related to this vertex.
      */
-    public XYZCoordinate getNormal(){
-        if(BuildConfig.DEBUG && this.normal == null){
-            throw new AssertionError("missing normal! illumination support cannot be implemented!");
-        }
-        return this.normal;
+    public Optional<XYZCoordinate> getNormal(){
+        if(this.normal == null)
+            return Optional.empty();
+        return Optional.of(this.normal);
     }
 
     /**

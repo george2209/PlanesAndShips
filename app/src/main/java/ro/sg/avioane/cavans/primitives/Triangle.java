@@ -29,12 +29,11 @@ public class Triangle extends AbstractGameCavan
         super.build(this.buildCoordinates(), this.buildIndexes(), this.getMaterial());
     }
 
-    private Optional<XYZMaterial> getMaterial(){
-        final XYZMaterial material = new XYZMaterial();
-//        material.setConstantKA(new XYZCoordinate(1.0f, 1.0f, 1.0f));
-        material.globalBackgroundColor = new XYZColor(1.0f, 0.0f , 0.0f, XYZColor.OPAQUE);
+    private XYZMaterial getMaterial(){
+        final XYZMaterial material = new XYZMaterial("TriangleMaterial");
+        material.iDiffuseMaterialColor = new XYZColor(1.0f, 0.0f , 0.0f, XYZColor.OPAQUE);
 
-        return Optional.ofNullable(material);
+        return material;
     }
 
 
@@ -64,8 +63,8 @@ public class Triangle extends AbstractGameCavan
         return arrVertices;
     }
 
-    private short[] buildIndexes(){
-        return new short[]{0, 1, 2};
+    private int[] buildIndexes(){
+        return new int[]{0, 1, 2};
     }
 
     @Override

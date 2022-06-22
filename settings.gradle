@@ -6,3 +6,4 @@
 
 include ':app'
 rootProject.name = "Avioane"
+include ':GDI_Game_Engine'

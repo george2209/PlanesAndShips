@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Avioane.iml" filepath="$PROJECT_DIR$/.idea/modules/Avioane.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/GDI_Game_Engine/Avioane.GDI_Game_Engine.iml" filepath="$PROJECT_DIR$/.idea/modules/GDI_Game_Engine/Avioane.GDI_Game_Engine.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Avioane.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Avioane.app.iml" />
+    </modules>
+  </component>
+</project>

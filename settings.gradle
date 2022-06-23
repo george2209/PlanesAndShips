@@ -4,6 +4,6 @@
  * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
  */
 
-include ':app'
+include ':PlanesAndShips'
 rootProject.name = "Avioane"
 include ':GDI_Game_Engine'

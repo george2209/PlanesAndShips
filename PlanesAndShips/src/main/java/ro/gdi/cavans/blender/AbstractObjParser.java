@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2021.
+ * Copyright (c) 2022.
  * By using this source code from this project/file you agree with the therms listed at
  * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
  */
 
-package ro.sg.avioane.cavans.blender;
+package ro.gdi.cavans.blender;
 
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_NORMALS;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_OWN_COLOR;

@@ -4,11 +4,7 @@
  * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
  */
 
-package ro.sg.avioane.cavans;
-
-import android.opengl.GLES30;
-
-import java.util.Optional;
+package ro.gdi.cavans;
 
 import ro.sg.avioane.geometry.XYZMaterial;
 import ro.sg.avioane.geometry.XYZVertex;

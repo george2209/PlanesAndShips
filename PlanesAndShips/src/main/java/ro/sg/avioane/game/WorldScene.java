@@ -14,7 +14,7 @@ import androidx.annotation.NonNull;
 import java.util.LinkedList;
 import java.util.List;
 
-import ro.sg.avioane.cavans.GameObject;
+import ro.gdi.cavans.GameObject;
 
 public class WorldScene {
     private static final float NEAR_CAMERA_FIELD = 1.0f;

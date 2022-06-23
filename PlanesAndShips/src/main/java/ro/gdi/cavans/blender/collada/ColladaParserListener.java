@@ -4,9 +4,9 @@
  * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
  */
 
-package ro.sg.avioane.cavans.blender.collada;
+package ro.gdi.cavans.blender.collada;
 
-import ro.sg.avioane.cavans.GameObject;
+import ro.gdi.cavans.GameObject;
 
 public interface ColladaParserListener {
 

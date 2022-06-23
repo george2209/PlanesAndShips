@@ -4,7 +4,7 @@
  * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
  */
 
-package ro.sg.avioane.cavans.blender;
+package ro.gdi.cavans.blender;
 
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_UNDEFINED;
 import static ro.sg.avioane.util.OpenGLProgramFactory.SHADER_VERTICES_WITH_NORMALS;
@@ -20,16 +20,14 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 
-import ro.sg.avioane.cavans.GameObject;
-import ro.sg.avioane.cavans.GameCavanMesh;
-import ro.sg.avioane.cavans.GameObjectComponent;
-import ro.sg.avioane.cavans.blender.collada.ColladaFileObjectDescriptor;
-import ro.sg.avioane.cavans.blender.collada.ColladaParserListener;
-import ro.sg.avioane.cavans.blender.collada.MaterialParserHelper;
-import ro.sg.avioane.cavans.blender.collada.MeshParserHelper;
+import ro.gdi.cavans.blender.collada.ColladaFileObjectDescriptor;
+import ro.gdi.cavans.blender.collada.MaterialParserHelper;
+import ro.gdi.cavans.GameObject;
+import ro.gdi.cavans.GameCavanMesh;
+import ro.gdi.cavans.GameObjectComponent;
+import ro.gdi.cavans.blender.collada.ColladaParserListener;
+import ro.gdi.cavans.blender.collada.MeshParserHelper;
 import ro.sg.avioane.geometry.XYZColor;
-import ro.sg.avioane.geometry.XYZCoordinate;
-import ro.sg.avioane.geometry.XYZTextureUV;
 import ro.sg.avioane.geometry.XYZVertex;
 import ro.sg.avioane.util.BackgroundTask;
 import ro.sg.avioane.util.OpenGLUtils;

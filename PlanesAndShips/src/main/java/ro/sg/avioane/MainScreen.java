@@ -17,18 +17,13 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import ro.sg.avioane.cavans.GameObject;
-import ro.sg.avioane.cavans.blender.BlenderObjCavan;
-import ro.sg.avioane.cavans.blender.ColladaParser;
-import ro.sg.avioane.cavans.blender.collada.ColladaFileObjectDescriptor;
-import ro.sg.avioane.cavans.blender.collada.ColladaParserListener;
-import ro.sg.avioane.cavans.primitives.Triangle;
-import ro.sg.avioane.cavans.primitives.XYZAxis;
+import ro.gdi.cavans.GameObject;
+import ro.gdi.cavans.blender.ColladaParser;
+import ro.gdi.cavans.blender.collada.ColladaFileObjectDescriptor;
+import ro.gdi.cavans.blender.collada.ColladaParserListener;
 import ro.sg.avioane.util.OpenGLProgramFactory;
 import ro.sg.avioane.util.OpenGLUtils;
 import ro.sg.avioane.util.TextureUtils;

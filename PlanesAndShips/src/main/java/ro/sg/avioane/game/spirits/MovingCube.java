@@ -6,8 +6,7 @@
 
 package ro.sg.avioane.game.spirits;
 
-import ro.sg.avioane.cavans.blender.BlenderObjCavan;
-import ro.sg.avioane.geometry.XYZVertex;
+import ro.gdi.cavans.blender.BlenderObjCavan;
 
 public class MovingCube extends BlenderObjCavan{
     /**

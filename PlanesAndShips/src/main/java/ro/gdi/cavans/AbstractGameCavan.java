@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2021.
+ * Copyright (c) 2022.
  * By using this source code from this project/file you agree with the therms listed at
  * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
  */
 
-package ro.sg.avioane.cavans;
+package ro.gdi.cavans;
 
 import android.opengl.GLES20;
 import android.opengl.GLES30;
@@ -17,7 +17,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import ro.sg.avioane.BuildConfig;
-import ro.sg.avioane.cavans.features.CavanMovements;
+import ro.gdi.cavans.features.CavanMovements;
 import ro.sg.avioane.game.TheSun;
 import ro.sg.avioane.geometry.XYZMaterial;
 import ro.sg.avioane.geometry.XYZVertex;

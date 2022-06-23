@@ -4,7 +4,7 @@
  * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
  */
 
-package ro.sg.avioane.cavans.util;
+package ro.gdi.cavans.util;
 
 
 /**

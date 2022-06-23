@@ -12,9 +12,7 @@ import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
 
-import ro.sg.avioane.cavans.AbstractGameCavan;
-import ro.sg.avioane.cavans.GameObject;
-import ro.sg.avioane.cavans.blender.BlenderObjCavan;
+import ro.gdi.cavans.GameObject;
 
 public class MainGameSurface extends GLSurfaceView {
 

@@ -4,9 +4,9 @@
  * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
  */
 
-package ro.sg.avioane.cavans;
+package ro.gdi.cavans;
 
-import ro.sg.avioane.cavans.util.GameObjectArray;
+import ro.gdi.cavans.util.GameObjectArray;
 
 public class GameObject extends GameObjectArray<GameObjectComponent> {
     protected final String iObjName;

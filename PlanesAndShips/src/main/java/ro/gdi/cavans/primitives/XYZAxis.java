@@ -1,14 +1,14 @@
 /*
- * Copyright (c) 2021.
+ * Copyright (c) 2022.
  * By using this source code from this project/file you agree with the therms listed at
  * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
  */
 
-package ro.sg.avioane.cavans.primitives;
+package ro.gdi.cavans.primitives;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import ro.sg.avioane.cavans.AbstractGameCavan;
+import ro.gdi.cavans.AbstractGameCavan;
 import ro.sg.avioane.geometry.XYZColor;
 import ro.sg.avioane.geometry.XYZCoordinate;
 import ro.sg.avioane.geometry.XYZMaterial;

@@ -15,7 +15,7 @@ import androidx.annotation.NonNull;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import ro.sg.avioane.cavans.GameObject;
+import ro.gdi.cavans.GameObject;
 import ro.sg.avioane.game.TouchScreenListener;
 import ro.sg.avioane.game.TouchScreenProcessor;
 import ro.sg.avioane.game.WorldCamera;

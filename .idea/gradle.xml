@@ -11,7 +11,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/GDI_Game_Engine" />
+            <option value="$PROJECT_DIR$/GDI-Game-Engine" />
             <option value="$PROJECT_DIR$/PlanesAndShips" />
           </set>
         </option>

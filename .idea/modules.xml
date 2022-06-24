@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Avioane.iml" filepath="$PROJECT_DIR$/.idea/modules/Avioane.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/GDI_Game_Engine/Avioane.GDI_Game_Engine.iml" filepath="$PROJECT_DIR$/.idea/modules/GDI_Game_Engine/Avioane.GDI_Game_Engine.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/GDI-Game-Engine/Avioane.GDI-Game-Engine.iml" filepath="$PROJECT_DIR$/.idea/modules/GDI-Game-Engine/Avioane.GDI-Game-Engine.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Avioane.PlanesAndShips.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Avioane.PlanesAndShips.iml" />
     </modules>
   </component>

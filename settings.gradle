@@ -6,4 +6,4 @@
 
 include ':PlanesAndShips'
 rootProject.name = "Avioane"
-include ':GDI_Game_Engine'
+include ':GDI-Game-Engine'

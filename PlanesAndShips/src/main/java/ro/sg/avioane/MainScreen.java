@@ -96,6 +96,7 @@ public class MainScreen extends AppCompatActivity implements ColladaParserListen
      * This method is handling the load of the Blender objects.
      * Here you load the game`s spirits :
      *          trees, houses, airplanes, etc..
+     *          TODO: to be updated with more examples
      */
     private void loadGameActors()  {
         if(BuildConfig.DEBUG && this.iColladaParser != null){

@@ -6,7 +6,7 @@
 
 package ro.sg.avioane.game.spirits;
 
-import ro.gdi.cavans.blender.BlenderObjCavan;
+import ro.gdi.canvas.blender.BlenderObjCavan;
 
 public class StaticCube extends BlenderObjCavan{
     /**

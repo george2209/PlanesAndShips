@@ -17,16 +17,15 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
 
-import java.io.IOException;
 import java.util.Objects;
 
-import ro.gdi.cavans.GameObject;
-import ro.gdi.cavans.blender.ColladaParser;
-import ro.gdi.cavans.blender.collada.ColladaFileObjectDescriptor;
-import ro.gdi.cavans.blender.collada.ColladaParserListener;
-import ro.sg.avioane.util.OpenGLProgramFactory;
-import ro.sg.avioane.util.OpenGLUtils;
-import ro.sg.avioane.util.TextureUtils;
+import ro.gdi.canvas.GameObject;
+import ro.gdi.canvas.blender.ColladaParser;
+import ro.gdi.canvas.blender.collada.ColladaFileObjectDescriptor;
+import ro.gdi.canvas.blender.collada.ColladaParserListener;
+import ro.gdi.util.OpenGLProgramFactory;
+import ro.gdi.util.OpenGLUtils;
+import ro.gdi.util.TextureUtils;
 
 public class MainScreen extends AppCompatActivity implements ColladaParserListener {
 
@@ -52,7 +51,6 @@ public class MainScreen extends AppCompatActivity implements ColladaParserListen
         super.onCreate(savedInstanceState);
 
         System.out.println("onCreate");
-        //this.iActivityAlive.set(true);
 
         //Remove title bar
         removeWindowTitleBar();
@@ -70,17 +68,7 @@ public class MainScreen extends AppCompatActivity implements ColladaParserListen
         if (OpenGLUtils.isOpenGL2Supported(activityManager))
         {
             this.setScreenProperties();
-
-            //here you load the game`s spirits : trees, houses, airplanes, etc..
-            //as example let`s load some exported Blender files. Use in Blender: Export->Collada (.dae)
-            //and then generate the (.bin) files by using the "ColladaAssimpConverter" (easy to use!)
-            final ColladaFileObjectDescriptor[] colladaFiles = new ColladaFileObjectDescriptor[1];
-            colladaFiles[0] = new ColladaFileObjectDescriptor();
-            colladaFiles[0].objectName = "floor";
-            colladaFiles[0].fileName = "floor_earth.bin";
-//            colladaFiles[0].objectName = "tank";
-//            colladaFiles[0].fileName = "tank.bin";
-            loadCavans(colladaFiles);
+            this.loadGameActors();
         } else {
             //TODO: make a layout frame where you display the non-supported message.
             //TBD if this part is really needed as the App shall be not installed from the
@@ -105,13 +93,19 @@ public class MainScreen extends AppCompatActivity implements ColladaParserListen
     }
 
     /**
-     * this method is handling the load of the Blender objects
-     * @throws IOException
+     * This method is handling the load of the Blender objects.
+     * Here you load the game`s spirits :
+     *          trees, houses, airplanes, etc..
      */
-    private void loadCavans(final ColladaFileObjectDescriptor[] colladaFiles) /*throws IOException*/ {
+    private void loadGameActors()  {
         if(BuildConfig.DEBUG && this.iColladaParser != null){
             throw new AssertionError("thread alive exception!");
         }
+
+        //as an example let`s load some exported Blender files. Use in Blender: Export->Collada (.dae)
+        //and then generate the (.bin) files by using the "ColladaAssimpConverter" (easy to use!)
+        final ColladaFileObjectDescriptor[] colladaFiles = new ColladaFileObjectDescriptor[1];
+        colladaFiles[0] = new ColladaFileObjectDescriptor("floor_earth.bin","floor");
 
         this.iColladaParser = new ColladaParser(this.getApplicationContext());
         this.iColladaParser.addColladaParserListener(this);

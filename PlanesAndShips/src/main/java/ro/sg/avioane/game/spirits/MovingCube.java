@@ -6,9 +6,10 @@
 
 package ro.sg.avioane.game.spirits;
 
-import ro.gdi.cavans.blender.BlenderObjCavan;
 
-public class MovingCube extends BlenderObjCavan{
+import ro.gdi.canvas.blender.BlenderObjCavan;
+
+public class MovingCube extends BlenderObjCavan {
     /**
      * @param objName the name of this object. Not sure if it has any practicability in production
      */

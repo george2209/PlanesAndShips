@@ -8,8 +8,8 @@ package ro.sg.avioane.game;
 
 import android.opengl.Matrix;
 
-import ro.sg.avioane.geometry.XYZCoordinate;
-import ro.sg.avioane.geometry.XYZVertex;
+import ro.gdi.geometry.XYZCoordinate;
+
 
 public class WorldCamera {
     private final float[] iViewMatrix = new float[16];

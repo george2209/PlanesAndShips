@@ -15,12 +15,12 @@ import androidx.annotation.NonNull;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import ro.gdi.cavans.GameObject;
+import ro.gdi.canvas.GameObject;
+import ro.gdi.geometry.XYZCoordinate;
 import ro.sg.avioane.game.TouchScreenListener;
 import ro.sg.avioane.game.TouchScreenProcessor;
 import ro.sg.avioane.game.WorldCamera;
 import ro.sg.avioane.game.WorldScene;
-import ro.sg.avioane.geometry.XYZCoordinate;
 
 public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenListener {
 

@@ -14,7 +14,7 @@ import androidx.annotation.NonNull;
 import java.util.LinkedList;
 import java.util.List;
 
-import ro.gdi.cavans.GameObject;
+import ro.gdi.canvas.GameObject;
 
 public class WorldScene {
     private static final float NEAR_CAMERA_FIELD = 1.0f;

@@ -9,11 +9,11 @@ package ro.sg.avioane.game;
 import android.opengl.GLU;
 import android.view.MotionEvent;
 
+import ro.gdi.geometry.XYZCoordinate;
+import ro.gdi.util.MathGL.MathGLUtils;
+import ro.gdi.util.MathGL.Matrix;
+import ro.gdi.util.MathGL.Vector;
 import ro.sg.avioane.BuildConfig;
-import ro.sg.avioane.geometry.XYZCoordinate;
-import ro.sg.avioane.util.MathGL.Matrix;
-import ro.sg.avioane.util.MathGL.Vector;
-import ro.sg.avioane.util.MathGL.MathGLUtils;
 
 /**
  * The class is processing the touch events and movements as well as making sure

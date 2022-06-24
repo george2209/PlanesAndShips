@@ -12,7 +12,7 @@ import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
 
-import ro.gdi.cavans.GameObject;
+import ro.gdi.canvas.GameObject;
 
 public class MainGameSurface extends GLSurfaceView {
 

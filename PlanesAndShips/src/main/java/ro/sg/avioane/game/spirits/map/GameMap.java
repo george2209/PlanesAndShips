@@ -1,13 +1,41 @@
 
 /*
- * Copyright (c) 2021.
+ * Copyright (c) 2022.
  * By using this source code from this project/file you agree with the therms listed at
  * https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
  */
 
-package ro.sg.avioane.game.spirits;
+package ro.sg.avioane.game.spirits.map;
 
-//public class GameTerrain extends AbstractGameCavan {
+import ro.gdi.canvas.GameObject;
+
+public class GameMap extends GameObject {
+
+    private final short iNoOfTilesX;
+    private final short iNoOfTilesZ;
+    private final GameMapSide iLeftMapSide;
+    private final GameMapSide iRightMapSide;
+
+
+    /***
+     *
+     * @param tilesX the number of tiles the map will have on X axis
+     * @param tilesZ the number of tiles the map will have on Z axis
+     */
+    public GameMap(final short tilesX, final short tilesZ) {
+        super("GameMap", 2);
+        this.iNoOfTilesX = tilesX;
+        this.iNoOfTilesZ = tilesZ;
+        this.iLeftMapSide = new GameMapSide((short)(tilesX), (short)(tilesZ),true);
+        this.iRightMapSide = new GameMapSide((short)(tilesX), (short)(tilesZ),false);
+        super.addComponent(this.iLeftMapSide);
+        super.addComponent(this.iRightMapSide);
+    }
+
+
+
+
+
 //
 //    private float iLowestYTerrainPoint = 0.0f;
 //
@@ -48,7 +76,7 @@ package ro.sg.avioane.game.spirits;
 //     * @param width as number of tiles. It must be an even number!
 //     * @param length as number of tiles. It must be an even number!
 //     */
-//    public GameTerrain(final int width, final int length, final Context context) {
+//    public GameMap(final int width, final int length, final Context context) {
 //        if (BuildConfig.DEBUG &&
 //                (width < 1 || length < 1 || width > MAX_TILES_NO || length > MAX_TILES_NO
 //                || width%2 != 0 || length%2 != 0  )) {
@@ -356,7 +384,7 @@ package ro.sg.avioane.game.spirits;
 //
 //
 ////    /***
-////     *  We'll use the theorem of Thales to find the startingPoint A on the plane GameTerrain.
+////     *  We'll use the theorem of Thales to find the startingPoint A on the plane GameMap.
 ////     *  Known points:
 ////     *  C = <code>startingPoint</code> parameter (normally it shall be the camera position)
 ////     *  A1 = will be calculated at a height of CB/2
@@ -468,4 +496,4 @@ package ro.sg.avioane.game.spirits;
 //            this.iIsDirty = true;
 //        }
 //    }
-//}
+}

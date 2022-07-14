@@ -6,14 +6,15 @@
 
 package ro.sg.avioane.game.spirits;
 
-import ro.gdi.canvas.blender.BlenderObjCavan;
 
-public class StaticCube extends BlenderObjCavan{
+import ro.gdi.canvas.GameObject;
+
+public class StaticCube extends GameObject {
     /**
      * @param objName the name of this object. Not sure if it has any practicability in production
      */
     public StaticCube(String objName) {
-        super(objName);
+        super(objName, 0);
     }
 
 

@@ -7,14 +7,14 @@
 package ro.sg.avioane.game.spirits;
 
 
-import ro.gdi.canvas.blender.BlenderObjCavan;
+import ro.gdi.canvas.GameObject;
 
-public class MovingCube extends BlenderObjCavan {
+public class MovingCube extends GameObject {
     /**
      * @param objName the name of this object. Not sure if it has any practicability in production
      */
     public MovingCube(String objName) {
-        super(objName);
+        super(objName,0);
     }
 
 //    private float movedSteps = 0.0f;

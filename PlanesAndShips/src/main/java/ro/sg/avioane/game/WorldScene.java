@@ -14,51 +14,22 @@ import androidx.annotation.NonNull;
 import java.util.LinkedList;
 import java.util.List;
 
+import ro.gdi.canvas.AbstractWorldScene;
 import ro.gdi.canvas.GameObject;
 
-public class WorldScene {
-    private static final float NEAR_CAMERA_FIELD = 1.0f;
-    private static final float FAR_CAMERA_FIELD = 300.0f;
-    private final float[] iProjectionMatrix = new float[16];
+public class WorldScene extends AbstractWorldScene<WorldCamera> {
+
     private final WorldCamera iCamera;
-    private final List<GameObject> iGameEntities = new LinkedList<GameObject>();
 
-    public WorldScene(final WorldCamera camera){
-        this.iCamera = camera;
+    public WorldScene(){
+        super(new WorldCamera(), 1.0f, 300.0f);
+        this.iCamera = super.getCamera();
     }
 
-    /**
-     * adds a new 3D object to this world.
-     * Warning!
-     * This method is not synchronized to you may want to do this operation during the start of the
-     * game and not when the game is already started and running.
-     * @param entity the 3D object that will be added to this world
-     */
-    public void add(@NonNull final GameObject entity){
-        this.iGameEntities.add(entity);
+    public WorldCamera getCamera(){
+        return this.iCamera;
     }
 
-    /**
-     * remove all referenced entities to this class
-     */
-//    public void clear(){
-//        this.iGameEntities.clear();
-//    }
-
-    public void onRestoreWorld(){
-        for(GameObject cavan: this.iGameEntities){
-            cavan.destroy();
-            cavan.onRestore();
-        }
-    }
-
-    /**
-     *
-     * @return the number of objects contained by this world
-     */
-    public int count(){
-        return this.iGameEntities.size();
-    }
 
     /**
      * This method must be called whenever the display resolution of the device was changed
@@ -71,27 +42,18 @@ public class WorldScene {
 
         this.iCamera.doRecalibration(screenWidth, screenHeight);
 
+        //Question: This must be made in regards to the phone display orientation??
         final float ratio = ((float) screenWidth) / ((float) screenHeight); //calculate the aspect ration on the far clip
+        final float[] projectionMatrix = super.getProjectionMatrix();
 
-        Matrix.setIdentityM(iProjectionMatrix, 0);
-        Matrix.frustumM(iProjectionMatrix, 0, -ratio, ratio, -1.0f, 1.0f, NEAR_CAMERA_FIELD, FAR_CAMERA_FIELD);
+        Matrix.setIdentityM(projectionMatrix, 0);
+        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio,-1.0f, 1.0f,
+                super.getNearCameraField(), super.getFarCameraField());
+
+        super.setProjectionMatrix(projectionMatrix);
     }
 
-    /**
-     * take care on rendering this world and all its objects and camera.
-     * TODO: draw only when something was changed. Implement a "dirty" semaphore or notification
-     */
-    public void onDraw(){
-        //call this to have the view matrix build depending on the camera movement
-        //we can choose to call this only if the camera was moved
-        //TODO: draw only when camera was moved this!
-        this.iCamera.onDraw();
 
-        //draw all entities of the map on the projection clip
-        for (final GameObject entity: this.iGameEntities) {
-            entity.draw(this.iCamera.getViewMatrix(), this.iProjectionMatrix);
-        }
-    }
 
     /**
      * process the touch events for this component.
@@ -107,7 +69,7 @@ public class WorldScene {
      * @param touchProcessor the processing event processor
      */
     public void onTouch(MotionEvent e, final TouchScreenProcessor touchProcessor){
-        touchProcessor.onTouch(e, this.iCamera.getViewMatrix(), this.iProjectionMatrix);
+        touchProcessor.onTouch(e, this.iCamera.getViewMatrix(), super.getProjectionMatrix());
     }
 
 }

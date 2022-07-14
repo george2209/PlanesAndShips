@@ -21,19 +21,16 @@ import java.util.Objects;
 
 import ro.gdi.canvas.GameObject;
 import ro.gdi.canvas.blender.ColladaParser;
-import ro.gdi.canvas.blender.collada.ColladaFileObjectDescriptor;
 import ro.gdi.canvas.blender.collada.ColladaParserListener;
 import ro.gdi.util.OpenGLProgramFactory;
 import ro.gdi.util.OpenGLUtils;
 import ro.gdi.util.TextureUtils;
+import ro.sg.avioane.game.spirits.map.GameMap;
 
-public class MainScreen extends AppCompatActivity implements ColladaParserListener {
+public class MainScreen extends AppCompatActivity {
 
     private MainGameSurface iGameSurface;
     //private final AtomicBoolean iActivityAlive = new AtomicBoolean(true);
-    private ColladaParser iColladaParser = null;
-
-    //private static boolean isTexturesLoaded = false;
 
     public MainScreen() {
         super();
@@ -68,7 +65,6 @@ public class MainScreen extends AppCompatActivity implements ColladaParserListen
         if (OpenGLUtils.isOpenGL2Supported(activityManager))
         {
             this.setScreenProperties();
-            this.loadGameActors();
         } else {
             //TODO: make a layout frame where you display the non-supported message.
             //TBD if this part is really needed as the App shall be not installed from the
@@ -92,42 +88,53 @@ public class MainScreen extends AppCompatActivity implements ColladaParserListen
         }
     }
 
-    /**
-     * This method is handling the load of the Blender objects.
-     * Here you load the game`s spirits :
-     *          trees, houses, airplanes, etc..
-     *          TODO: to be updated with more examples
-     */
-    private void loadGameActors()  {
-        if(BuildConfig.DEBUG && this.iColladaParser != null){
-            throw new AssertionError("thread alive exception!");
-        }
-
-        //as an example let`s load some exported Blender files. Use in Blender: Export->Collada (.dae)
-        //and then generate the (.bin) files by using the "ColladaAssimpConverter" (easy to use!)
-        final ColladaFileObjectDescriptor[] colladaFiles = new ColladaFileObjectDescriptor[1];
-        colladaFiles[0] = new ColladaFileObjectDescriptor("floor_earth.bin","floor");
-
-        this.iColladaParser = new ColladaParser(this.getApplicationContext());
-        this.iColladaParser.addColladaParserListener(this);
-        this.iColladaParser.startParsing(colladaFiles, this);
-    }
-
-//    @Override
-//    protected void onResume(){
-//        System.out.println("onResume");
-//        super.onResume();
-//    }
-
-//    @Override
-//    protected void onPause(){
-//        System.out.println("onPause");
-//        super.onPause();
+//    /**
+//     * This method is handling the load of the Blender objects.
+//     * Here you load the game`s spirits :
+//     *          trees, houses, airplanes, etc..
+//     *          TODO: to be updated with more examples
+//     */
+//    private void loadGameActors()  {
+//        if(BuildConfig.DEBUG && this.iColladaParser != null){
+//            throw new AssertionError("thread alive exception!");
+//        }
+//
+//        //as an example let`s load some exported Blender files. Use in Blender: Export->Collada (.dae)
+//        //and then generate the (.bin) files by using the "ColladaAssimpConverter" (easy to use!)
+//        /*final ColladaFileObjectDescriptor[] colladaFiles = new ColladaFileObjectDescriptor[1];
+//        colladaFiles[0] = new ColladaFileObjectDescriptor("tree.bin","tree");
+//
+//        this.iColladaParser = new ColladaParser(this.getApplicationContext());
+//        this.iColladaParser.addColladaParserListener(this);
+//        this.iColladaParser.startParsing(colladaFiles, this);*/
+//
+//
+//        //load realtime build actors
+//        //this.iGameSurface.addNonBlenderObject(iGameMap);
+//
 //    }
 
     @Override
+    protected void onResume(){
+        System.out.println("MainScreen::onResume");
+        super.onResume();
+    }
+
+    @Override
+    protected void onRestart() {
+        System.out.println("MainScreen::onRestart");
+        super.onRestart();
+    }
+
+    @Override
+    protected void onPause(){
+        System.out.println("MainScreen::onPause");
+        super.onPause();
+    }
+
+    @Override
     protected void onStart() {
-        System.out.println("onStart");
+        System.out.println("MainScreen::onStart");
         super.onStart();
         if(this.iGameSurface != null) {
             this.iGameSurface.onResume();
@@ -137,7 +144,7 @@ public class MainScreen extends AppCompatActivity implements ColladaParserListen
 
     @Override
     protected void onStop(){
-        System.out.println("onStop");
+        System.out.println("MainScreen::onStop");
         if(this.iGameSurface != null)
             this.iGameSurface.onPause();
         super.onStop();
@@ -145,21 +152,17 @@ public class MainScreen extends AppCompatActivity implements ColladaParserListen
 
     @Override
     protected void onDestroy() {
-        System.out.println("onDestroy!!!");
-        if(this.iColladaParser != null ){
-            this.iColladaParser.stopParsing();
-        }
+        System.out.println("MainScreen::onDestroy!!!");
+//        if(this.iColladaParser != null ){
+//            this.iColladaParser.stopParsing();
+//        }
         OpenGLProgramFactory.killInstance();
         TextureUtils.killInstance();
         this.iGameSurface = null;
         super.onDestroy();
     }
 
-    //    @Override
-//    protected void onRestart() {
-//        System.out.println("onRestart");
-//        super.onRestart();
-//    }
+
 
     /*private void loadTextures(){
         if(!MainScreen.isTexturesLoaded){
@@ -189,31 +192,5 @@ public class MainScreen extends AppCompatActivity implements ColladaParserListen
         }
     }
 
-    /**
-     * From <code>ColladaParserListener</code>
-     * @param gameObjects the parsed game object.
-     */
-    @Override
-    public void notifyParseFinished(GameObject[] gameObjects) {
-        this.iGameSurface.queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                iGameSurface.loadBlenderObjects(gameObjects);
-                iColladaParser = null;
-            }
-        });
-    }
 
-    /**
-     * From <code>ColladaParserListener</code>
-     */
-    @Override
-    public void notifyParseFailed() {
-        this.runOnUiThread(() -> {
-            this.iColladaParser = null;
-        });
-
-        //TODO: decide what to show the user here in case of failure.
-        throw new UnsupportedOperationException("FATAL ERROR!");
-    }
 }

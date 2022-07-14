@@ -16,22 +16,27 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import ro.gdi.canvas.GameObject;
+import ro.gdi.canvas.blender.ColladaParser;
+import ro.gdi.canvas.blender.collada.ColladaParserListener;
 import ro.gdi.geometry.XYZCoordinate;
 import ro.sg.avioane.game.TouchScreenListener;
 import ro.sg.avioane.game.TouchScreenProcessor;
 import ro.sg.avioane.game.WorldCamera;
 import ro.sg.avioane.game.WorldScene;
+import ro.sg.avioane.game.spirits.map.GameMap;
 
-public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenListener {
+public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenListener, ColladaParserListener {
 
+    private ColladaParser iColladaParser = null;
     private final Context iContext;
+    private final WorldCamera iCamera;
 
+    private GameMap iGameMap = null; //it will be created inside the OpenGL context!
 
 
 
 
     //put here some object for test:
-    //private GameTerrain iGamePlane = null;
 
     //private XYZPoint iPoint = null;
     //private XYZAxis iWorldAxis = null;
@@ -42,12 +47,12 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 //    private StaticCube staticBlenderCube = null;
 //    MovingCube movingCube = null;
 
-    //private GameTerrain iGameTerrain = null;
+    //private GameMap iGameTerrain = null;
 
 
 
-    private final WorldCamera iCamera = new WorldCamera();
-    private final WorldScene iWorld;
+    //private final WorldCamera iCamera = new WorldCamera();
+    private final WorldScene iWorld = new WorldScene();
     private int iScreenWidth = 0;
     private int iScreenHeight = 0;
 
@@ -55,18 +60,35 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 
     public MainGameRenderer(Context context) {
         this.iContext = context;
-        this.iWorld = new WorldScene(this.iCamera);
         this.iTouchProcessor.addTouchScreenListener(this);
+        iCamera = this.iWorld.getCamera();
     }
 
-    public void addEntityInGame(@NonNull final GameObject entity){
-        this.iWorld.add(entity);
+    @Override
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+
+//        final TextureUtils textureUtils = TextureUtils.getInstance();
+//        boolean isRestoreNeeded = textureUtils.onDestroy();
+//        isRestoreNeeded |= OpenGLProgramFactory.getInstance().onDestroy();
+//        //textureUtils.loadTextures(this.iContext);
+//        if(isRestoreNeeded && this.iWorld.count() > 0){
+//            System.out.println("A restore of the world is needed***");
+//            this.iWorld.onRestoreWorld();
+//        }
+//        textureUtils.releaseTextures();
+
+        //add spirits to the surface
+        this.iGameMap = new GameMap((short)20,(short)10);
+        this.iWorld.add(this.iGameMap);
+
+        GLES30.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+        GLES30.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
     }
 
 
 //    private void addDrawObjects() {
 
-        //this.iGameTerrain = new GameTerrain(50,50, this.iContext);
+        //this.iGameTerrain = new GameMap(50,50, this.iContext);
         //this.iWorld.add(this.iGameTerrain);
 
 //        final ObjParser objParser = new ObjParser();
@@ -123,21 +145,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 //    }
 
 
-    @Override
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 
-//        final TextureUtils textureUtils = TextureUtils.getInstance();
-//        boolean isRestoreNeeded = textureUtils.onDestroy();
-//        isRestoreNeeded |= OpenGLProgramFactory.getInstance().onDestroy();
-//        //textureUtils.loadTextures(this.iContext);
-//        if(isRestoreNeeded && this.iWorld.count() > 0){
-//            System.out.println("A restore of the world is needed***");
-//            this.iWorld.onRestoreWorld();
-//        }
-//        textureUtils.releaseTextures();
-        GLES30.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-        GLES30.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-    }
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -188,7 +196,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         cameraPosition.setZ( cameraPosition.z() - (ratio/100.0f) * zPercent * toleranceFactor);
         this.iCamera.setCameraPosition(cameraPosition);
 
-        final XYZCoordinate lookAtPosition = this.iCamera.getiLookAtPosition();
+        final XYZCoordinate lookAtPosition = this.iCamera.getLookAtPosition();
         lookAtPosition.setX( lookAtPosition.x() - (ratio/100.0f) * xPercent * 2.0f * toleranceFactor);
         lookAtPosition.setZ( lookAtPosition.z() - (ratio/100.0f) * zPercent * toleranceFactor);
         this.iCamera.setLookAtPosition(lookAtPosition);
@@ -224,6 +232,35 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         final XYZCoordinate cameraPosition = this.iCamera.getCameraPosition();
         cameraPosition.setY(cameraPosition.y()*(1-zoomingFactor));
         this.iCamera.setCameraPosition(cameraPosition);
+    }
+
+
+    /**
+     * From <code>ColladaParserListener</code>
+     * @param gameObjects the parsed game object.
+     */
+    @Override
+    public void notifyParseFinished(GameObject[] gameObjects) {
+//        this.queueEvent(new Runnable() {
+//            @Override
+//            public void run() {
+//                iGameSurface.addBlenderObjects(gameObjects);
+//                iColladaParser = null;
+//            }
+//        });
+    }
+
+    /**
+     * From <code>ColladaParserListener</code>
+     */
+    @Override
+    public void notifyParseFailed() {
+//        this.runOnUiThread(() -> {
+//            this.iColladaParser = null;
+//        });
+//
+//        //TODO: decide what to show the user here in case of failure.
+//        throw new UnsupportedOperationException("FATAL ERROR!");
     }
 
 }

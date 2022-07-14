@@ -39,31 +39,36 @@ public class MainGameSurface extends GLSurfaceView {
         super.setRenderer(this.iGameRenderer);
 
 
+        //TODO: optimize the rendering to lower the battery consumption
+
         // Render the view only when there is a change in the drawing data
         // if you uncomment this line then the rendering will take place only when you call
         // super.requestRender();
         //super.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-
     }
 
-    /**
-     * this method must be called from the GUI thread!
-     * @param blenderOBJArray
-     */
-    public void loadBlenderObjects(@NonNull final GameObject[] blenderOBJArray){
-        for (GameObject gameEntity:blenderOBJArray) {
-            gameEntity.onRestore();
-            this.iGameRenderer.addEntityInGame(gameEntity);
-        }
-    }
+//    /**
+//     * this method must be called from the GUI thread!
+//     * @param blenderOBJArray
+//     */
+//    public void addBlenderObjects(@NonNull final GameObject[] blenderOBJArray){
+//        for (GameObject gameEntity:blenderOBJArray) {
+//            gameEntity.onRestore();
+//            this.iGameRenderer.addEntityInGame(gameEntity);
+//        }
+//    }
 
-    /**
-     *
-     * @param gameEntity a non null instance of AbstractGameCavan that will be added into the "world"
-     */
-    public void loadNonBlenderObject(@NonNull final GameObject gameEntity){
-        this.iGameRenderer.addEntityInGame(gameEntity);
-    }
+//    /**
+//     *
+//     * @param gameEntity a non null instance of AbstractGameCanvan that will be added into the "world"
+//     */
+//    public void addNonBlenderObject(@NonNull final GameObject gameEntity){
+//        this.queueEvent(() -> {
+//            gameEntity.onRestore();
+//            this.iGameRenderer.addEntityInGame(gameEntity);
+//        });
+//
+//    }
 
 
     @Override

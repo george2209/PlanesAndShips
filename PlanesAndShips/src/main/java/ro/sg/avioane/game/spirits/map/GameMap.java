@@ -8,6 +8,7 @@
 package ro.sg.avioane.game.spirits.map;
 
 import ro.gdi.canvas.GameObject;
+import ro.gdi.geometry.XYZCoordinate;
 
 public class GameMap extends GameObject {
 
@@ -32,7 +33,16 @@ public class GameMap extends GameObject {
         super.addComponent(this.iRightMapSide);
     }
 
-
+    /**
+     *
+     * @param vector
+     * @param startingPoint
+     * @return the intersection point of the vector starting from the startingPoint or null if there
+     * is no such intersection
+     */
+    public XYZCoordinate getIntersectionPoint(final XYZCoordinate startingPoint, final XYZCoordinate vector){
+        return this.iLeftMapSide.getIntersectionPoint(startingPoint, vector);
+    }
 
 
 

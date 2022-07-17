@@ -11,30 +11,32 @@ import android.opengl.GLES20;
 import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
-import androidx.annotation.NonNull;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import ro.gdi.canvas.GameObject;
 import ro.gdi.canvas.blender.ColladaParser;
 import ro.gdi.canvas.blender.collada.ColladaParserListener;
+import ro.gdi.canvas.primitives.Line;
 import ro.gdi.geometry.XYZCoordinate;
-import ro.sg.avioane.game.TouchScreenListener;
-import ro.sg.avioane.game.TouchScreenProcessor;
+import ro.gdi.util.MathGL.MathGLUtils;
+import ro.gdi.touchevents.TouchScreenListener;
+import ro.gdi.touchevents.TouchScreenProcessor;
 import ro.sg.avioane.game.WorldCamera;
 import ro.sg.avioane.game.WorldScene;
 import ro.sg.avioane.game.spirits.map.GameMap;
 
-public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenListener, ColladaParserListener {
+public class MainGameRenderer implements GLSurfaceView.Renderer, ColladaParserListener, TouchScreenListener {
 
     private ColladaParser iColladaParser = null;
     private final Context iContext;
     private final WorldCamera iCamera;
+    private final TouchScreenProcessor iTouchProcessor = new TouchScreenProcessor();
 
-    private GameMap iGameMap = null; //it will be created inside the OpenGL context!
-
-
-
+    //the following game spirits must be created inside the OpenGL context!
+    private GameMap iGameMap = null;
+    private Line iTouchLine = null;
 
     //put here some object for test:
 
@@ -56,11 +58,10 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
     private int iScreenWidth = 0;
     private int iScreenHeight = 0;
 
-    private final TouchScreenProcessor iTouchProcessor = new TouchScreenProcessor();
+
 
     public MainGameRenderer(Context context) {
         this.iContext = context;
-        this.iTouchProcessor.addTouchScreenListener(this);
         iCamera = this.iWorld.getCamera();
     }
 
@@ -77,7 +78,13 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 //        }
 //        textureUtils.releaseTextures();
 
+        this.iTouchProcessor.addTouchScreenListener(this);
+
         //add spirits to the surface
+        this.iTouchLine = new Line(new XYZCoordinate(0,0,0), new XYZCoordinate(0,0,0));
+        this.iTouchLine.setVisible(false);
+        this.iWorld.add(this.iTouchLine); //add it later.
+
         this.iGameMap = new GameMap((short)20,(short)10);
         this.iWorld.add(this.iGameMap);
 
@@ -152,7 +159,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         this.iScreenWidth = width;
         this.iScreenHeight = height;
         GLES30.glViewport(0, 0, width, height);
-        this.iTouchProcessor.doRecalibration(this.iScreenWidth, this.iScreenHeight);
+        this.iTouchProcessor.doRecalibration(width, height);
         iWorld.doRecalibration(width, height);
 
     }
@@ -181,15 +188,26 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
 
 
 
+    /**
+     * process the touch events for this component.
+     * The input is the display coordinates the the calculated world-based coordinates
+     * and the touch event type (movement, click..) will be sent to the respective touch processor
+     * listener in a separate call, however on "this" caller thread, meaning no separate thread for
+     * processing & notification will be used.
+     * If you want to do the computation on a separate thread then you must be aware that you must
+     * send the resulting notification on the OpenGL thread (GUI).
+     * This method is called usually from inside the extended class of
+     * GLSurfaceView.onTouchEvent(..) method.
+     * @param e the mouse event object
+     */
     public void onTouch(MotionEvent e) {
-        this.iWorld.onTouch(e, this.iTouchProcessor);
+        this.iTouchProcessor.onTouch(e, this.iCamera.getViewMatrix(), this.iWorld.getProjectionMatrix());
     }
-
 
     @Override
     public void fireMovement(float xPercent, float zPercent) {
         final XYZCoordinate cameraPosition = this.iCamera.getCameraPosition();
-        final float ratio = TouchScreenProcessor.TOUCH_MOVEMENT_ACCELERATION_FACTOR * (float) this.iScreenWidth / (float) this.iScreenHeight;
+        final float ratio = TouchScreenProcessor.TOUCH_MOVEMENT_ACCELERATION_FACTOR; // * (float) this.iScreenWidth / (float) this.iScreenHeight;
         final float toleranceFactor = 5.0f; //TODO: this shall depend on the map zoom level.
 
         cameraPosition.setX( cameraPosition.x() - (ratio/100.0f) * xPercent * 2.0f * toleranceFactor) ;
@@ -200,32 +218,26 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, TouchScreenList
         lookAtPosition.setX( lookAtPosition.x() - (ratio/100.0f) * xPercent * 2.0f * toleranceFactor);
         lookAtPosition.setZ( lookAtPosition.z() - (ratio/100.0f) * zPercent * toleranceFactor);
         this.iCamera.setLookAtPosition(lookAtPosition);
-
     }
 
     @Override
-    public void fireTouchClick(final float[] clickVector) {
-//        final float[] p1 = this.iCamera.getCameraPosition().asArray();
-//        final float[] p2 = MathGLUtils.getPointOnVector(clickVector, p1, 50.0f);
-//
-//        final XYZVertex p1Line = new XYZVertex(new XYZCoordinate(p1));
-//        final XYZVertex p2Line = new XYZVertex(new XYZCoordinate(p2));
-//        p1Line.backgroundColor = new XYZColor(1.0f, 0 , 0.0f, 1);
-//        p2Line.backgroundColor = new XYZColor(1.0f, 0 , 0.0f, 1);
+    public void fireTouchClick(float[] clickVector) {
+        System.out.println("\tclick vector: x=" + clickVector[0] + " y=" + clickVector[1] + " z=" + clickVector[2]);
 
-//        this.iMovingLine.updateCoordinates(
-//                    p1Line,
-//                    p2Line
-//        );
-//
-//        this.iGamePlane.processClickOnObject(this.iCamera.getCameraPosition(), new XYZVertex(clickVector));
+        final XYZCoordinate p1 = new XYZCoordinate(this.iCamera.getCameraPosition().asArray());
+//        final XYZCoordinate p2 = new XYZCoordinate(
+//                MathGLUtils.getPointOnVector(clickVector, p1.asArray(), 150.0f));
 
+        final XYZCoordinate p2 = this.iGameMap.getIntersectionPoint(p1, new XYZCoordinate(clickVector));
+
+        if(p2 != null) {
+            this.iTouchLine.updateCoordinates(p1, p2);
+            this.iTouchLine.setVisible(true);
+        } else {
+            System.out.println("no intersection +++++");
+        }
     }
 
-    /**
-     *
-     * @param zoomingFactor the zoom factor in percent as real subunit number in range [0..1]
-     */
     @Override
     public void fireZoom(float zoomingFactor) {
         //System.out.println("ZOOM FACTOR=" + zoomingFactor);

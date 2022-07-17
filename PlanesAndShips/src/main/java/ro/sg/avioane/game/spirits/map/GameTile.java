@@ -30,17 +30,6 @@ public class GameTile extends GameObjectMesh {
         super(verticesArray, DRAW_ORDER, GLES30.GL_TRIANGLE_STRIP);
     }
 
-//    @Override
-//    public void draw(float[] viewMatrix, float[] projectionMatrix) {
-//        super.doDraw(viewMatrix, projectionMatrix, GLES30.GL_TRIANGLE_STRIP);
-//    }
-//
-//    @Override
-//    public void onRestore() {
-//        super.build(new XYZVertex[] {this.iVertexTopLeft,this.iVertexTopRight,
-//                this.iVertexBottomLeft, this.iVertexBottomRight}, DRAW_ORDER);
-//    }
-
     public void showBorder(){
 
     }

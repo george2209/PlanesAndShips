@@ -16,6 +16,11 @@ import java.util.List;
 
 import ro.gdi.canvas.AbstractWorldScene;
 import ro.gdi.canvas.GameObject;
+import ro.gdi.canvas.primitives.Line;
+import ro.gdi.geometry.XYZColor;
+import ro.gdi.geometry.XYZCoordinate;
+import ro.gdi.geometry.XYZVertex;
+import ro.gdi.util.MathGL.MathGLUtils;
 
 public class WorldScene extends AbstractWorldScene<WorldCamera> {
 
@@ -24,10 +29,6 @@ public class WorldScene extends AbstractWorldScene<WorldCamera> {
     public WorldScene(){
         super(new WorldCamera(), 1.0f, 300.0f);
         this.iCamera = super.getCamera();
-    }
-
-    public WorldCamera getCamera(){
-        return this.iCamera;
     }
 
 
@@ -53,23 +54,5 @@ public class WorldScene extends AbstractWorldScene<WorldCamera> {
         super.setProjectionMatrix(projectionMatrix);
     }
 
-
-
-    /**
-     * process the touch events for this component.
-     * The input is the display coordinates the the calculated world-based coordinates
-     * and the touch event type (movement, click..) will be sent to the respective touch processor
-     * listener in a separate call, however on "this" caller thread, meaning no separate thread for
-     * processing & notification will be used.
-     * If you want to do the computation on a separate thread then you must be aware that you must
-     * send the resulting notification on the OpenGL thread (GUI).
-     * This method is called usually from inside the extended class of
-     * GLSurfaceView.onTouchEvent(..) method.
-     * @param e the mouse event object
-     * @param touchProcessor the processing event processor
-     */
-    public void onTouch(MotionEvent e, final TouchScreenProcessor touchProcessor){
-        touchProcessor.onTouch(e, this.iCamera.getViewMatrix(), super.getProjectionMatrix());
-    }
 
 }

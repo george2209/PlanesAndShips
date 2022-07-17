@@ -47,29 +47,6 @@ public class MainGameSurface extends GLSurfaceView {
         //super.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
 
-//    /**
-//     * this method must be called from the GUI thread!
-//     * @param blenderOBJArray
-//     */
-//    public void addBlenderObjects(@NonNull final GameObject[] blenderOBJArray){
-//        for (GameObject gameEntity:blenderOBJArray) {
-//            gameEntity.onRestore();
-//            this.iGameRenderer.addEntityInGame(gameEntity);
-//        }
-//    }
-
-//    /**
-//     *
-//     * @param gameEntity a non null instance of AbstractGameCanvan that will be added into the "world"
-//     */
-//    public void addNonBlenderObject(@NonNull final GameObject gameEntity){
-//        this.queueEvent(() -> {
-//            gameEntity.onRestore();
-//            this.iGameRenderer.addEntityInGame(gameEntity);
-//        });
-//
-//    }
-
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {

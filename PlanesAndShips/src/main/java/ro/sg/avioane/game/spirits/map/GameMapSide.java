@@ -19,17 +19,57 @@ public class GameMapSide extends GameObjectComponent {
     private final short iNoOfTilesX;
     private final short iNoOfTilesZ;
 
-    //map side corner coordinates.
+    //map side corner coordinates. needed???
     private final XYZCoordinate iTopLeftMapSide = new XYZCoordinate(0,0,0);
     private final XYZCoordinate iTopRightMapSide = new XYZCoordinate(0,0,0);
     private final XYZCoordinate iBottomLeftMapSide = new XYZCoordinate(0,0,0);
     private final XYZCoordinate iBottomRightMapSide = new XYZCoordinate(0,0,0);
+    private final boolean isLeftSideMap;
 
     public GameMapSide(final short tilesX, final short tilesZ, boolean isLeftSide) {
         super("GameMapSide" + (isLeftSide? "Left" : "Right"), tilesX/2 * tilesZ);
         this.iNoOfTilesX = tilesX;
         this.iNoOfTilesZ = tilesZ;
-        this.doBuildTiles(isLeftSide);
+        this.isLeftSideMap = isLeftSide;
+        this.doBuildTiles();
+    }
+
+    /**
+     * paint a tile containing the point of interest
+     * The running cost is O(1). No search involved! only calculus ;).
+     * I know I can compress all in smaller lines..for the moment for a simple understanding and
+     * readability I will keep it like this.
+     * @param pointOfInterest the coordinates (X and Z will be processed here) that shall be inside
+     *                        the respective tile
+     */
+    public void paintTile(final XYZCoordinate pointOfInterest){
+        System.out.println("paintTile: x=" + pointOfInterest.x() +
+                " y=" + pointOfInterest.y() + " z=" + pointOfInterest.z());
+
+        int xAxisIndex = this.isLeftSideMap ? (int) (
+                10 * ( 1-( 1 - pointOfInterest.x()) / (iNoOfTilesX/2 * GameTile.TILE_SIZE))
+        ) : -1; //TODO: right side map!
+
+        int zAxisIndex =  pointOfInterest.z() < 0 ?
+                (int)(10 * (1 - (((iNoOfTilesZ/2 * GameTile.TILE_SIZE) - pointOfInterest.z()) / (iNoOfTilesZ * GameTile.TILE_SIZE)))) :
+                (int)(10 * (((iNoOfTilesZ/2* GameTile.TILE_SIZE) + pointOfInterest.z()) / (iNoOfTilesZ * GameTile.TILE_SIZE)));
+
+
+        //(int)(1 - pointOfInterest.z() / ((iNoOfTilesZ/2) * GameTile.TILE_SIZE));
+        //if(zAxisIndex < 0)
+        //    zAxisIndex  = 1 - zAxisIndex; //upper negative side correction.
+
+        if(xAxisIndex >= 0 && xAxisIndex <iNoOfTilesX / 2){
+            if(zAxisIndex >= 0 && zAxisIndex < iNoOfTilesZ){
+                final int cellIndex = xAxisIndex + zAxisIndex * (iNoOfTilesX/2);
+                final GameTile gameTile = (GameTile) super.getMesh(cellIndex);
+                gameTile.highlightCell();
+            }
+        } else {
+            System.out.println("index out of range!");
+        }
+
+
     }
 
     /**
@@ -54,16 +94,15 @@ public class GameMapSide extends GameObjectComponent {
     /**
      * doBuildTiles is building the map with the tiles by initializing each tile
      */
-    private void doBuildTiles(final boolean isLeftSideMap){
+    private void doBuildTiles(){
         if(BuildConfig.DEBUG)
             if(this.iNoOfTilesX%2 != 0 || this.iNoOfTilesZ%2 != 0)
                 throw new AssertionError("the tiles of the map must be perfectly split in two parts otherwise the map is not balanced." +
                         " use even numbers for tilesX and tilesZ!");
-        final short zero = 0;
         //map borders
-        final short startIndexX = isLeftSideMap ? (short)(zero-iNoOfTilesX/2) : zero;
-        final short endIndexX = isLeftSideMap ? zero : (short)(iNoOfTilesX / 2);
-        final short startIndexZ = (short)(zero-iNoOfTilesZ/2);
+        final short startIndexX = isLeftSideMap ? (short)(-iNoOfTilesX/2) : 0;
+        final short endIndexX = isLeftSideMap ? 0 : (short)(iNoOfTilesX / 2);
+        final short startIndexZ = (short)(-iNoOfTilesZ/2);
         final short endIndexZ = (short)(iNoOfTilesZ / 2);
 
 
@@ -82,8 +121,8 @@ public class GameMapSide extends GameObjectComponent {
         //System.out.println(" ");
         //System.out.println(isLeftSideMap? "LEFT SIDE ********* " : "RIGHT SIDE ********* ");
 
-        for(short tileX = startIndexX; tileX<endIndexX; tileX++){
 
+        for(short tileZ = startIndexZ; tileZ<endIndexZ; tileZ++){
             //tmp
             if(isCe1){
                 color = c2;
@@ -92,8 +131,8 @@ public class GameMapSide extends GameObjectComponent {
             }
             isCe1 = !isCe1;
 
+            for(short tileX = startIndexX; tileX<endIndexX; tileX++){
 
-            for(short tileZ = startIndexZ; tileZ<endIndexZ; tileZ++){
                 final XYZCoordinate topLeft = new XYZCoordinate(
                         tileX*GameTile.TILE_SIZE  , 0, tileZ * GameTile.TILE_SIZE);
                 final XYZCoordinate lowerLeft = new XYZCoordinate(
@@ -146,10 +185,10 @@ public class GameMapSide extends GameObjectComponent {
         }
 
         //tmp
-        System.out.println("**** print margins " + isLeftSideMap);
-        System.out.println("\t iTopLeftMapSide= " + iTopLeftMapSide.toString());
-        System.out.println("\t iBottomLeftMapSide= " + iBottomLeftMapSide.toString());
-        System.out.println("\t iTopRightMapSide= " + iTopRightMapSide.toString());
-        System.out.println("\t iBottomRightMapSide= " + iBottomRightMapSide.toString());
+//        System.out.println("**** print margins " + isLeftSideMap);
+//        System.out.println("\t iTopLeftMapSide= " + iTopLeftMapSide.toString());
+//        System.out.println("\t iBottomLeftMapSide= " + iBottomLeftMapSide.toString());
+//        System.out.println("\t iTopRightMapSide= " + iTopRightMapSide.toString());
+//        System.out.println("\t iBottomRightMapSide= " + iBottomRightMapSide.toString());
     }
 }

@@ -9,12 +9,13 @@ package ro.sg.avioane.game.spirits.map;
 import android.opengl.GLES30;
 
 import ro.gdi.canvas.GameObjectMesh;
+import ro.gdi.geometry.XYZColor;
 import ro.gdi.geometry.XYZVertex;
 
 public class GameTile extends GameObjectMesh {
-    private final static int[] DRAW_ORDER = new int[] {0,2,1,3};
 
     public final static float TILE_SIZE = 10;
+    private XYZColor iCellColor = null;
 
     /**
      * defines a map tile specifying the all 4 corners by each vertex.
@@ -27,7 +28,7 @@ public class GameTile extends GameObjectMesh {
      *                      3 = bottom right corner
      */
     public GameTile(final XYZVertex[] verticesArray){
-        super(verticesArray, DRAW_ORDER, GLES30.GL_TRIANGLE_STRIP);
+        super(verticesArray, new int[] {0,2,1,3}, GLES30.GL_TRIANGLE_STRIP);
     }
 
     public void showBorder(){
@@ -39,6 +40,18 @@ public class GameTile extends GameObjectMesh {
     }
 
     public void highlightCell(){
+        final int noOfVertices = super.getVerticesSize();
+        final XYZColor highlightColor = new XYZColor(0,0,1, 1);
+        this.iCellColor = super.getVertex(0).vertexColor;
+        for(int i=0; i<noOfVertices; i++){
+            final XYZVertex vertex = super.getVertex(i);
+            vertex.vertexColor = highlightColor;
+        }
+        super.notifyVerticesChanged();
+    }
 
+    @Override
+    public void draw(float[] viewMatrix, float[] projectionMatrix) {
+        super.draw(viewMatrix,projectionMatrix);
     }
 }

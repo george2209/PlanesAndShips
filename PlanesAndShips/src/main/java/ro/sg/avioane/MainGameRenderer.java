@@ -20,7 +20,6 @@ import ro.gdi.canvas.blender.ColladaParser;
 import ro.gdi.canvas.blender.collada.ColladaParserListener;
 import ro.gdi.canvas.primitives.Line;
 import ro.gdi.geometry.XYZCoordinate;
-import ro.gdi.util.MathGL.MathGLUtils;
 import ro.gdi.touchevents.TouchScreenListener;
 import ro.gdi.touchevents.TouchScreenProcessor;
 import ro.sg.avioane.game.WorldCamera;
@@ -46,7 +45,6 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, ColladaParserLi
     //private Square iSquare = null;
     //private BlenderObjCavan iAirPlane = null;
 
-//    private StaticCube staticBlenderCube = null;
 //    MovingCube movingCube = null;
 
     //private GameMap iGameTerrain = null;
@@ -121,11 +119,6 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, ColladaParserLi
 //
 //        this.iSquare = new Square(upperLeft, 10);
 //        this.iWorld.add(this.iSquare);
-
-//        ParsedObjBlender blenderData = new ObjParser().parseOBJ(this.iContext, R.raw.cube_obj);
-//        this.staticBlenderCube = new StaticCube(blenderData.vertexArray, blenderData.drawOrderArray);
-//        this.iWorld.add(this.staticBlenderCube);
-
 
 
 //        blenderData = new ObjParser().parseOBJ(this.iContext, R.raw.cube_obj);
@@ -206,6 +199,7 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, ColladaParserLi
 
     @Override
     public void fireMovement(float xPercent, float zPercent) {
+        //TODO: refactory needed!
         final XYZCoordinate cameraPosition = this.iCamera.getCameraPosition();
         final float ratio = TouchScreenProcessor.TOUCH_MOVEMENT_ACCELERATION_FACTOR; // * (float) this.iScreenWidth / (float) this.iScreenHeight;
         final float toleranceFactor = 5.0f; //TODO: this shall depend on the map zoom level.
@@ -225,17 +219,16 @@ public class MainGameRenderer implements GLSurfaceView.Renderer, ColladaParserLi
         System.out.println("\tclick vector: x=" + clickVector[0] + " y=" + clickVector[1] + " z=" + clickVector[2]);
 
         final XYZCoordinate p1 = new XYZCoordinate(this.iCamera.getCameraPosition().asArray());
-//        final XYZCoordinate p2 = new XYZCoordinate(
-//                MathGLUtils.getPointOnVector(clickVector, p1.asArray(), 150.0f));
+        this.iGameMap.processMapClick(p1, new XYZCoordinate(clickVector));
 
-        final XYZCoordinate p2 = this.iGameMap.getIntersectionPoint(p1, new XYZCoordinate(clickVector));
-
-        if(p2 != null) {
-            this.iTouchLine.updateCoordinates(p1, p2);
-            this.iTouchLine.setVisible(true);
-        } else {
-            System.out.println("no intersection +++++");
-        }
+//        final XYZCoordinate p2 = this.iGameMap.getIntersectionPoint(p1, new XYZCoordinate(clickVector));
+//
+//        if(p2 != null) {
+//            this.iTouchLine.updateCoordinates(p1, p2);
+//            this.iTouchLine.setVisible(true);
+//        } else {
+//            System.out.println("no intersection +++++");
+//        }
     }
 
     @Override

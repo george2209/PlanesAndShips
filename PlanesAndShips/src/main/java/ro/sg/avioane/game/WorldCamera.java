@@ -6,8 +6,6 @@
 
 package ro.sg.avioane.game;
 
-import android.opengl.Matrix;
-
 import ro.gdi.canvas.AbstractWorldCamera;
 import ro.gdi.geometry.XYZCoordinate;
 

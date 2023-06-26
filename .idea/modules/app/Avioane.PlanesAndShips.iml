@@ -27,6 +27,8 @@
     <content url="file://$MODULE_DIR$/../../../PlanesAndShips">
       <excludeFolder url="file://$MODULE_DIR$/../../../PlanesAndShips/.gradle" />
       <excludeFolder url="file://$MODULE_DIR$/../../../PlanesAndShips/build" />
+      <excludeFolder url="file://$MODULE_DIR$/../../../PlanesAndShips/blender" />
+      <excludeFolder url="file://$MODULE_DIR$/../../../PlanesAndShips/docs" />
     </content>
     <orderEntry type="jdk" jdkName="Android API 31 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

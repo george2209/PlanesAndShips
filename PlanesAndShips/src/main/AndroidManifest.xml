@@ -5,8 +5,7 @@
   ~ https://github.com/george2209/PlanesAndShips/blob/main/LICENSE
   -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ro.sg.avioane">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-feature
         android:glEsVersion="0x00030000"
